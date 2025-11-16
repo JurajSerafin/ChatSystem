@@ -36,6 +36,6 @@ Within each chat log, users can search for previously sent messages by entering 
 
 The application uses a **WebSocket API** for real-time communication (read receipts, push notifications) and a **REST API** for all other functionality.
 
-### Goals
+### Extensibility
 
-The goal is to make the application easily extensible in every practical aspect—such as adding new message types, supporting different communication protocols, or defining new user roles— all through well-specified interfaces.
+The application is expected to be easily extensible in every practical aspect—such as adding new message types, supporting different communication protocols, or defining new user roles— all through well-specified interfaces.
