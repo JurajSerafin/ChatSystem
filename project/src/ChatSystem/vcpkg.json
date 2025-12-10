@@ -1,0 +1,21 @@
+{
+  "name": "chatsystem",
+  "version": "1.0.0",
+  "builtin-baseline": "f5cbc726b123896eef77f5acc1b9047a28a0731e",
+  "description": "A secure chat application with user authentication",
+  "dependencies": [
+    {
+      "name": "wxwidgets",
+      "features": [ "webview" ]
+    },
+    "boost-asio",
+    "boost-system",
+    "boost-thread",
+    "openssl",
+    "libpqxx",
+    "sqlite3",
+    "nlohmann-json",
+    "spdlog",
+    "gtest"
+  ]
+}
