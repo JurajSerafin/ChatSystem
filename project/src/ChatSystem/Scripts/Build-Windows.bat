@@ -1,10 +1,15 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set PRESET=%1
-if "%PRESET%"=="" set PRESET=debug
+REM Build-Windows.bat - Quick build script for daily development
 
-set TARGET=%2
+set PRESET=%1
+if "%PRESET%"=="" set PRESET=windows-debug
+
+set CONFIG=%2
+if "%CONFIG%"=="" set CONFIG=Debug
+
+set TARGET=%3
 if "%TARGET%"=="" set TARGET=all
 
 REM Get project root
@@ -27,23 +32,23 @@ REM Detect number of processors
 set CORES=%NUMBER_OF_PROCESSORS%
 
 echo.
-echo Building %TARGET% with %CORES% cores (preset: %PRESET%)...
+echo Building %TARGET% [%CONFIG%] with %CORES% cores (preset: %PRESET%)...
 echo.
 
 REM Build
 if "%TARGET%"=="all" (
-    cmake --build Build\%PRESET% --parallel %CORES%
+    cmake --build Build\%PRESET% --config %CONFIG% --parallel %CORES%
 ) else (
-    cmake --build Build\%PRESET% --target %TARGET% --parallel %CORES%
+    cmake --build Build\%PRESET% --target %TARGET% --config %CONFIG% --parallel %CORES%
 )
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo [OK] Build completed successfully!
     echo.
-    echo Run application: Build\%PRESET%\App\ChatSystem.exe
-    echo Run tests:       ctest --test-dir Build\%PRESET%
-    echo Run server:      Build\%PRESET%\Server\ChatSystemServer.exe
+    echo Run application: Build\%PRESET%\App\%CONFIG%\ChatSystem.exe
+    echo Run tests:       ctest --test-dir Build\%PRESET% -C %CONFIG%
+    echo Run server:      Build\%PRESET%\Server\%CONFIG%\ChatSystemServer.exe
 ) else (
     echo.
     echo [ERROR] Build failed!
@@ -51,5 +56,5 @@ if %ERRORLEVEL% EQU 0 (
     exit /b 1
 )
 
-if "%3"=="nopause" goto :eof
+if "%4"=="nopause" goto :eof
 pause
