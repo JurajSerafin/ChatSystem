@@ -1,4 +1,3 @@
-// Tests/Core/CoreTests.cpp
 #include <gtest/gtest.h>
 
 TEST(CoreTest, BasicTest) {
