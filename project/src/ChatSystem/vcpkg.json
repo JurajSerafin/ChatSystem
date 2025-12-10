@@ -4,10 +4,7 @@
   "builtin-baseline": "f5cbc726b123896eef77f5acc1b9047a28a0731e",
   "description": "A secure chat application with user authentication",
   "dependencies": [
-    {
-      "name": "wxwidgets",
-      "features": [ "webview" ]
-    },
+    "wxwidgets",
     "boost-asio",
     "boost-system",
     "boost-thread",
