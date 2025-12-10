@@ -1,0 +1,36 @@
+# Build directories
+Build/
+build/
+out/
+cmake-build-*/
+
+# vcpkg
+vcpkg/
+!vcpkg.json
+
+# IDE
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Compiled
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+_deps
+
+# OS
+.DS_Store
+Thumbs.db
