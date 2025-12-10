@@ -1,15 +1,17 @@
-#include <wx/frame.h>
+#include <iostream>
 
 #include "wx/app.h"
 
-class ChatApp : public wxApp {
-public:
-    bool OnInit() override {
-        wxFrame* frame = new wxFrame(nullptr, wxID_ANY, "ChatSystem",
-            wxDefaultPosition, wxSize(800, 600));
-        frame->Show(true);
-        return true;
-    }
-};
+#include "tech_demo.hpp"
 
-wxIMPLEMENT_APP(ChatApp);
+int main(int argc, char ** argv)
+{
+	try {
+		TechDemo::run_all();
+		return 0;
+	} catch (std::exception e) {
+
+		std::cout << e.what() << '\n';
+		return 1;
+	}
+}
