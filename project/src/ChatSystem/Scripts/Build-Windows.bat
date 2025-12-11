@@ -1,60 +1,79 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM Build-Windows.bat - Quick build script for daily development
+:parse_args
+    set PRESET=%1
+    if "%PRESET%"=="" set PRESET=windows-debug
 
-set PRESET=%1
-if "%PRESET%"=="" set PRESET=windows-debug
+    set CONFIG=%2
+    if "%CONFIG%"=="" set CONFIG=Debug
 
-set CONFIG=%2
-if "%CONFIG%"=="" set CONFIG=Debug
+    set TARGET=%3
+    if "%TARGET%"=="" set TARGET=all
 
-set TARGET=%3
-if "%TARGET%"=="" set TARGET=all
+    set NO_PAUSE=%4
+goto :eof
 
-REM Get project root
-set SCRIPT_DIR=%~dp0
-set PROJECT_ROOT=%SCRIPT_DIR%..
-cd /d "%PROJECT_ROOT%"
 
-REM Check if build directory exists
-if not exist "Build\%PRESET%" (
-    echo [WARNING] Build directory doesn't exist. Running configuration...
-    cmake --preset=%PRESET%
+:ensure_build_dir
+    if not exist "Build\%PRESET%" (
+        echo [WARNING] Build directory doesn't exist. Running configuration...
+        cmake --preset=%PRESET%
+        if %ERRORLEVEL% NEQ 0 (
+            echo [ERROR] Configuration failed
+            if not "%NO_PAUSE%"=="nopause" pause
+            exit /b 1
+        )
+    )
+goto :eof
+
+
+:detect_cores
+    set CORES=%NUMBER_OF_PROCESSORS%
+goto :eof
+
+
+:do_build
+    echo.
+    echo Building %TARGET% [%CONFIG%] with %CORES% cores ^(preset: %PRESET%^)...
+    echo.
+
+    if "%TARGET%"=="all" (
+        cmake --build Build\%PRESET% --config %CONFIG% --parallel %CORES%
+    ) else (
+        cmake --build Build\%PRESET% --target %TARGET% --config %CONFIG% --parallel %CORES%
+    )
+
     if %ERRORLEVEL% NEQ 0 (
-        echo [ERROR] Configuration failed
-        pause
+        echo.
+        echo [ERROR] Build failed!
+        if not "%NO_PAUSE%"=="nopause" pause
         exit /b 1
     )
-)
+goto :eof
 
-REM Detect number of processors
-set CORES=%NUMBER_OF_PROCESSORS%
 
-echo.
-echo Building %TARGET% [%CONFIG%] with %CORES% cores (preset: %PRESET%)...
-echo.
-
-REM Build
-if "%TARGET%"=="all" (
-    cmake --build Build\%PRESET% --config %CONFIG% --parallel %CORES%
-) else (
-    cmake --build Build\%PRESET% --target %TARGET% --config %CONFIG% --parallel %CORES%
-)
-
-if %ERRORLEVEL% EQU 0 (
+:print_summary
     echo.
     echo [OK] Build completed successfully!
     echo.
     echo Run application: Build\%PRESET%\App\%CONFIG%\ChatSystem.exe
     echo Run tests:       ctest --test-dir Build\%PRESET% -C %CONFIG%
     echo Run server:      Build\%PRESET%\Server\%CONFIG%\ChatSystemServer.exe
-) else (
     echo.
-    echo [ERROR] Build failed!
-    pause
-    exit /b 1
-)
+goto :eof
 
-if "%4"=="nopause" goto :eof
-pause
+
+
+set SCRIPT_DIR=%~dp0
+set PROJECT_ROOT=%SCRIPT_DIR%..
+cd /d "%PROJECT_ROOT%"
+
+call :parse_args %1 %2 %3 %4
+call :ensure_build_dir
+call :detect_cores
+call :do_build
+call :print_summary
+
+if not "%NO_PAUSE%"=="nopause" pause
+exit /b 0
