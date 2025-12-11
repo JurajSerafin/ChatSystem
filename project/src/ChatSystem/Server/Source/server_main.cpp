@@ -1,6 +1,6 @@
 #include <iostream>
 
-int main(int argc, char* argv[]) {
+[[maybe_unused]] static int server_main() {
     std::cout << "ChatSystem Server v1.0.0" << std::endl;
     std::cout << "Server starting..." << std::endl;
 

@@ -35,11 +35,11 @@ void TechDemo::test_wxwidgets()
 	std::cout << "wxWidgets Version: " << reinterpret_cast<const char*>(wxVERSION_STRING) << "\n";
 
 	if (wxInitialize()) {
-		std::cout << "✓ wxWidgets runtime initialized successfully\n";
+		std::cout << "wxWidgets runtime initialized successfully\n";
 		wxUninitialize();
 	}
 	else {
-		std::cout << "✗ wxWidgets failed to initialize\n";
+		std::cout << "wxWidgets failed to initialize\n";
 	}
 }
 
@@ -50,10 +50,10 @@ void TechDemo::test_boost()
 
 	try {
 		boost::asio::io_context io;
-		std::cout << "✓ Boost.Asio: IO context created\n";
+		std::cout << "Boost.Asio: IO context created\n";
 	}
 	catch (const std::exception& e) {
-		std::cout << "✗ Boost.Asio failed: " << e.what() << "\n";
+		std::cout << "Boost.Asio failed: " << e.what() << "\n";
 	}
 
 	try {
@@ -63,11 +63,11 @@ void TechDemo::test_boost()
 		});
 		worker.join();
 		if (thread_ran) {
-			std::cout << "✓ Boost.Thread: Thread executed successfully\n";
+			std::cout << "Boost.Thread: Thread executed successfully\n";
 		}
 	}
 	catch (const std::exception& e) {
-		std::cout << "✗ Boost.Thread failed: " << e.what() << "\n";
+		std::cout << "Boost.Thread failed: " << e.what() << "\n";
 	}
 }
 
@@ -80,11 +80,11 @@ void TechDemo::test_openssl()
 	const SSL_METHOD* method = TLS_client_method();
 
 	if (SSL_CTX* ctx = SSL_CTX_new(method)) {
-		std::cout << "✓ OpenSSL: SSL context created\n";
+		std::cout << "OpenSSL: SSL context created\n";
 		SSL_CTX_free(ctx);
 	}
 	else {
-		std::cout << "✗ OpenSSL: Failed to create SSL context\n";
+		std::cout << "OpenSSL: Failed to create SSL context\n";
 	}
 }
 
@@ -97,10 +97,10 @@ void TechDemo::test_postgresql()
 		pqxx::connection dummy_connection{ "" };
 		pqxx::work dummy_transaction{ dummy_connection, nullptr };
 
-		std::cout << "✓ libpqxx: Core classes constructable\n";
+		std::cout << "libpqxx: Core classes constructable\n";
 	}
 	catch (const std::exception& e) {
-		std::cout << "✗ libpqxx object test failed: " << e.what() << "\n";
+		std::cout << "libpqxx object test failed: " << e.what() << "\n";
 	}
 }
 
@@ -114,20 +114,20 @@ void TechDemo::test_sqlite()
 	sqlite3* database = nullptr;
 
 	if (int reaction = sqlite3_open(":memory:", &database); reaction == SQLITE_OK) {
-		std::cout << "✓ SQLite: In-memory database opened\n";
+		std::cout << "SQLite: In-memory database opened\n";
 
 		auto query = "CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);";
 		char* err_msg = nullptr;
 		reaction = sqlite3_exec(database, query, nullptr, nullptr, &err_msg);
 
 		if (reaction == SQLITE_OK) {
-			std::cout << "✓ SQLite: Table created successfully\n";
+			std::cout << "SQLite: Table created successfully\n";
 
 			query = "INSERT INTO test (name) VALUES ('Test');";
 			reaction = sqlite3_exec(database, query, nullptr, nullptr, &err_msg);
 
 			if (reaction == SQLITE_OK) {
-				std::cout << "✓ SQLite: Data inserted successfully\n";
+				std::cout << "SQLite: Data inserted successfully\n";
 
 				query = "SELECT COUNT(*) FROM test;";
 				sqlite3_stmt* stmt;
@@ -135,21 +135,21 @@ void TechDemo::test_sqlite()
 
 				if (reaction == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW) {
 					int count = sqlite3_column_int(stmt, 0);
-					std::cout << "✓ SQLite: Query executed, row count: " << count << "\n";
+					std::cout << "SQLite: Query executed, row count: " << count << "\n";
 				}
 				sqlite3_finalize(stmt);
 			}
 		}
 
 		if (err_msg) {
-			std::cout << "✗ SQLite error: " << err_msg << "\n";
+			std::cout << "SQLite error: " << err_msg << "\n";
 			sqlite3_free(err_msg);
 		}
 
 		sqlite3_close(database);
 	}
 	else {
-		std::cout << "✗ SQLite: Failed to open database\n";
+		std::cout << "SQLite: Failed to open database\n";
 	}
 }
 
@@ -165,7 +165,7 @@ void TechDemo::test_json()
 				"chat", "authentication", "encryption"}}
 		};
 
-		std::cout << "✓ JSON: Object created\n";
+		std::cout << "JSON: Object created\n";
 		std::cout << "  Content: " << json_array.dump(2) << "\n";
 
 		std::string json_str = R"(
@@ -180,7 +180,7 @@ void TechDemo::test_json()
 		}
 	}
 	catch (const std::exception& e) {
-		std::cout << "✗ JSON failed: " << e.what() << "\n";
+		std::cout << "JSON failed: " << e.what() << "\n";
 	}
 }
 
@@ -195,12 +195,12 @@ void TechDemo::test_spdlog()
 		console->warn("This is a warning");
 		console->error("This is an error (test only)");
 
-		std::cout << "✓ spdlog: Logging working!" << "\n";
+		std::cout << "spdlog: Logging working!" << "\n";
 
 		spdlog::drop("console");
 	}
 	catch (const std::exception& e) {
-		std::cout << "✗ spdlog failed: " << e.what() << "\n";
+		std::cout << "spdlog failed: " << e.what() << "\n";
 	}
 }
 
