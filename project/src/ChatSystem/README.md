@@ -17,40 +17,51 @@
 sudo apt-get install git cmake ninja-build clang
 ```
 
-## First Step - Enter the Repository
+## Quick Guide on how to build and run the Application
 
 ### Windows
 
+**Clone and Enter the Repository**
 ```powershell
-# Clone the repository
 git clone --recurse-submodules <repository-url>
 cd ChatSystem
+```
 
-# Run setup (first time: ~25-35 minutes)
+**Run the Setup (first time: ~25-35 minutes)**
+```powershell
 .\Scripts\Setup-Windows.bat
+```
 
-# Build the project
+**Build the Project**
+```powershell
 .\Scripts\Build-Windows.bat
+```
 
-# Run the application
+**Run the Application**
+```powershell
 .\Build\windows-debug\App\ChatSystem.exe
 ```
 
 ### Linux
 
+**Clone and Enter the Repository**
 ```bash
-# Clone the repository
 git clone --recurse-submodules <repository-url>
 cd ChatSystem
-
-# Run setup (first time: ~30-60 minutes)
+```
+**Run the Setup (first time: ~25-35 minutes)**
+```bash
 chmod +x Scripts/*.sh
 ./Scripts/Setup-Linux.sh
+```
 
-# Build the project
+**Build the Project**
+```bash
 ./Scripts/Build-Linux.sh
+```
 
-# Run the application
+**Run the Application**
+```bash
 ./Build/linux-debug/App/ChatSystem
 ```
 
