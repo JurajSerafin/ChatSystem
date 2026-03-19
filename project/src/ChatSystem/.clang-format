@@ -10,12 +10,15 @@ ContinuationIndentWidth: 4
 AccessModifierOffset: -4
 ColumnLimit: 100
 
+# Pointer and reference alignment
 DerivePointerAlignment: false
 PointerAlignment: Left
 ReferenceAlignment: Left
 
+# "const" alignment
 QualifierAlignment: Right
 
+# Include sorting
 IncludeBlocks: Regroup
 SortIncludes: CaseSensitive
 IncludeCategories:
