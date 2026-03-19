@@ -5,8 +5,12 @@ out/
 cmake-build-*/
 
 # vcpkg
-vcpkg/
+vcpkg/downloads/
+vcpkg/buildtrees/
+vcpkg/packages/
+vcpkg/installed/
 !vcpkg.json
+!vcpkg-configuration.json
 
 # IDE
 .vscode/

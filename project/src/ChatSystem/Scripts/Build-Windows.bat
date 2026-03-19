@@ -1,6 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
+goto :main
+
 :parse_args
     set PRESET=%1
     if "%PRESET%"=="" set PRESET=windows-debug
@@ -57,14 +59,14 @@ goto :eof
     echo.
     echo [OK] Build completed successfully!
     echo.
-    echo Run application: Build\%PRESET%\App\%CONFIG%\ChatSystem.exe
-    echo Run tests:       ctest --test-dir Build\%PRESET% -C %CONFIG%
-    echo Run server:      Build\%PRESET%\Server\%CONFIG%\ChatSystemServer.exe
+    echo Run application: Build\%PRESET%\App\ChatSystem.exe
+    echo Run tests:       ctest --test-dir Build\%PRESET%
+    echo Run server:      Build\%PRESET%\Server\ChatSystemServer.exe
     echo.
 goto :eof
 
 
-
+:main 
 set SCRIPT_DIR=%~dp0
 set PROJECT_ROOT=%SCRIPT_DIR%..
 cd /d "%PROJECT_ROOT%"

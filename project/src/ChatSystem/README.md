@@ -6,15 +6,15 @@
 ## Prerequisites
 
 ### Windows
-
-- **Visual Studio 2022** with C++ development tools
-- **Git** - For cloning the repository
-- **CMake 3.21+** - Configuration, building
+- **Visual Studio 2022** with "Desktop development with C++" workload
+- **C++ Clang tools for Windows** component (install via VS Installer)
+- **Git**, **CMake 3.21+**
+- All cmake commands must be run from: **x64 Native Tools Command Prompt for VS 2022**
 
 ### Linux (Ubuntu/Debian)
 
 ```bash
-sudo apt-get install git build-essential cmake
+sudo apt-get install git cmake ninja-build clang
 ```
 
 ## First Step - Enter the Repository
@@ -23,7 +23,7 @@ sudo apt-get install git build-essential cmake
 
 ```powershell
 # Clone the repository
-git clone <repository-url>
+git clone --recurse-submodules <repository-url>
 cd ChatSystem
 
 # Run setup (first time: ~25-35 minutes)
@@ -33,14 +33,14 @@ cd ChatSystem
 .\Scripts\Build-Windows.bat
 
 # Run the application
-.\Build\windows-debug\App\Debug\ChatSystem.exe
+.\Build\windows-debug\App\ChatSystem.exe
 ```
 
 ### Linux
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone --recurse-submodules <repository-url>
 cd ChatSystem
 
 # Run setup (first time: ~30-60 minutes)
@@ -94,14 +94,6 @@ cmake --build Build/windows-debug --config Debug    # Windows
 cmake --build Build/linux-debug                     # Linux
 ```
 
-### Using Visual Studio (Windows)
-
-1. Open `Build/windows-debug/ChatSystem.sln`
-2. Select Startup Item
-3. Build
-4. Run
-
-
 ## Testing
 
 ### Run Tests
@@ -122,20 +114,19 @@ After building, you'll have:
 
 | Executable | Description | Location (Windows) | Location (Linux) |
 |------------|-------------|-------------------|------------------|
-| **ChatSystem** | Main GUI application | `Build\windows-debug\App\Debug\` | `Build/linux-debug/App/` |
-| **ChatSystemServer** | Chat server | `Build\windows-debug\Server\Debug\` | `Build/linux-debug/Server/` |
-| **CoreTests** | Unit tests | `Build\windows-debug\Tests\Debug\` | `Build/linux-debug/Tests/` |
+| **ChatSystem** | Main GUI application | `Build\windows-debug\App\` | `Build/linux-debug/App/` |
+| **ChatSystemServer** | Chat server | `Build\windows-debug\Server\` | `Build/linux-debug/Server/` |
+| **CoreTests** | Unit tests | `Build\windows-debug\Tests\` | `Build/linux-debug/Tests/` |
 
 
 ## Build Configurations
 
 ### Windows Presets
 
-- `windows-debug` - Debug build with MSVC
-- `windows-release` - Optimized release build
+- `windows-debug` - Debug build with ClangCL
+- `windows-release` - Optimized release build with ClangCL
 
 ### Linux Presets
 
-- `linux-debug` - Debug build with G++
-- `linux-release` - Optimized release build
-
+- `linux-debug` - Debug build with Clang 
+- `linux-release` - Optimized release build with Clang

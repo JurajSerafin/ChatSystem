@@ -1,14 +1,3 @@
-# Ensure vcpkgn usage
-if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-        CACHE STRING "vcpkg toolchain file")
-    message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
-endif()
-
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    message(WARNING "VCPKG_ROOT not set. Please run the setup script first.")
-endif()
-
 message(STATUS "Finding dependencies...")
 
 # wxWidgets
@@ -17,8 +6,12 @@ if(wxWidgets_FOUND)
     message(STATUS "Found wxWidgets ${wxWidgets_VERSION}")
 endif()
 
+message(STATUS "CMAKE_SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P}")
+find_package(Boost REQUIRED CONFIG COMPONENTS system thread asio)
+
 # Boost
-find_package(Boost REQUIRED COMPONENTS system thread)
+cmake_policy(SET CMP0167 NEW)
+find_package(Boost REQUIRED CONFIG COMPONENTS system thread asio)
 if(Boost_FOUND)
     message(STATUS "Found Boost ${Boost_VERSION}")
 endif()
@@ -64,7 +57,6 @@ if(BUILD_TESTS)
     endif()
 endif()
 
-
 add_library(ChatSystem_Dependencies INTERFACE)
 add_library(ChatSystem::Dependencies ALIAS ChatSystem_Dependencies)
 
@@ -72,6 +64,7 @@ target_link_libraries(ChatSystem_Dependencies INTERFACE
     ${wxWidgets_LIBRARIES}
     Boost::system
     Boost::thread
+    Boost::asio
     OpenSSL::SSL
     OpenSSL::Crypto
     libpqxx::pqxx
@@ -89,7 +82,6 @@ target_compile_definitions(ChatSystem_Dependencies INTERFACE
     $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>:NDEBUG>
 )
-
 
 if(WIN32)
     target_compile_definitions(ChatSystem_Dependencies INTERFACE

@@ -1,7 +1,7 @@
 {
   "name": "chatsystem",
   "version": "1.0.0",
-  "builtin-baseline": "f5cbc726b123896eef77f5acc1b9047a28a0731e",
+  "builtin-baseline": "fc349a7b35348173d4d24621ae04ad80e2375957",
   "description": "A secure chat application with user authentication",
   "dependencies": [
     "wxwidgets",

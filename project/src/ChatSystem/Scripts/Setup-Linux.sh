@@ -64,7 +64,7 @@ install_wayland_input_libs() {
 
 install_additional_utils() {
     echo "[10/10] Installing additional utilities..."
-    sudo apt-get install -y libicu-dev libtbb-dev libboost-all-dev ninja-build subversion git-lfs
+    sudo apt-get install -y libicu-dev libtbb-dev ninja-build subversion git-lfs
 }
 
 # Install all system dependencies
@@ -93,31 +93,11 @@ install_system_dependencies() {
 
 setup_vcpkg() {
     echo ""
-    echo "Setting up vcpkg..."
-    if [ ! -d "vcpkg" ]; then
-        echo "Cloning vcpkg..."
-        git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
-        ./bootstrap-vcpkg.sh
-        cd ..
-    else
-        echo "Updating existing vcpkg..."
-        cd vcpkg
-        git fetch
-        git pull
-        ./bootstrap-vcpkg.sh
-        cd ..
-    fi
-
-    export VCPKG_ROOT="$(pwd)/vcpkg"
-    echo "VCPKG_ROOT=$VCPKG_ROOT"
-
-    if ! grep -q "VCPKG_ROOT" ~/.bashrc 2>/dev/null; then
-        echo "" >> ~/.bashrc
-        echo "# vcpkg" >> ~/.bashrc
-        echo "export VCPKG_ROOT=\"$VCPKG_ROOT\"" >> ~/.bashrc
-        echo "[INFO] Added VCPKG_ROOT to ~/.bashrc"
-    fi
+    echo "Initializing vcpkg submodule..."
+    git submodule update --init
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    cd ..
 }
 
 clean_previous_build() {

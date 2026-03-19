@@ -15,22 +15,9 @@ goto :eof
 
 :setup_vcpkg
     echo.
-    echo Setting up vcpkg...
-    if not exist "vcpkg" (
-        git clone https://github.com/microsoft/vcpkg.git
-        if ERRORLEVEL 1 (
-            echo [ERROR] Failed to clone vcpkg
-            pause
-            exit /b 1
-        )
-        call vcpkg\bootstrap-vcpkg.bat
-    ) else (
-        pushd vcpkg
-        git pull
-        if ERRORLEVEL 1 echo [WARNING] Failed to pull latest vcpkg
-        call bootstrap-vcpkg.bat
-        popd
-    )
+    echo Initializing vcpkg submodule...
+    git submodule update --init
+    call vcpkg\bootstrap-vcpkg.bat
     set VCPKG_ROOT=%cd%\vcpkg
     echo VCPKG_ROOT=%VCPKG_ROOT%
 goto :eof
@@ -56,17 +43,15 @@ goto :eof
     echo ==========================================
     echo.
     echo Next steps:
-    echo   1. Open ChatSystem.sln in Visual Studio, OR
-    echo   2. Build from command line:
     echo.
-    echo Build:           cmake --build Build\debug --config Debug
-    echo Run application: Build\debug\App\Debug\ChatSystem.exe
-    echo Run tests:       ctest --test-dir Build\debug -C Debug
-    echo Run server:      Build\debug\Server\Debug\ChatSystemServer.exe
+    echo This script must be run from:
+    echo     "x64 Native Tools Command Prompt for VS 2022"
     echo.
-    echo Or use Visual Studio:
-    echo   - Open Build\debug\ChatSystem.sln
-    echo   - Press F5 to build and run
+    echo Build:           cmake --build Build\windows-debug --config Debug
+    echo Run application: Build\windows-debug\App\ChatSystem.exe
+    echo Run tests:       ctest --test-dir Build\windows-debug -C Debug
+    echo Run server:      Build\windows-debug\Server\ChatSystemServer.exe
+    echo.
 goto :eof
 
 
