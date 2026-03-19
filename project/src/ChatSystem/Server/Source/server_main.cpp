@@ -1,6 +1,6 @@
 #include <iostream>
 
-[[maybe_unused]] static int server_main() {
+int main() {
     std::cout << "ChatSystem Server v1.0.0" << std::endl;
     std::cout << "Server starting..." << std::endl;
 

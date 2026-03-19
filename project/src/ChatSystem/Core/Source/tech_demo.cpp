@@ -19,7 +19,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "tech_demo.hpp"
+#include "tech_demo.h"
 
 void TechDemo::print_separator(const std::string& title)
 {

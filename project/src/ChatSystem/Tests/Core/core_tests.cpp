@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "tech_demo.hpp"
+#include "tech_demo.h"
 
 TEST(CoreTest, BasicTest) {
 

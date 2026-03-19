@@ -1,5 +1,5 @@
-﻿#ifndef TECH_DEMO_HPP
-#define TECH_DEMO_HPP
+﻿#ifndef TECH_DEMO_H
+#define TECH_DEMO_H
 
 #include <string>
 

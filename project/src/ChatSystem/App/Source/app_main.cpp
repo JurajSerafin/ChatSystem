@@ -2,7 +2,7 @@
 
 #include "wx/app.h"
 
-#include "tech_demo.hpp"
+#include "tech_demo.h"
 
 class ChatAppDemo : public wxApp {
 public:
