@@ -9,7 +9,7 @@
 class IProtocolHandler {
 public:
     virtual std::string ProtocolName() const = 0;
-    virtual Response Handle(Request const& request) = 0;
+    virtual Response Handle(const Request& request) = 0;
     virtual ~IProtocolHandler() = default;
 };
 

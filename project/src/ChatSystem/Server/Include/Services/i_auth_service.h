@@ -11,17 +11,15 @@
 
 class IAuthService {
 public:
-    virtual User RegisterUser(std::string const& login, std::string const& password) = 0;
+    virtual User RegisterUser(const std::string& login, const std::string& password) = 0;
 
-    virtual Session Login(std::string const& login, std::string const& password) = 0;
+    virtual Session Login(const std::string& login, const std::string& password) = 0;
 
-    virtual void Logout(std::string const& token) = 0;
+    virtual void Logout(const std::string& token) = 0;
 
-    virtual std::optional<User> ValidateToken(std::string const& token) = 0;
+    virtual std::optional<User> ValidateToken(const std::string& token) = 0;
 
-    virtual void ChangePassword(UserId userId,
-                                std::string const& oldPassword,
-                                std::string const& newPassword) = 0;
+    virtual void ChangePassword(UserId userId, const std::string& oldPassword, const std::string& newPassword) = 0;
 };
 
 

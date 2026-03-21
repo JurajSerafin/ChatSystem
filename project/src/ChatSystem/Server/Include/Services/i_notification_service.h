@@ -8,7 +8,7 @@
 
 class INotificationService {
 public:
-    virtual void NotifyNewMessage(UserId recipientId, Message const& message) = 0;
+    virtual void NotifyNewMessage(UserId recipientId, const Message& message) = 0;
 
     virtual void NotifyReadReceipt(UserId senderId, MessageId messageId, UserId readerId) = 0;
 

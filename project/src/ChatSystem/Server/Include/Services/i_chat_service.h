@@ -12,7 +12,7 @@
 
 class IChatService {
 public:
-    virtual Chat CreateChat(UserId creatorId, std::vector<UserId> const& participantIds) = 0;
+    virtual Chat CreateChat(UserId creatorId, const std::vector<UserId>& participantIds) = 0;
 
     virtual std::vector<Chat> GetChatsForUser(UserId userId) = 0;
 

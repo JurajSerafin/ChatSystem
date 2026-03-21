@@ -15,12 +15,12 @@ class IMessageService {
 public:
     virtual Message SendMessage(UserId senderId,
                                 ChatId chatId,
-                                std::string const& plaintext,
+                                const std::string& plaintext,
                                 MessageType type) = 0;
 
     virtual std::vector<Message> GetHistory(ChatId chatId, int limit, int offset) = 0;
 
-    virtual std::vector<Message> Search(ChatId chatId, std::string const& keywords) = 0;
+    virtual std::vector<Message> Search(ChatId chatId, const std::string& keywords) = 0;
 
     virtual void MarkAsRead(MessageId id, UserId readerId) = 0;
 

@@ -16,7 +16,7 @@ PointerAlignment: Left
 ReferenceAlignment: Left
 
 # "const" alignment
-QualifierAlignment: Right
+QualifierAlignment: Left
 
 # Include sorting
 IncludeBlocks: Regroup
