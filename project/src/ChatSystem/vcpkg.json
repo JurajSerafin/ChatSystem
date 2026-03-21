@@ -8,6 +8,7 @@
     "boost-asio",
     "boost-system",
     "boost-thread",
+    "boost-uuid",
     "openssl",
     "libpqxx",
     "sqlite3",
