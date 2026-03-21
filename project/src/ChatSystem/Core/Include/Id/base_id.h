@@ -8,14 +8,14 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-template <typename TDerived>
+template <typename TDerivedId>
 class BaseId {
-    friend TDerived;
+    friend TDerivedId;
 
 public:
-    [[nodiscard]] static TDerived Generate();
+    [[nodiscard]] static TDerivedId Generate();
 
-    [[nodiscard]] static TDerived FromString(const std::string& id);
+    [[nodiscard]] static TDerivedId FromString(const std::string& id);
 
     [[nodiscard]] const std::string& ToString() const;
 
@@ -24,6 +24,10 @@ public:
     bool operator==(const BaseId& other) const = default;
 
     bool operator<(const BaseId& other) const;
+
+    struct Hasher {
+        size_t operator()(const TDerivedId& id) const noexcept;
+    };
 
 protected:
     explicit BaseId(std::string id) : id_{std::move(id)} {}
@@ -58,21 +62,15 @@ bool BaseId<TDerived>::IsValid() const {
     return !id_.empty();
 }
 
-template <typename TDerived>
-bool BaseId<TDerived>::operator<(const BaseId& other) const {
+template <typename TDerivedId>
+bool BaseId<TDerivedId>::operator<(const BaseId& other) const {
     return id_ < other.id_;
 }
 
 
-namespace std {
-    
-    template <typename TDerived>
-    requires std::is_base_of<BaseId<TDerived>, TDerived>
-    struct hash {
-        size_t operator()(const TDerived& id) const { 
-            return hash<std::string>{}(id.ToString());
-        }
-    };
+template <typename TDerivedId>
+size_t BaseId<TDerivedId>::Hasher::operator()(const TDerivedId& id) const noexcept {
+    return std::hash<std::string>{}(id.ToString());
 }
 
 #endif  // BASE_ID_H
