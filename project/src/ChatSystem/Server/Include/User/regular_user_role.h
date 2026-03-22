@@ -25,6 +25,15 @@ public:
 
     [[nodiscard]] bool CanPerform(UserAction action) const override;
 
+    RegularUserRole() = default;
+
+    RegularUserRole(const RegularUserRole& other) = default;
+
+    RegularUserRole(RegularUserRole&& other) = default;
+
+    RegularUserRole& operator=(const RegularUserRole& other) = delete;
+    RegularUserRole& operator=(RegularUserRole&& other) = delete;
+
     ~RegularUserRole() override = default;
 };
 
