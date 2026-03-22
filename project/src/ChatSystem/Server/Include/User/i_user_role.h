@@ -3,12 +3,12 @@
 
 #include <string>
 
-#include <Actions/i_action.h>
+#include <User/user_action.h>
 
 class IUserRole {
 public:
-    virtual std::string RoleName() const = 0;
-    virtual bool CanPerform(IAction action) const = 0;
+    [[nodiscard]] virtual const std::string& RoleName() const = 0;
+    [[nodiscard]] virtual bool CanPerform(UserAction action) const = 0;
     virtual ~IUserRole() = default;
 };
 

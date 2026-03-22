@@ -4,6 +4,7 @@
 #include <Tags/tag.h>
 #include <User/i_user_role.h>
 #include <User/user_id.h>
+#include <User/user_action.h>
 #include <memory>
 #include <string>
 
@@ -67,6 +68,7 @@ public:
     [[nodiscard]] static Builder CreateBuilder();
 };
 
+
 // User method definitions
 
 inline const UserId& User::GetId() const {
@@ -95,6 +97,10 @@ inline const IUserRole& User::GetRole() const {
 
 inline void User::SetRole(std::unique_ptr<IUserRole> role) {
     role_ = std::move(role);
+}
+
+inline bool User::CanPerform(const UserAction action) const {
+    return role_->CanPerform(action);
 }
 
 
