@@ -25,7 +25,7 @@ private:
     
     ChatId id_;
 
-    time_point creation_point_;
+    time_point created_at_;
 
     std::optional<Message> last_message_;
 
@@ -33,7 +33,7 @@ private:
 
 public:
 
-    Chat(ChatId&& id, time_point created_at) : id_(std::move(id)), creation_point_(created_at) {}
+    Chat(ChatId&& id, time_point created_at) : id_(std::move(id)), created_at_(created_at) {}
 
     [[nodiscard]] const std::vector<User>& GetParticipants() const;
 
