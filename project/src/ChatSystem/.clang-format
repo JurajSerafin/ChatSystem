@@ -39,6 +39,8 @@ IncludeCategories:
 
 # Braces
 BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: false
 
 # Parameters
 BinPackParameters: false
