@@ -39,6 +39,8 @@ IncludeCategories:
 
 # Braces
 BreakBeforeBraces: Attach
+
+# Line collapsing
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortBlocksOnASingleLine: false
 
