@@ -14,6 +14,8 @@
  * It is typically used as input for validation and business logic.
  */
 struct UserParams {
+  // Required
+
   /// Unique identifier of the user.
   UserId id;
 
@@ -32,7 +34,7 @@ struct UserParams {
   /// User role defining permissions.
   std::unique_ptr<IUserRole> role;
 
-  // Optional fields can be added here.
+  // Optional
 };
 
 #endif  // USER_PARAMS_H
