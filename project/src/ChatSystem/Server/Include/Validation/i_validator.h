@@ -24,8 +24,7 @@ struct IValidator {
    * @param params Object to validate.
    * @return ValidationResult containing validation errors.
    */
-  [[nodiscard]] virtual ValidationResult Validate(
-    const TParams& params) const = 0;
+  [[nodiscard]] virtual ValidationResult Validate(const TParams& params) const = 0;
 
   /**
    * @brief Virtual destructor.
