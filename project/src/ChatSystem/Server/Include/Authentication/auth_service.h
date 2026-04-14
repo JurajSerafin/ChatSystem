@@ -14,6 +14,7 @@
 #include <Validation/i_validator.h>
 #include <chrono>
 #include <string>
+#include <optional>
 
 /**
  * @brief Concrete implementation of IAuthService.
