@@ -3,159 +3,153 @@
 
 #include <Chat/chat_id.h>
 #include <Message/message_id.h>
+#include <Message/message_params.h>
 #include <Message/message_type.h>
 #include <User/user_id.h>
+#include <Validation/i_validator.h>
 #include <chrono>
+#include <stdexcept>
 #include <string>
 
+/**
+ * @brief Represents a message in a chat system.
+ *
+ * The Message class encapsulates all data and state related to a single
+ * chat message, including metadata such as sender, timestamps, delivery
+ * state, and read state.
+ *
+ * Instances are immutable in identity but allow state transitions
+ * (e.g. delivered/read flags).
+ */
 class Message {
-private:
-    using time_point = std::chrono::system_clock::time_point;
-
-    std::string content_;
-
-    MessageId id_;
-
-    const ChatId* chat_id_;
-
-    const UserId* sender_id_;
-
-    MessageType type_;
-
-    bool is_read_{false};
-
-    bool is_delivered_{false};
-
-    time_point created_at_;
-
-    Message() = default;
-
-    Message(Message&& other) = default;
-
-    Message(const Message& other) = default;
-
 public:
-    class Builder {
-    private:
-        friend class Message;
+  using TimePoint = std::chrono::system_clock::time_point;
 
-        Message message_;
+  /**
+   * @brief Creates a validated Message instance.
+   *
+   * Validates the provided parameters using the given validator.
+   * If validation fails, an exception is thrown.
+   *
+   * @param params Message parameters used for construction.
+   * @param validator Validator used to verify correctness.
+   * @return Constructed Message object.
+   * @throws std::invalid_argument if validation fails.
+   */
+  [[nodiscard]] static Message Create(MessageParams params, const IValidator<MessageParams>& validator);
 
-        Builder() = default;
+  Message(const Message&) = delete;
+  Message& operator=(const Message&) = delete;
 
-    public:
-        [[nodiscard]] Builder& WithId(MessageId&& messageId);
+  Message(Message&&) = default;
+  Message& operator=(Message&&) = default;
 
-        [[nodiscard]] Builder& WithChatId(const ChatId& chatId);
+  /// @return Unique identifier of the message.
+  [[nodiscard]] const MessageId& GetId() const;
 
-        [[nodiscard]] Builder& WithSenderId(const UserId& senderId);
+  /// @return Identifier of the chat containing this message.
+  [[nodiscard]] const ChatId& GetChatId() const;
 
-        [[nodiscard]] Builder& WithContent(std::string&& content);
+  /// @return Identifier of the sender of the message.
+  [[nodiscard]] const UserId& GetSenderId() const;
 
-        [[nodiscard]] Builder& OfType(const MessageType type);
+  /// @return Content/body of the message.
+  [[nodiscard]] const std::string& GetContent() const;
 
-        [[nodiscard]] Builder& CreatedAt(const time_point createdAt);
+  /// @return Type of the message (e.g. text, image, system).
+  [[nodiscard]] MessageType GetType() const;
 
-        [[nodiscard]] Message Build();
-    };
+  /// @return Timestamp when the message was created.
+  [[nodiscard]] TimePoint CreatedAt() const;
 
-    [[nodiscard]] static Message::Builder CreateBuilder();
+  /// @return True if the message has been read.
+  [[nodiscard]] bool IsRead() const;
 
-    [[nodiscard]] const std::string& GetContent() const;
+  /// @return True if the message has been delivered.
+  [[nodiscard]] bool IsDelivered() const;
 
-    [[nodiscard]] time_point CreatedAt() const;
+  /// Marks the message as read.
+  void MarkRead();
 
-    [[nodiscard]] const MessageId& GetId() const;
+  /// Marks the message as delivered.
+  void MarkDelivered();
 
-    [[nodiscard]] const UserId& GetSenderId() const;
+private:
+  explicit Message::Message(MessageParams params)
+    : id_{ std::move(params.id) },
+    chat_id_{ std::move(params.chat_id) },
+    sender_id_{ std::move(params.sender_id) },
+    content_{ std::move(params.content) },
+    type_{ params.type },
+    created_at_{ params.created_at } {}
 
-    [[nodiscard]] MessageType GetType() const;
+  MessageId id_;
 
-    [[nodiscard]] bool IsRead() const;
+  ChatId chat_id_;
 
-    [[nodiscard]] bool IsDelivered() const;
+  UserId sender_id_;
 
-    void SetReadStatus(const bool isRead = true);
+  std::string content_;
 
-    void SetDeliveredStatus(const bool isDelivered = true);
+  MessageType type_;
+
+  TimePoint created_at_;
+
+  /// Indicates whether the message has been read by the recipient.
+  bool is_read_{ false };
+
+  /// Indicates whether the message has been delivered to the recipient.
+  bool is_delivered_{ false };
 };
 
-// Builder method definitions
+inline Message Message::Create(MessageParams params, const IValidator<MessageParams>& validator) {
 
-inline Message::Builder& Message::Builder::WithId(MessageId&& messageId) {
-    message_.id_ = std::move(messageId);
-    return *this;
-}
+  if (const auto result = validator.Validate(params); !result.IsValid()) {
+    throw std::invalid_argument{ result.Summary() };
+  }
 
-inline Message::Builder& Message::Builder::WithChatId(const ChatId& chatId) {
-    message_.chat_id_ = &chatId;
-    return *this;
-}
-
-inline Message::Builder& Message::Builder::WithSenderId(const UserId& senderId) {
-    message_.sender_id_ = &senderId;
-    return *this;
-}
-
-inline Message::Builder& Message::Builder::WithContent(std::string&& content) {
-    message_.content_ = std::move(content);
-    return *this;
-}
-
-inline Message::Builder& Message::Builder::OfType(MessageType type) {
-    message_.type_ = type;
-    return *this;
-}
-
-inline Message::Builder& Message::Builder::CreatedAt(const time_point createdAt) {
-    message_.created_at_ = createdAt;
-    return *this;
-}
-
-inline Message Message::Builder::Build() {
-    return Message{std::move(message_)};
-}
-
-inline Message::Builder Message::CreateBuilder() {
-    return Message::Builder{};
-}
-
-// Message method definitions
-
-inline const std::string& Message::GetContent() const {
-    return content_;
-}
-
-inline Message::time_point Message::CreatedAt() const {
-    return created_at_;
+  return Message{ std::move(params) };
 }
 
 inline const MessageId& Message::GetId() const {
-    return id_;
+  return id_;
+}
+
+inline const ChatId& Message::GetChatId() const {
+  return chat_id_;
 }
 
 inline const UserId& Message::GetSenderId() const {
-    return *sender_id_;
+  return sender_id_;
+}
+
+inline const std::string& Message::GetContent() const {
+  return content_;
 }
 
 inline MessageType Message::GetType() const {
-    return type_;
+  return type_;
+}
+
+inline Message::TimePoint Message::CreatedAt() const {
+  return created_at_;
 }
 
 inline bool Message::IsRead() const {
-    return is_read_;
+  return is_read_;
 }
 
 inline bool Message::IsDelivered() const {
-    return is_delivered_;
+  return is_delivered_;
 }
 
-inline void Message::SetReadStatus(const bool isRead) {
-    is_read_ = isRead;
+inline void Message::MarkRead() {
+  is_read_ = true;
 }
 
-inline void Message::SetDeliveredStatus(const bool isDelivered) {
-    is_delivered_ = isDelivered;
+inline void Message::MarkDelivered() {
+  is_delivered_ = true;
 }
 
-#endif
+
+#endif  // MESSAGE_H

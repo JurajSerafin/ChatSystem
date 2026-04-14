@@ -9,10 +9,14 @@
 #include <string>
 
 /**
- * @brief Data transfer object containing message parameters.
+ * @brief Data transfer object for message creation and validation.
  *
- * Holds all required data to create or process a message within a chat.
- * Typically used as input for validation and messaging logic.
+ * MessageParams aggregates all data required to construct a Message.
+ * It is typically passed to a validator before being used to create
+ * a domain object.
+ *
+ * Validation rules (e.g. valid identifiers, content constraints, timestamps)
+ * are enforced externally via an IValidator<MessageParams> implementation.
  */
 struct MessageParams {
   // Required
@@ -23,16 +27,16 @@ struct MessageParams {
   /// Identifier of the chat the message belongs to.
   ChatId chat_id;
 
-  /// Identifier of the user who sent the message.
+  /// Identifier of the sender (must be valid).
   UserId sender_id;
 
   /// Message content.
   std::string content;
 
-  /// Type of the message.
+  /// Type of the message (determines content semantics).
   MessageType type;
 
-  /// Timestamp when the message was created.
+  /// Creation timestamp.
   std::chrono::system_clock::time_point created_at;
 
   // Optional
