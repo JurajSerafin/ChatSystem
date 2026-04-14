@@ -8,69 +8,115 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+/**
+ * @brief CRTP base class for strongly-typed UUID identifiers.
+ *
+ * BaseId provides a reusable implementation for type-safe identifiers
+ * (e.g. UserId, SessionId). Each derived type represents a distinct ID type,
+ * preventing accidental mixing of identifiers at compile time.
+ *
+ * The class internally stores IDs as strings but enforces type safety via CRTP.
+ *
+ * @tparam TDerivedId The concrete ID type inheriting from BaseId.
+ */
 template <typename TDerivedId>
 class BaseId {
-    friend TDerivedId;
+  friend TDerivedId;
 
 public:
-    [[nodiscard]] static TDerivedId Generate();
+  /**
+   * @brief Generates a new random UUID-based identifier.
+   *
+   * @return A new instance of the derived ID type.
+   */
+  [[nodiscard]] static TDerivedId Generate();
 
-    [[nodiscard]] static TDerivedId FromString(const std::string& id);
+  /**
+   * @brief Creates an ID from an existing string representation.
+   *
+   * No validation is performed beyond storing the string.
+   *
+   * @param id String representation of the identifier.
+   * @return Constructed derived ID instance.
+   */
+  [[nodiscard]] static TDerivedId FromString(const std::string& id);
 
-    [[nodiscard]] const std::string& ToString() const;
+  /**
+   * @brief Returns the string representation of the identifier.
+   *
+   * @return Constant reference to internal ID string.
+   */
+  [[nodiscard]] const std::string& ToString() const;
 
-    [[nodiscard]] bool IsValid() const;
+  /**
+   * @brief Checks whether the identifier is valid.
+   *
+   * @return true if the ID is valid, false otherwise.
+   */
+  [[nodiscard]] bool IsValid() const;
 
-    bool operator==(const BaseId& other) const = default;
+  /**
+   * @brief Equality comparison operator.
+   */
+  bool operator==(const BaseId& other) const = default;
 
-    bool operator<(const BaseId& other) const;
+  /**
+   * @brief Lexicographical comparison operator.
+   */
+  bool operator<(const BaseId& other) const;
 
-    struct Hasher {
-        size_t operator()(const TDerivedId& id) const noexcept;
-    };
+  /**
+   * @brief Hash functor for using IDs in unordered containers.
+   */
+  struct Hasher {
+    size_t operator()(const TDerivedId& id) const noexcept;
+  };
 
 protected:
-    explicit BaseId(std::string id) : id_{std::move(id)} {}
+  explicit BaseId(std::string&& id) : id_{ std::move(id) } {}
+
+  explicit BaseId(const std::string& id) : id_{ id } {}
 
 private:
-    static std::string GenerateUuid() {
-        static boost::uuids::random_generator generator;
-        return boost::uuids::to_string(generator());
-    }
+  /**
+   * @brief Generates a UUID string using Boost UUID.
+   */
+  static std::string GenerateUuid() {
+    static boost::uuids::random_generator generator;
+    return boost::uuids::to_string(generator());
+  }
 
-    std::string id_;
+  std::string id_;
 };
-
 
 template <typename TDerived>
 TDerived BaseId<TDerived>::Generate() {
-    return TDerived{GenerateUuid()};
+  return TDerived{GenerateUuid()};
 }
 
 template <typename TDerived>
 TDerived BaseId<TDerived>::FromString(const std::string& id) {
-    return TDerived{id};
+  return TDerived{id};
 }
 
 template <typename TDerived>
 const std::string& BaseId<TDerived>::ToString() const {
-    return id_;
+  return id_;
 }
 
 template <typename TDerived>
 bool BaseId<TDerived>::IsValid() const {
-    return !id_.empty();
+  return !id_.empty();
 }
 
 template <typename TDerivedId>
 bool BaseId<TDerivedId>::operator<(const BaseId& other) const {
-    return id_ < other.id_;
+  return id_ < other.id_;
 }
-
 
 template <typename TDerivedId>
 size_t BaseId<TDerivedId>::Hasher::operator()(const TDerivedId& id) const noexcept {
-    return std::hash<std::string>{}(id.ToString());
+  return std::hash<std::string>{}(id.ToString());
 }
 
-#endif  // BASE_ID_H
+#endif // BASE_ID_H
