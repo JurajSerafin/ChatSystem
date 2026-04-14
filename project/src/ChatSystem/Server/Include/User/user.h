@@ -3,145 +3,68 @@
 
 #include <Tags/tag.h>
 #include <User/i_user_role.h>
-#include <User/user_id.h>
 #include <User/user_action.h>
+#include <User/user_id.h>
+#include <User/user_params.h>
+#include <Validation/i_validator.h>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 class User {
-private:
-    UserId id_;
-
-    Tag tag_;
-
-    std::string login_;
-
-    std::string password_hash_;
-
-    std::string public_key_;
-
-    std::unique_ptr<IUserRole> role_;
-
-    User() = default;
-
 public:
-    [[nodiscard]] const UserId& GetId() const;
+  [[nodiscard]] static User Create(UserParams params, const IValidator<UserParams>& validator);
 
-    [[nodiscard]] const Tag& GetTag() const;
+  User(User&&) = default;
+  User& operator=(User&&) = default;
+  User(const User&) = delete;
+  User& operator=(const User&) = delete;
 
-    [[nodiscard]] const std::string& GetLogin() const;
+  [[nodiscard]] const UserId& GetId() const { return id_; }
+  [[nodiscard]] const Tag& GetTag() const { return tag_; }
+  [[nodiscard]] const std::string& GetLogin() const { return login_; }
+  [[nodiscard]] const std::string& GetPasswordHash() const { return password_hash_; }
+  [[nodiscard]] const std::string& GetPublicKey() const { return public_key_; }
+  [[nodiscard]] const IUserRole& GetRole() const { return *role_; }
 
-    [[nodiscard]] const std::string& GetPasswordHash() const;
+  void SetRole(std::unique_ptr<IUserRole> role) { role_ = std::move(role); }
+  void SetLogin(std::string login,const IValidator<UserParams>& validator);
 
-    [[nodiscard]] const std::string& GetPublicKey() const;
+  void SetPasswordHash(std::string hash) {
+    if (hash.empty())
+      throw std::invalid_argument{ "User: password_hash cannot be empty" };
+    password_hash_ = std::move(hash);
+  }
 
-    [[nodiscard]] const IUserRole& GetRole() const;
+  [[nodiscard]] bool CanPerform(UserAction action) const {
+    return role_->CanPerform(action);
+  }
 
-    void SetRole(std::unique_ptr<IUserRole> role);
+private:
+  explicit User(UserParams params)
+    : id_{ std::move(params.id) }
+    , tag_{ std::move(params.tag) }
+    , login_{ std::move(params.login) }
+    , password_hash_{ std::move(params.password_hash) }
+    , public_key_{ std::move(params.public_key) }
+    , role_{ std::move(params.role) } {
+  }
 
-    [[nodiscard]] bool CanPerform(const UserAction action) const;
-
-    class Builder {
-    private:
-        friend class User;
-
-        User user_;
-
-        Builder() = default;
-
-    public:
-        [[nodiscard]] Builder& WithId(UserId&& id);
-
-        [[nodiscard]] Builder& WithTag(Tag&& tag);
-
-        [[nodiscard]] Builder& WithLogin(std::string&& login);
-
-        [[nodiscard]] Builder& WithPasswordHash(std::string&& hash);
-
-        [[nodiscard]] Builder& WithPublicKey(std::string&& pubKey);
-
-        [[nodiscard]] Builder& WithRole(std::unique_ptr<IUserRole> role);
-
-        [[nodiscard]] User Build();
-    };
-
-    [[nodiscard]] static Builder CreateBuilder();
+  UserId id_;
+  Tag tag_;
+  std::string login_;
+  std::string password_hash_;
+  std::string public_key_;
+  std::unique_ptr<IUserRole> role_;
 };
 
+inline User User::Create(UserParams params, const IValidator<UserParams>& validator) {
+  const auto result = validator.Validate(params);
 
-// User method definitions
-
-inline const UserId& User::GetId() const {
-    return id_;
-}
-
-inline const Tag& User::GetTag() const {
-    return tag_;
-}
-
-inline const std::string& User::GetLogin() const {
-    return login_;
-}
-
-inline const std::string& User::GetPasswordHash() const {
-    return password_hash_;
-}
-
-inline const std::string& User::GetPublicKey() const {
-    return public_key_;
-}
-
-inline const IUserRole& User::GetRole() const {
-    return *role_;
-}
-
-inline void User::SetRole(std::unique_ptr<IUserRole> role) {
-    role_ = std::move(role);
-}
-
-inline bool User::CanPerform(const UserAction action) const {
-    return role_->CanPerform(action);
-}
-
-
-// Builder method definitions
-
-inline User::Builder& User::Builder::WithId(UserId&& id) {
-    user_.id_ = std::move(id);
-    return *this;
-}
-
-inline User::Builder& User::Builder::WithTag(Tag&& tag) {
-    user_.tag_ = std::move(tag);
-    return *this;
-}
-
-inline User::Builder& User::Builder::WithLogin(std::string&& login) {
-    user_.login_ = std::move(login);
-    return *this;
-}
-
-inline User::Builder& User::Builder::WithPasswordHash(std::string&& hash) {
-    user_.password_hash_ = std::move(hash);
-    return *this;
-}
-
-inline User::Builder& User::Builder::WithPublicKey(std::string&& pubKey) {
-    user_.public_key_ = std::move(pubKey);
-    return *this;
-}
-
-inline User::Builder& User::Builder::WithRole(std::unique_ptr<IUserRole> role) {
-    user_.role_ = std::move(role);
-    return *this;
-}
-
-inline User User::Builder::Build() {
-    return std::move(user_);
-}
-
-inline User::Builder User::CreateBuilder() {
-    return Builder{};
+  if (!result.IsValid()) {
+    throw std::invalid_argument{ result.Summary() };
+  }
+  return User{ std::move(params) };
 }
 
 #endif  // USER_H

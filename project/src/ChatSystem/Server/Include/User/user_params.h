@@ -8,10 +8,14 @@
 #include <string>
 
 /**
- * @brief Data transfer object containing user parameters.
+ * @brief Data transfer object for user creation and validation.
  *
- * This struct aggregates all data required to create or update a user.
- * It is typically used as input for validation and business logic.
+ * UserParams aggregates all data required to construct or update a User.
+ * It is typically passed to a validator before being used to create
+ * a domain object.
+ *
+ * Validation rules (e.g. non-empty fields, length constraints, valid role)
+ * are enforced externally via an IValidator<UserParams> implementation.
  */
 struct UserParams {
   // Required
@@ -28,7 +32,7 @@ struct UserParams {
   /// Hashed password.
   std::string password_hash;
 
-  /// Public key associated with the user.
+  /// Public key associated with the user).
   std::string public_key;
 
   /// User role defining permissions.

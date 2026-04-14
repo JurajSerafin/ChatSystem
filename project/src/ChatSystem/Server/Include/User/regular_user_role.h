@@ -10,7 +10,7 @@
 
 class RegularUserRole : public IUserRole {
 private:
-    inline static const std::set<UserAction> kPerformableActions{
+    inline static const std::set<UserAction> kPerformableActions {
         UserAction::kSendMessage,
         UserAction::kDeleteAccount,
         UserAction::kDeleteOwnMessage,
