@@ -1,7 +1,6 @@
 #ifndef REGULAR_USER_ROLE_H
 #define REGULAR_USER_ROLE_H
 
-
 #include <set>
 #include <string>
 
@@ -10,39 +9,40 @@
 
 class RegularUserRole : public IUserRole {
 private:
-    inline static const std::set<UserAction> kPerformableActions {
-        UserAction::kSendMessage,
-        UserAction::kDeleteAccount,
-        UserAction::kDeleteOwnMessage,
-        UserAction::kModifyLogin,
-        UserAction::kModifyPassword,
-    };
-
-    static constexpr std::string kRoleName = "REGULAR_USER";
+  inline static const std::set<UserAction> kPerformableActions {
+      UserAction::kSendMessage,
+      UserAction::kDeleteAccount,
+      UserAction::kDeleteOwnMessage,
+      UserAction::kModifyLogin,
+      UserAction::kModifyPassword,
+  };
 
 public:
-    [[nodiscard]] const std::string& RoleName() const override;
 
-    [[nodiscard]] bool CanPerform(UserAction action) const override;
+  [[nodiscard]] const std::string& RoleName() const override;
 
-    RegularUserRole() = default;
+  [[nodiscard]] bool CanPerform(UserAction action) const override;
 
-    RegularUserRole(const RegularUserRole& other) = default;
+  RegularUserRole() = default;
 
-    RegularUserRole(RegularUserRole&& other) = default;
+  RegularUserRole(const RegularUserRole& other) = default;
 
-    RegularUserRole& operator=(const RegularUserRole& other) = delete;
-    RegularUserRole& operator=(RegularUserRole&& other) = delete;
+  RegularUserRole(RegularUserRole&& other) = default;
 
-    ~RegularUserRole() override = default;
+  RegularUserRole& operator=(const RegularUserRole& other) = delete;
+  RegularUserRole& operator=(RegularUserRole&& other) = delete;
+
+  ~RegularUserRole() override = default;
 };
 
 inline const std::string& RegularUserRole::RoleName() const {
-    return kRoleName;
+  static const std::string kRoleName = "REGULAR_USER";
+
+  return kRoleName;
 }
 
-inline bool RegularUserRole::CanPerform(UserAction action) const {
-    return kPerformableActions.contains(action);
+inline bool RegularUserRole::CanPerform(const UserAction action) const {
+  return kPerformableActions.contains(action);
 }
 
 #endif  // REGULAR_USER_ROLE_H
