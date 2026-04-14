@@ -1,9 +1,11 @@
-#include "User/regular_user_role.h"
-
 #include <Authentication/auth_service.h>
 
-#include <memory>
+#include "User/regular_user_role.h"
 #include <Authentication/tags.h>
+#include <optional>
+#include <memory>
+
+
 
 User AuthService::RegisterUser(const std::string& login, const std::string& password) {
   if (user_repo_.FindByLogin(login).has_value()) {
