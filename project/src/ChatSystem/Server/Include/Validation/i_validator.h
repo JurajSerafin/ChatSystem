@@ -3,6 +3,8 @@
 
 #include <Validation/validation_result.h>
 
+// TODO: Redesign into composable rule structure
+
 /**
  * @brief Generic interface for validators.
  *
@@ -13,7 +15,7 @@
  * @tparam TParams Type of the object being validated.
  */
 template <typename TParams>
-struct IValidator {
+class IValidator {
 
   /**
    * @brief Validates the given parameters.
