@@ -17,6 +17,8 @@
  */
 template <typename TParams, std::size_t MaxErrors>
 class IValidator {
+protected:
+  static constexpr std::size_t kMaxErrors = MaxErrors;
 public:
 
   /**
@@ -28,7 +30,7 @@ public:
    * @param params Object to validate.
    * @return ValidationResult containing validation errors.
    */
-  [[nodiscard]] virtual validation::ValidationResult<MaxErrors> Validate(const TParams& params) const = 0;
+  [[nodiscard]] constexpr virtual validation::ValidationResult<kMaxErrors> Validate(const TParams& params) const = 0;
 
   /**
    * @brief Virtual destructor.
