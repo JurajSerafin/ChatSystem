@@ -13,6 +13,7 @@
  * any validation errors found.
  *
  * @tparam TParams Type of the object being validated.
+ * @tparam MaxErrors The maximum number of validation errors this validator can produce.
  */
 template <typename TParams, std::size_t MaxErrors>
 class IValidator {
