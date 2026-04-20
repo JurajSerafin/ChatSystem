@@ -5,7 +5,12 @@
 
 #include <array>
 #include <string_view>
+#include <sstream>
+#include <string>
 #include <utility>
+#include <ostream>
+#include <concepts>
+
 
 namespace validation {
 
@@ -59,6 +64,8 @@ namespace validation {
      * @param error The ValidationError object to move.
      */
     constexpr void AddError(ValidationError&& error) noexcept;
+
+    [[nodiscard]] std::string Summary();
   };
 
   template <std::size_t MaxErrors>
@@ -86,6 +93,17 @@ namespace validation {
     if (count < MaxErrors) {
       errors[count++] = std::move(error);
     }
+  }
+
+  template <std::size_t MaxErrors>
+  std::string ValidationResult<MaxErrors>::Summary() {
+    std::stringstream result_stream;
+
+    for (auto&& err : errors) {
+      result_stream << err << '\n';
+    }
+
+    return result_stream.str();
   }
 }  // namespace validation
 
