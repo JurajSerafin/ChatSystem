@@ -2,9 +2,39 @@
 #define SESSION_VALIDATOR_H
 
 #include <Session/session_params.h>
-#include <Validation/i_validator.h>
-#include <Validation/validation_result.h>
+#include <Validation/validation.h>
 #include <chrono>
+#include <concepts>
+#include <string>
+#include <type_traits>
+
+/**
+ * @brief Concept defining the requirements for a Session validator.
+ * Extends the basic `ValidatorFor` concept to ensure the validator provides
+ * access to individual session field rules. This guarantees that
+ * domain objects can validate individual fields during state mutations.
+ * 
+ * @tparam TValidator The validator type being checked.
+ * @tparam TParams The parameter DTO type.
+ */
+template<typename TValidator, typename TParams>
+concept SessionValidatorFor = validation::ValidatorFor<TValidator, TParams>&& requires(TValidator validator, TParams params) {
+  // Ensure the params object contains the expected fields
+  { params.id } -> std::convertible_to<SessionId>;
+  { params.user_id } -> std::convertible_to<UserId>;
+  { params.token } -> std::convertible_to<std::string>;
+  { params.expires_at } -> std::convertible_to<std::chrono::system_clock::time_point>;
+  { params.created_at } -> std::convertible_to<std::chrono::system_clock::time_point>;
+
+  // Ensure the validator exposes raw rules for each field that evaluate to a boolean Ok()
+  { validator.GetIdRule()(params.id).Ok() } -> std::convertible_to<bool>;
+  { validator.GetUserIdRule()(params.user_id).Ok() } -> std::convertible_to<bool>;
+  { validator.GetTokenRule()(params.token).Ok() } -> std::convertible_to<bool>;
+  { validator.GetExpiresAtRule()(params.expires_at).Ok() } -> std::convertible_to<bool>;
+
+  // GetCreatedAtRule requires a threshold time point to construct the rule
+  { validator.GetCreatedAtRule(params.expires_at)(params.created_at).Ok() } -> std::convertible_to<bool>;
+};
 
 /**
  * @brief Validator for SessionParams objects.
@@ -13,96 +43,43 @@
  * a Session entity is created.
  *
  * Validation includes:
- * - Valid session identifier
- * - Valid user identifier
+ * - Valid session id
+ * - Valid user id
  * - Token presence and minimum length
  * - Expiration timestamp correctness
+ * - Timeline correctness (created_at <= expires_at)
  */
-class SessionValidator : public IValidator<SessionParams> {
-public:
-  /**
-   * @brief Validates session parameters.
-   *
-   * Executes all validation rules on the provided SessionParams instance
-   * and aggregates any errors into a ValidationResult.
-   *
-   * @param params Session parameters to validate.
-   * @return ValidationResult containing all detected validation errors.
-   */
-  [[nodiscard]] ValidationResult Validate(const SessionParams& params) const override {
-
-    ValidationResult result;
-
-    ValidateId(params, result);
-    ValidateUserId(params, result);
-    ValidateToken(params, result);
-    ValidateExpiry(params, result);
-
-    return result;
-  }
-
+class SessionValidator : public IValidator<SessionParams, 7> {
 private:
   /**
-   * @brief Validates the session identifier.
-   *
-   * Ensures that the ID is valid.
+   * @brief Retrieves the raw validation rule for the creation timestamp.
+   * @param other The expiration time point to compare against.
+   * @return A composed rule ensuring the creation time is valid and before expiration.
    */
-  static void ValidateId(const SessionParams& params, ValidationResult& validationResult) {
-    if (!params.id.IsValid()) {
-      validationResult.AddError("id", "cannot be empty");
-    }
-  }
+  static constexpr auto GetCreatedAtRule(std::chrono::system_clock::time_point other);
 
+public:
   /**
-   * @brief Validates the user identifier.
-   *
-   * Ensures that the associated user ID is valid.
+   * @brief Validates the entire SessionParams object.
+   * @param params The session parameters to validate.
+   * @return A ValidationResult containing any aggregated errors.
    */
-  static void ValidateUserId(const SessionParams& params, ValidationResult& validationResult) {
-    if (!params.user_id.IsValid()) {
-      validationResult.AddError("user_id", "cannot be empty");
-    }
-  }
+  [[nodiscard]] validation::ValidationResult<kMaxErrors> Validate(const SessionParams& params) const override;
 
-  /**
-   * @brief Validates the session token.
-   *
-   * Ensures that:
-   * - Token is not empty
-   * - Token meets minimum length requirements
-   */
-  static void ValidateToken(const SessionParams& params, ValidationResult& validationResult) {
-    if (params.token.empty()) {
-      validationResult.AddError("token", "cannot be empty");
-    }
-    else if (params.token.size() < kMinTokenLength) {
-      validationResult.AddError("token", "token too short");
-    }
-  }
-
-  /**
-   * @brief Validates session expiration.
-   *
-   * Ensures that:
-   * - Expiration timestamp is set
-   * - Expiration occurs after creation time
-   */
-  static void ValidateExpiry(const SessionParams& params, ValidationResult& validationResult) {
-    if (params.created_at == std::chrono::system_clock::time_point{}) {
-      validationResult.AddError("created_at", "must be set");
-    }
-
-    if (params.expires_at == std::chrono::system_clock::time_point{}) {
-      validationResult.AddError("expires_at", "must be set");
-    }
-
-    if (params.expires_at <= params.created_at) {
-      validationResult.AddError("expires_at", "must be after created_at");
-    }
-  }
-
-  /// Minimum allowed length for the session token.
+  /// Minimum allowed length for session tokens to enforce basic security.
   static constexpr size_t kMinTokenLength = 32;
+
+  /// @brief Retrieves the raw validation rule for the session ID.
+  static constexpr auto GetIdRule();
+
+  /// @brief Retrieves the raw validation rule for the user ID.
+  static constexpr auto GetUserIdRule();
+
+  /// @brief Retrieves the raw validation rule for the authentication token.
+  static constexpr auto GetTokenRule();
+
+  /// @brief Retrieves the raw validation rule for the expiration timestamp.
+  static constexpr auto GetExpiresAtRule();
 };
 
 #endif  // SESSION_VALIDATOR_H
