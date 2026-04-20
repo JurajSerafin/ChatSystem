@@ -84,21 +84,22 @@ namespace validation {
 
       return final_result;
     }
-  } // namespace validation::rules
 
-  /**
-   * @brief Logical AND operator for combining validation rules.
-   * * Allows chaining rules declaratively, e.g., `rule1 && rule2`.
-   * * @tparam LeftRule The first rule.
-   * @tparam RightRule The second rule.
-   * @param leftRule The first rule instance.
-   * @param rightRule The second rule instance.
-   * @return A composed AndRule containing both rules.
-   */
-  template<HasCapacity LeftRule, HasCapacity RightRule>
-  constexpr auto operator&&(LeftRule leftRule, RightRule rightRule) {
-    return rules::AndRule<LeftRule, RightRule>{leftRule, rightRule};
-  }
+    /**
+     * @brief Logical AND operator for combining validation rules.
+     * Allows chaining rules declaratively, e.g., `rule1 && rule2`.
+     * 
+     * @tparam LeftRule The first rule.
+     * @tparam RightRule The second rule.
+     * @param leftRule The first rule instance.
+     * @param rightRule The second rule instance.
+     * @return A composed AndRule containing both rules.
+     */
+    template<HasCapacity LeftRule, HasCapacity RightRule>
+    constexpr auto operator&&(LeftRule leftRule, RightRule rightRule) {
+      return rules::AndRule<LeftRule, RightRule>{leftRule, rightRule};
+    }
+  } // namespace validation::rules
 
 } // namespace validation
 
