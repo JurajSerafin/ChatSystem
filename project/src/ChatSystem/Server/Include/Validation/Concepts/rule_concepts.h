@@ -51,10 +51,21 @@ namespace validation {
    * @tparam TPtr The pointer-like type to check.
    */
   template<typename TPtr>
-  concept NullablePointer =
-    requires(TPtr ptr) {
-      { static_cast<bool>(ptr) } -> std::convertible_to<bool>;
-      { std::to_address(ptr) };
+  concept NullablePointer = requires(TPtr ptr) {
+    { static_cast<bool>(ptr) } -> std::convertible_to<bool>;
+    { std::to_address(ptr) };
+  };
+
+  /**
+   * @brief Concept ensuring a type supports the less-than-or-equal-to (<=) operator.
+   * * Validates that an instance of the value type can be compared against a threshold
+   * using `<=`, and that the result of this comparison can be evaluated as a boolean.
+   * * @tparam TValue The type of the value being validated.
+   * @tparam TThreshold The type of the threshold to compare against (defaults to TValue).
+   */
+  template<typename TValue, typename TThreshold = TValue>
+  concept HasLessThanInclusive = requires(const TValue value, const TThreshold threshold) {
+    { value <= threshold } -> std::convertible_to<bool>;
   };
 
 }
