@@ -14,6 +14,10 @@ function(add_unit_test TEST_NAME)
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
     )
+
+    target_include_directories(${TEST_NAME} PRIVATE
+        ${CMAKE_SOURCE_DIR}/Server/Include
+    )
     
     target_link_libraries(${TEST_NAME} PRIVATE
         ChatSystem::Core
@@ -26,13 +30,17 @@ function(add_unit_test TEST_NAME)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endfunction()
 
 # Add test categories
 file(GLOB CORE_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/Core/*.cpp")
 if(CORE_TESTS)
     add_unit_test(CoreTests SOURCES ${CORE_TESTS})
+endif()
+
+file(GLOB SERVER_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/Server/*.cpp")
+if(SERVER_TESTS)
+    add_unit_test(ServerTests SOURCES ${SERVER_TESTS})
 endif()
 
 message(STATUS "Configured unit tests")
