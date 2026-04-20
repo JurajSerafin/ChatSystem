@@ -113,14 +113,7 @@ private:
    * @brief Private constructor called only after factory validation succeeds.
    * @param params Validated parameters.
    */
-  explicit User(UserParams params)
-    : id_{ std::move(params.id) }
-    , tag_{ std::move(params.tag) }
-    , login_{ std::move(params.login) }
-    , password_hash_{ std::move(params.password_hash) }
-    , public_key_{ std::move(params.public_key) }
-    , role_{ std::move(params.role) } {
-  }
+  explicit User(UserParams params);
 
   UserId id_;
   Tag tag_;
@@ -188,5 +181,14 @@ void User<TUserParamsValidator>::SetPasswordHash(std::string hash,
   validation::SetOrThrow(*this, &User::password_hash_, std::move(hash),
     validator.GetPasswordHashRule(), "Invalid Password Hash");
 }
+
+template <UserValidatorFor<UserParams> TUserParamsValidator>
+User<TUserParamsValidator>::User(UserParams params)
+    : id_{std::move(params.id)},
+      tag_{std::move(params.tag)},
+      login_{std::move(params.login)},
+      password_hash_{std::move(params.password_hash)},
+      public_key_{std::move(params.public_key)},
+      role_{std::move(params.role)} {}
 
 #endif  // USER_H
