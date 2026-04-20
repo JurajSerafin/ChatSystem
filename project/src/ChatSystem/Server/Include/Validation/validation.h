@@ -2,6 +2,7 @@
 #define VALIDATION_H
 
 #include <Validation/Concepts/rule_concepts.h>
+#include <Validation/Concepts/validator_concepts.h>
 
 #include <Validation/Core/validation_error.h>
 #include <Validation/Core/validation_result.h>
@@ -16,6 +17,7 @@
 #include <Validation/Rules/not_empty.h>
 #include <Validation/Rules/rule_base.h>
 #include <Validation/Rules/time_point_must_be_set.h>
+#include <Validation/Rules/is_less_than_inclusive.h>
 
 #include <Validation/utils.h>
 #include <Validation/i_validator.h>
@@ -28,6 +30,6 @@
  * @param Object The class or struct type.
  * @param Member The specific member to bind.
  */
-#define BIND_FIELD(Object, Member) validation::rules::Field<Object, decltype(Object::Member)>{&Object::Member, #Member}
+#define BIND_FIELD(Object, Member) validation::rules::Field{&Object::Member, #Member}
 
 #endif // VALIDATION_H
