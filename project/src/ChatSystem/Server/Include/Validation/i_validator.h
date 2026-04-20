@@ -1,9 +1,9 @@
 #ifndef I_VALIDATOR_H
 #define I_VALIDATOR_H
 
-#include <Validation/validation_result.h>
 
-// TODO: Redesign into composable rule structure
+#include <Validation/Core/validation_result.h>
+
 
 /**
  * @brief Generic interface for validators.
@@ -14,8 +14,9 @@
  *
  * @tparam TParams Type of the object being validated.
  */
-template <typename TParams>
+template <typename TParams, std::size_t MaxErrors>
 class IValidator {
+public:
 
   /**
    * @brief Validates the given parameters.
@@ -26,7 +27,7 @@ class IValidator {
    * @param params Object to validate.
    * @return ValidationResult containing validation errors.
    */
-  [[nodiscard]] virtual ValidationResult Validate(const TParams& params) const = 0;
+  [[nodiscard]] virtual validation::ValidationResult<MaxErrors> Validate(const TParams& params) const = 0;
 
   /**
    * @brief Virtual destructor.
@@ -35,5 +36,7 @@ class IValidator {
    */
   virtual ~IValidator() = default;
 };
+
+
 
 #endif  // I_VALIDATOR_H
