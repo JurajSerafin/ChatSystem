@@ -57,7 +57,7 @@ public:
    * @return A valid, fully-constructed User instance.
    * @throws std::invalid_argument if the parameters fail validation.
    */
-  [[nodiscard]] static User Create(UserParams params, const TUserParamsValidator& validator);
+  [[nodiscard]] static User<TUserParamsValidator> Create(UserParams params, const TUserParamsValidator& validator);
 
   /**
    * @brief Checks if the user's role permits a specific action.
@@ -124,7 +124,7 @@ private:
 };
 
 template<UserValidatorFor<UserParams> TUserParamsValidator>
-auto User<TUserParamsValidator>::Create(UserParams params, const TUserParamsValidator& validator) {
+User<TUserParamsValidator> User<TUserParamsValidator>::Create(UserParams params, const TUserParamsValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }
