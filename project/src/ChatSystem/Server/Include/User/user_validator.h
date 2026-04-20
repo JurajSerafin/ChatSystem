@@ -58,14 +58,6 @@ private:
   /// Maximum allowed length for the login field.
   static constexpr std::size_t kMaxLoginLength = 32;
 
-public:
-  /**
-   * @brief Validates the entire UserParams object.
-   * @param params The user parameters to validate.
-   * @return A ValidationResult containing any aggregated errors.
-   */
-  [[nodiscard]] constexpr validation::ValidationResult<kMaxErrors> Validate(const UserParams& params) const override;
-
   /// @brief Retrieves the raw validation rule for the user ID.
   static constexpr auto GetIdRule();
 
@@ -83,6 +75,14 @@ public:
 
   /// @brief Retrieves the raw validation rule for the user role.
   static constexpr auto GetRoleRule();
+
+public:
+  /**
+   * @brief Validates the entire UserParams object.
+   * @param params The user parameters to validate.
+   * @return A ValidationResult containing any aggregated errors.
+   */
+  [[nodiscard]] constexpr validation::ValidationResult<kMaxErrors> Validate(const UserParams& params) const override;
 };
 
 #endif  // USER_VALIDATOR_H
