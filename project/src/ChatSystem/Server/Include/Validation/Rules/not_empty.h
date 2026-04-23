@@ -29,7 +29,7 @@ namespace validation {
 
     template <std::ranges::range TRange>
     constexpr auto NotEmpty_t::operator()(const TRange& rangeVal) const noexcept {
-      ValidationResult<1> result;
+      ValidationResult<capacity> result;
 
       if (std::ranges::empty(rangeVal)) {
         result.AddError({ "", "Must not be empty" });

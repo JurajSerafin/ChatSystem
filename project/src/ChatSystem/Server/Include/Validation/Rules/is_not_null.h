@@ -29,7 +29,7 @@ namespace validation {
 
     template <NullablePointer TPointer>
     constexpr auto IsNotNull_t::operator()(const TPointer& ptr) const noexcept {
-      ValidationResult<1> result;
+      ValidationResult<capacity> result;
 
       if (!ptr) {
         result.AddError({ "", "Must not be null" });

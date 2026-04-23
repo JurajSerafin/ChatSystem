@@ -27,7 +27,7 @@ namespace validation {
     };
 
     constexpr auto TimePointMustBeSet_t::operator()(std::chrono::system_clock::time_point tp) const noexcept {
-      ValidationResult<1> result;
+      ValidationResult<capacity> result;
 
       if (tp == std::chrono::system_clock::time_point{}) {
         result.AddError({ "", "Has to be set to a concrete time point" });

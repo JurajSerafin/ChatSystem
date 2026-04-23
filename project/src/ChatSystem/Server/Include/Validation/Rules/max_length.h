@@ -31,7 +31,7 @@ namespace validation {
     template <std::size_t Max>
     template <std::ranges::range TRange>
     constexpr auto MaxLength_t<Max>::operator()(const TRange& rangeVal) const noexcept {
-      ValidationResult<1> result;
+      ValidationResult<capacity> result;
 
       if (GetLength(rangeVal) > Max) {
         result.AddError({ "", "Is too long" });

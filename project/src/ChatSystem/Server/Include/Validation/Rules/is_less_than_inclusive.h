@@ -48,7 +48,7 @@ namespace validation {
     template <typename TValue>
       requires HasLessThanInclusive<TValue, TThreshold>
     constexpr auto IsLessThanInclusive_t<TThreshold>::operator()(const TValue& thisVal) const noexcept {
-      ValidationResult<1> result;
+      ValidationResult<capacity> result;
 
       if (!(thisVal <= threshold)) {
         result.AddError({ "", "Must be less than or equal to the threshold" });

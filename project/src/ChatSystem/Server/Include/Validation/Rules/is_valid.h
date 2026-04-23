@@ -27,7 +27,7 @@ namespace validation {
 
     template <HasIsValid TValidatable>
     constexpr auto IsValid_t::operator()(const TValidatable& validatable) const noexcept {
-      ValidationResult<1> result;
+      ValidationResult<capacity> result;
 
       if (!validatable.IsValid()) {
         result.AddError({ "", "Has to be valid" });
