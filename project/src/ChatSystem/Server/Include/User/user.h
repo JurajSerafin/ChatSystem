@@ -53,13 +53,16 @@ public:
   /**
    * @brief Factory method to safely construct a User object.
    * Fully validates the provided DTO before allowing construction.
-   * * @param params The fully populated DTO representing the user state.
+   * 
+   * @tparam TUserValidator Type of the validator used for User entities.
+   * 
+   * @param params The fully populated DTO representing the user state.
    * @param validator The validator instance to check the parameters against.
    * @return A valid, fully-constructed User instance.
    * @throws std::invalid_argument if the parameters fail validation.
    */
-  template<UserValidatorFor<UserParams> TUserParamsValidator>
-  [[nodiscard]] static User Create(UserParams params, const TUserParamsValidator& validator);
+  template<UserValidatorFor<UserParams> TUserValidator>
+  [[nodiscard]] static User Create(UserParams params, const TUserValidator& validator);
 
   /**
    * @brief Checks if the user's role permits a specific action.
@@ -125,8 +128,8 @@ private:
   std::unique_ptr<IUserRole> role_;
 };
 
-template<UserValidatorFor<UserParams> TUserParamsValidator>
-User User::Create(UserParams params, const TUserParamsValidator& validator) {
+template<UserValidatorFor<UserParams> TUserValidator>
+User User::Create(UserParams params, const TUserValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }

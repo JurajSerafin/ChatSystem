@@ -56,13 +56,15 @@ public:
    *
    * Validates the provided parameters and constructs a Session if valid.
    *
+   * @tparam TSessionValidator Type of the validator used for Session entities.
+   * 
    * @param params Session parameters used for construction.
    * @param validator Validator used to verify correctness.
    * @return Constructed Session object.
    * @throws std::invalid_argument if validation fails.
    */
-  template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-  [[nodiscard]] static Session Create(SessionParams params, const TSessionParamsValidator& validator);
+  template<SessionValidatorFor<SessionParams> TSessionValidator>
+  [[nodiscard]] static Session Create(SessionParams params, const TSessionValidator& validator);
 
   /// @brief Retrieves the unique identifier of the session.
   [[nodiscard]] const SessionId& GetId() const;
@@ -112,8 +114,8 @@ private:
   std::chrono::system_clock::time_point created_at_;
 };
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-Session Session::Create(SessionParams params, const TSessionParamsValidator& validator) {
+template<SessionValidatorFor<SessionParams> TSessionValidator>
+Session Session::Create(SessionParams params, const TSessionValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }

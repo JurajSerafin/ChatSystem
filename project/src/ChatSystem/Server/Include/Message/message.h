@@ -54,14 +54,16 @@ public:
    *
    * Validates the provided parameters using the given validator.
    * If validation fails, an exception is thrown.
+   * 
+   * @tparam TMessageValidator Type of the validator used for Message entities.
    *
    * @param params Message parameters used for construction.
    * @param validator Validator used to verify correctness.
    * @return Constructed Message object.
    * @throws std::invalid_argument if validation fails.
    */
-  template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-  [[nodiscard]] static Message Create(MessageParams params, const TMessageParamsValidator& validator);
+  template<MessageValidatorFor<MessageParams> TMessageValidator>
+  [[nodiscard]] static Message Create(MessageParams params, const TMessageValidator& validator);
 
   /// @return Unique identifier of the message.
   [[nodiscard]] const MessageId& GetId() const;
@@ -127,8 +129,8 @@ private:
   bool is_delivered_{ false };
 };
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-Message Message::Create(MessageParams params, const TMessageParamsValidator& validator) {
+template<MessageValidatorFor<MessageParams> TMessageValidator>
+Message Message::Create(MessageParams params, const TMessageValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }
