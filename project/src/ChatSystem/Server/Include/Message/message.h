@@ -5,8 +5,8 @@
 #include <Message/message_id.h>
 #include <Message/message_params.h>
 #include <Message/message_type.h>
+#include <Message/message_validator.h>
 #include <User/user_id.h>
-#include <Validation/i_validator.h>
 #include <chrono>
 #include <stdexcept>
 #include <string>
@@ -20,10 +20,36 @@
  *
  * Instances are immutable in identity but allow state transitions
  * (e.g. delivered/read flags).
+ * * @tparam TMessageParamsValidator The validator policy type ensuring data integrity.
  */
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
 class Message {
 public:
-  using TimePoint = std::chrono::system_clock::time_point;
+  /**
+   * @brief Default move constructor.
+   * Efficiently transfers ownership of a message's data.
+   */
+  Message(Message&&) = default;
+
+  /**
+   * @brief Default move assignment operator.
+   * Efficiently transfers ownership of message data to an existing instance.
+   */
+  Message& operator=(Message&&) = default;
+
+  /**
+   * @brief Deleted copy constructor.
+   * Copying is strictly disabled. A message entity represents a unique
+   * historical record in the database. Duplicating it would break identity semantics.
+   */
+  Message(const Message&) = delete;
+
+  /**
+   * @brief Deleted copy assignment operator.
+   * Copy assignment is strictly disabled to prevent overwriting an existing
+   * message record with another message's data.
+   */
+  Message& operator=(const Message&) = delete;
 
   /**
    * @brief Creates a validated Message instance.
@@ -36,13 +62,7 @@ public:
    * @return Constructed Message object.
    * @throws std::invalid_argument if validation fails.
    */
-  [[nodiscard]] static Message Create(MessageParams params, const IValidator<MessageParams>& validator);
-
-  Message(const Message&) = delete;
-  Message& operator=(const Message&) = delete;
-
-  Message(Message&&) = default;
-  Message& operator=(Message&&) = default;
+  [[nodiscard]] static Message<TMessageParamsValidator> Create(MessageParams params, const TMessageParamsValidator& validator);
 
   /// @return Unique identifier of the message.
   [[nodiscard]] const MessageId& GetId() const;
@@ -60,7 +80,7 @@ public:
   [[nodiscard]] MessageType GetType() const;
 
   /// @return Timestamp when the message was created.
-  [[nodiscard]] TimePoint CreatedAt() const;
+  [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 
   /// @return True if the message has been read.
   [[nodiscard]] bool IsRead() const;
@@ -75,13 +95,19 @@ public:
   void MarkDelivered();
 
 private:
-  explicit Message::Message(MessageParams params)
+  /**
+   * @brief Constructs a Message from parameters.
+   * Use Create() for validated construction.
+   * @param params Validated message parameters.
+   */
+  explicit Message(MessageParams params)
     : id_{ std::move(params.id) },
     chat_id_{ std::move(params.chat_id) },
     sender_id_{ std::move(params.sender_id) },
     content_{ std::move(params.content) },
     type_{ params.type },
-    created_at_{ params.created_at } {}
+    created_at_{ params.created_at } {
+  }
 
   MessageId id_;
 
@@ -93,7 +119,7 @@ private:
 
   MessageType type_;
 
-  TimePoint created_at_;
+  std::chrono::system_clock::time_point created_at_;
 
   /// Indicates whether the message has been read by the recipient.
   bool is_read_{ false };
@@ -102,54 +128,65 @@ private:
   bool is_delivered_{ false };
 };
 
-inline Message Message::Create(MessageParams params, const IValidator<MessageParams>& validator) {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+Message<TMessageParamsValidator> Message<TMessageParamsValidator>::Create(MessageParams params, const TMessageParamsValidator& validator) {
 
-  if (const auto result = validator.Validate(params); !result.IsValid()) {
+  // FIX: Changed result.IsValid() to result.Ok()
+  if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }
 
   return Message{ std::move(params) };
 }
 
-inline const MessageId& Message::GetId() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+const MessageId& Message<TMessageParamsValidator>::GetId() const {
   return id_;
 }
 
-inline const ChatId& Message::GetChatId() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+const ChatId& Message<TMessageParamsValidator>::GetChatId() const {
   return chat_id_;
 }
 
-inline const UserId& Message::GetSenderId() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+const UserId& Message<TMessageParamsValidator>::GetSenderId() const {
   return sender_id_;
 }
 
-inline const std::string& Message::GetContent() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+const std::string& Message<TMessageParamsValidator>::GetContent() const {
   return content_;
 }
 
-inline MessageType Message::GetType() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+MessageType Message<TMessageParamsValidator>::GetType() const {
   return type_;
 }
 
-inline Message::TimePoint Message::CreatedAt() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+std::chrono::system_clock::time_point Message<TMessageParamsValidator>::CreatedAt() const {
   return created_at_;
 }
 
-inline bool Message::IsRead() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+bool Message<TMessageParamsValidator>::IsRead() const {
   return is_read_;
 }
 
-inline bool Message::IsDelivered() const {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+bool Message<TMessageParamsValidator>::IsDelivered() const {
   return is_delivered_;
 }
 
-inline void Message::MarkRead() {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+void Message<TMessageParamsValidator>::MarkRead() {
   is_read_ = true;
 }
 
-inline void Message::MarkDelivered() {
+template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+void Message<TMessageParamsValidator>::MarkDelivered() {
   is_delivered_ = true;
 }
-
 
 #endif  // MESSAGE_H

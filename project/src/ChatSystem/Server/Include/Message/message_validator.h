@@ -1,111 +1,94 @@
 #ifndef MESSAGE_VALIDATOR_H
 #define MESSAGE_VALIDATOR_H
 
-#include <chrono>
+#include "message_id.h"
+#include "message_type.h"
 
+#include <Chat/chat_id.h>
 #include <Message/message_params.h>
-#include <Validation/i_validator.h>
-#include <Validation/validation_result.h>
+#include <User/user_id.h>
+#include <Validation/validation.h>
+#include <chrono>
+#include <concepts>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+
+/**
+ * @brief Concept defining the requirements for a Message validator.
+ * Extends the basic `ValidatorFor` concept to ensure the validator also provides
+ * access to individual field rules. This allows domain objects to validate
+ * individual fields during state mutations (e.g., `SetId`) without
+ * requiring a full `MessageParams` DTO.
+ *
+ * @tparam TValidator The validator type being checked.
+ * @tparam TParams The parameter DTO type (expected to structurally match MessageParams).
+ */
+template<typename TValidator, typename TParams>
+concept MessageValidatorFor = validation::ValidatorFor<TValidator, TParams>&& requires(TValidator validator, TParams params) {
+  // Ensure the params object contains the expected fields
+  { params.id } -> std::convertible_to<MessageId>;
+  { params.chat_id } -> std::convertible_to<ChatId>;
+  { params.sender_id } -> std::convertible_to<UserId>;
+  { params.content } -> std::convertible_to<std::string>;
+  { params.type } -> std::convertible_to<MessageType>;
+  { params.created_at } -> std::convertible_to< std::chrono::system_clock::time_point>;
+
+  // Ensure the validator exposes raw rules for each field that evaluate to a boolean Ok()
+  { validator.GetIdRule()(params.id).Ok() } -> std::convertible_to<bool>;
+  { validator.GetChatIdRule()(params.chat_id).Ok() } -> std::convertible_to<bool>;
+  { validator.GetSenderIdRule()(params.sender_id).Ok() } -> std::convertible_to<bool>;
+  { validator.GetContentRule()(params.content).Ok() } -> std::convertible_to<bool>;
+  { validator.GetTypeRule()(params.type).Ok() } -> std::convertible_to<bool>;
+  { validator.GetCreatedAtRule()(params.created_at).Ok() } -> std::convertible_to<bool>;
+};
 
 /**
  * @brief Validator for MessageParams objects.
  *
- * Ensures that message data meets required constraints before processing.
- * Validation includes identifiers, content rules, and timestamp presence.
+ * This class implements validation logic for user-related data,
+ * ensuring that all required fields meet defined constraints.
+ *
+ * The validation checks include:
+ * - Valid id
+ * - Valid chat id
+ * - Valid sender id
+ * - Non-empty content, with maximal size kMaxContentLength
+ * - Non-empty tag
+ * - Point of creation set, other than the epoch
  */
-class MessageValidator : public IValidator<MessageParams> {
-public:
-  /**
-   * @brief Validates message parameters.
-   *
-   * Runs all validation checks on the provided MessageParams instance
-   * and returns a ValidationResult containing any errors found.
-   *
-   * @param params Message parameters to validate.
-   * @return ValidationResult containing validation errors.
-   */
-  [[nodiscard]] ValidationResult Validate(const MessageParams& params) const override;
-
+class MessageValidator : public IValidator<MessageParams, 6> {
 private:
-  /**
-   * @brief Validates the message identifier.
-   */
-  static void ValidateId(const MessageParams& params, ValidationResult& validationResult);
-
-  /**
-   * @brief Validates the chat identifier.
-   */
-  static void ValidateChatId(const MessageParams& params, ValidationResult& validationResult);
-
-  /**
-   * @brief Validates the sender identifier.
-   */
-  static void ValidateSenderId(const MessageParams& params, ValidationResult& validationResult);
-
-  /**
-   * @brief Validates the message content.
-   *
-   * Ensures content is not empty and does not exceed maximum length.
-   */
-  static void ValidateContent(const MessageParams& params, ValidationResult& validationResult);
-
-  /**
-   * @brief Validates the creation timestamp.
-   *
-   * Ensures the timestamp is set (not default-initialized).
-   */
-  static void ValidateCreatedAt(const MessageParams& params, ValidationResult& validationResult);
-
   /// Maximum allowed length of message content.
   static constexpr size_t kMaxContentLength = 10000;
+
+public:
+  /**
+   * @brief Validates the entire MessageParams object.
+   * @param params The user parameters to validate.
+   * @return A ValidationResult containing any aggregated errors.
+   */
+  [[nodiscard]] constexpr validation::ValidationResult<kMaxErrors> Validate(const MessageParams& params) const override;
+
+  /// @brief Retrieves the raw validation rule for the message ID.
+  static constexpr auto GetIdRule();
+
+  /// @brief Retrieves the raw validation rule for the chat id.
+  static constexpr auto GetChatIdRule();
+
+  /// @brief Retrieves the raw validation rule for the sender id.
+  static constexpr auto GetSenderIdRule();
+
+  /// @brief Retrieves the raw validation rule for the message content.
+  static constexpr auto GetContentRule();
+
+  /// @brief Retrieves the raw validation rule for the message type.
+  static constexpr auto GetTypeRule();
+
+  /// @brief Retrieves the raw validation rule for the message creation time point.
+  static constexpr auto GetCreatedAtRule();
 };
 
-
-inline ValidationResult MessageValidator::Validate(const MessageParams& params) const {
-  ValidationResult result;
-
-  ValidateId(params, result);
-  ValidateChatId(params, result);
-  ValidateSenderId(params, result);
-  ValidateContent(params, result);
-  ValidateCreatedAt(params, result);
-
-  return result;
-}
-
-inline void MessageValidator::ValidateId(const MessageParams& params, ValidationResult& validationResult) {
-  if (!params.id.IsValid()) {
-    validationResult.AddError("id", "cannot be empty");
-  }
-}
-
-inline void MessageValidator::ValidateChatId(const MessageParams& params, ValidationResult& validationResult) {
-  if (!params.chat_id.IsValid()) {
-    validationResult.AddError("chat_id", "cannot be empty");
-  }
-}
-
-inline void MessageValidator::ValidateSenderId(const MessageParams& params, ValidationResult& validationResult) {
-  if (!params.sender_id.IsValid()) {
-    validationResult.AddError("sender_id", "cannot be empty");
-  }
-}
-
-inline void MessageValidator::ValidateContent(const MessageParams& params, ValidationResult& validationResult) {
-  if (params.content.empty()) {
-    validationResult.AddError("content", "cannot be empty");
-    return;
-  }
-
-  if (params.content.size() > kMaxContentLength) {
-    validationResult.AddError("content", "exceeds maximum length of 10000 characters");
-  }
-}
-
-inline void MessageValidator::ValidateCreatedAt(const MessageParams& params, ValidationResult& validationResult) {
-  if (params.created_at == std::chrono::system_clock::time_point{}) {
-    validationResult.AddError("created_at", "must be set");
-  }
-}
 
 #endif  // MESSAGE_VALIDATOR_H
