@@ -18,6 +18,7 @@
 #include <Validation/Rules/rule_base.h>
 #include <Validation/Rules/time_point_must_be_set.h>
 #include <Validation/Rules/is_less_than_inclusive.h>
+#include <Validation/Rules/true_rule.h>
 
 #include <Validation/utils.h>
 #include <Validation/i_validator.h>
