@@ -1,7 +1,7 @@
 #ifndef USER_PARAMS_H
 #define USER_PARAMS_H
 
-#include <Tags/tag.h>
+#include <Tags/user_tag.h>
 #include <User/i_user_role.h>
 #include <User/user_id.h>
 #include <memory>
@@ -24,7 +24,7 @@ struct UserParams {
   UserId id;
 
   /// User tag.
-  Tag tag;
+  tags::UserTag tag;
 
   /// User login name.
   std::string login;

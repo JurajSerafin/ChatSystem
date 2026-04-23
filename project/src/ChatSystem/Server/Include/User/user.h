@@ -1,7 +1,7 @@
 #ifndef USER_H
 #define USER_H
 
-#include <Tags/tag.h>
+#include <Tags/user_tag.h>
 #include <User/i_user_role.h>
 #include <User/user_action.h>
 #include <User/user_id.h>
@@ -70,7 +70,7 @@ public:
   [[nodiscard]] const UserId& GetId() const;
 
   /// @brief Retrieves the unique tag assigned to the user.
-  [[nodiscard]] const Tag& GetTag() const;
+  [[nodiscard]] const tags::UserTag& GetTag() const;
 
   /// @brief Retrieves the login name of the user.
   [[nodiscard]] const std::string& GetLogin() const;
@@ -116,7 +116,7 @@ private:
   explicit User(UserParams params);
 
   UserId id_;
-  Tag tag_;
+  tags::UserTag tag_;
   std::string login_;
   std::string password_hash_;
   std::string public_key_;
@@ -141,7 +141,7 @@ const UserId& User<TUserParamsValidator>::GetId() const {
     return id_;
 }
 template <UserValidatorFor<UserParams> TUserParamsValidator>
-const Tag& User<TUserParamsValidator>::GetTag() const {
+const tags::UserTag& User<TUserParamsValidator>::GetTag() const {
     return tag_;
 }
 template <UserValidatorFor<UserParams> TUserParamsValidator>

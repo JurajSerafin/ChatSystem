@@ -10,18 +10,18 @@
 /**
  * @brief Concept defining the requirements for a User validator.
  * Extends the basic `ValidatorFor` concept to ensure the validator also provides
- * access to individual field rules. This allows domain objects (like `User`)
- * to validate individual fields during state mutations (e.g., `SetLogin`) without
+ * access to individual field rules. This allows domain objects to validate
+ * individual fields during state mutations (e.g., `SetLogin`) without
  * requiring a full `UserParams` DTO.
  *
  * @tparam TValidator The validator type being checked.
  * @tparam TParams The parameter DTO type (expected to structurally match UserParams).
  */
 template<typename TValidator, typename TParams>
-concept UserValidatorFor = validation::ValidatorFor<TValidator, TParams>&& requires(TValidator validator, TParams params) {
+concept UserValidatorFor = validation::ValidatorFor<TValidator, TParams> && requires(TValidator validator, TParams params) {
   // Ensure the params object contains the expected fields
   { params.id } -> std::convertible_to<UserId>;
-  { params.tag } -> std::convertible_to<Tag>;
+  { params.tag } -> std::convertible_to<tags::UserTag>;
   { params.login } -> std::convertible_to<std::string>;
   { params.password_hash } -> std::convertible_to<std::string>;
   { params.public_key } -> std::convertible_to<std::string>;
