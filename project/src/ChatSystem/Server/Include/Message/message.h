@@ -10,6 +10,7 @@
 #include <chrono>
 #include <stdexcept>
 #include <string>
+#include <functional>
 
 /**
  * @brief Represents a message in a chat system.
@@ -54,7 +55,7 @@ public:
    *
    * Validates the provided parameters using the given validator.
    * If validation fails, an exception is thrown.
-   * 
+   *
    * @tparam TMessageValidator Type of the validator used for Message entities.
    *
    * @param params Message parameters used for construction.
@@ -83,18 +84,6 @@ public:
   /// @return Timestamp when the message was created.
   [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 
-  /// @return True if the message has been read.
-  [[nodiscard]] bool IsRead() const;
-
-  /// @return True if the message has been delivered.
-  [[nodiscard]] bool IsDelivered() const;
-
-  /// Marks the message as read.
-  void MarkRead();
-
-  /// Marks the message as delivered.
-  void MarkDelivered();
-
 private:
   /**
    * @brief Constructs a Message from parameters.
@@ -122,13 +111,7 @@ private:
 
   std::chrono::system_clock::time_point created_at_;
 
-  /// Indicates whether the message has been read by the recipient.
-  bool is_read_{ false };
-
-  /// Indicates whether the message has been delivered to the recipient.
-  bool is_delivered_{ false };
 };
-
 template<MessageValidatorFor<MessageParams> TMessageValidator>
 Message Message::Create(MessageParams params, const TMessageValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
@@ -160,22 +143,6 @@ inline MessageType Message::GetType() const {
 
 inline std::chrono::system_clock::time_point Message::CreatedAt() const {
   return created_at_;
-}
-
-inline bool Message::IsRead() const {
-  return is_read_;
-}
-
-inline bool Message::IsDelivered() const {
-  return is_delivered_;
-}
-
-inline void Message::MarkRead() {
-  is_read_ = true;
-}
-
-inline void Message::MarkDelivered() {
-  is_delivered_ = true;
 }
 
 #endif  // MESSAGE_H
