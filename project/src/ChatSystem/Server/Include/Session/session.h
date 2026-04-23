@@ -20,10 +20,7 @@
  * validation through a provided validator.
  *
  * Instances are move-only and support expiration checks and refresh logic.
- *
- * @tparam TSessionParamsValidator The validator policy type ensuring data integrity.
  */
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
 class Session {
 public:
 
@@ -64,6 +61,7 @@ public:
    * @return Constructed Session object.
    * @throws std::invalid_argument if validation fails.
    */
+  template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
   [[nodiscard]] static Session Create(SessionParams params, const TSessionParamsValidator& validator);
 
   /// @brief Retrieves the unique identifier of the session.
@@ -115,7 +113,7 @@ private:
 };
 
 template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-Session<TSessionParamsValidator> Session<TSessionParamsValidator>::Create(SessionParams params, const TSessionParamsValidator& validator) {
+Session Session::Create(SessionParams params, const TSessionParamsValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }
@@ -123,43 +121,35 @@ Session<TSessionParamsValidator> Session<TSessionParamsValidator>::Create(Sessio
   return Session{ std::move(params) };
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-const SessionId& Session<TSessionParamsValidator>::GetId() const {
+inline const SessionId& Session::GetId() const {
   return id_;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-const UserId& Session<TSessionParamsValidator>::GetUserId() const {
+inline const UserId& Session::GetUserId() const {
   return user_id_;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-const std::string& Session<TSessionParamsValidator>::GetToken() const {
+inline const std::string& Session::GetToken() const {
   return token_;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-std::chrono::system_clock::time_point Session<TSessionParamsValidator>::ExpiresAt() const {
+inline std::chrono::system_clock::time_point Session::ExpiresAt() const {
   return expires_at_;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-std::chrono::system_clock::time_point Session<TSessionParamsValidator>::CreatedAt() const {
+inline std::chrono::system_clock::time_point Session::CreatedAt() const {
   return created_at_;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-bool Session<TSessionParamsValidator>::IsExpired() const {
+inline bool Session::IsExpired() const {
   return std::chrono::system_clock::now() >= expires_at_;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-void Session<TSessionParamsValidator>::Refresh(std::chrono::system_clock::duration duration) {
+inline void Session::Refresh(std::chrono::system_clock::duration duration) {
   expires_at_ = std::chrono::system_clock::now() + duration;
 }
 
-template<SessionValidatorFor<SessionParams> TSessionParamsValidator>
-Session<TSessionParamsValidator>::Session(SessionParams params)
+inline Session::Session(SessionParams params)
   : id_{ std::move(params.id) },
   user_id_{ std::move(params.user_id) },
   token_{ std::move(params.token) },

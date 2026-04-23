@@ -16,13 +16,11 @@
  *
  * The Message class encapsulates all data and state related to a single
  * chat message, including metadata such as sender, timestamps, delivery
- * state, and read state.
+ * state, and read state, and strictly enforces its invariants on creation through
+ * a generic validation policy provided at compile time.
  *
- * Instances are immutable in identity but allow state transitions
- * (e.g. delivered/read flags).
- * * @tparam TMessageParamsValidator The validator policy type ensuring data integrity.
+ * Instances are immutable in identity but allow state transitions (e.g. delivered/read flags).
  */
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
 class Message {
 public:
   /**
@@ -62,7 +60,8 @@ public:
    * @return Constructed Message object.
    * @throws std::invalid_argument if validation fails.
    */
-  [[nodiscard]] static Message<TMessageParamsValidator> Create(MessageParams params, const TMessageParamsValidator& validator);
+  template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
+  [[nodiscard]] static Message Create(MessageParams params, const TMessageParamsValidator& validator);
 
   /// @return Unique identifier of the message.
   [[nodiscard]] const MessageId& GetId() const;
@@ -129,9 +128,7 @@ private:
 };
 
 template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-Message<TMessageParamsValidator> Message<TMessageParamsValidator>::Create(MessageParams params, const TMessageParamsValidator& validator) {
-
-  // FIX: Changed result.IsValid() to result.Ok()
+Message Message::Create(MessageParams params, const TMessageParamsValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }
@@ -139,53 +136,43 @@ Message<TMessageParamsValidator> Message<TMessageParamsValidator>::Create(Messag
   return Message{ std::move(params) };
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-const MessageId& Message<TMessageParamsValidator>::GetId() const {
+inline const MessageId& Message::GetId() const {
   return id_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-const ChatId& Message<TMessageParamsValidator>::GetChatId() const {
+inline const ChatId& Message::GetChatId() const {
   return chat_id_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-const UserId& Message<TMessageParamsValidator>::GetSenderId() const {
+inline const UserId& Message::GetSenderId() const {
   return sender_id_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-const std::string& Message<TMessageParamsValidator>::GetContent() const {
+inline const std::string& Message::GetContent() const {
   return content_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-MessageType Message<TMessageParamsValidator>::GetType() const {
+inline MessageType Message::GetType() const {
   return type_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-std::chrono::system_clock::time_point Message<TMessageParamsValidator>::CreatedAt() const {
+inline std::chrono::system_clock::time_point Message::CreatedAt() const {
   return created_at_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-bool Message<TMessageParamsValidator>::IsRead() const {
+inline bool Message::IsRead() const {
   return is_read_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-bool Message<TMessageParamsValidator>::IsDelivered() const {
+inline bool Message::IsDelivered() const {
   return is_delivered_;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-void Message<TMessageParamsValidator>::MarkRead() {
+inline void Message::MarkRead() {
   is_read_ = true;
 }
 
-template<MessageValidatorFor<MessageParams> TMessageParamsValidator>
-void Message<TMessageParamsValidator>::MarkDelivered() {
+inline void Message::MarkDelivered() {
   is_delivered_ = true;
 }
 

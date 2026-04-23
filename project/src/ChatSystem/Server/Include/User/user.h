@@ -7,19 +7,20 @@
 #include <User/user_id.h>
 #include <User/user_params.h>
 #include <User/user_validator.h>
-#include <Validation/validation.h>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 /**
  * @brief Domain entity representing a User within the system.
  * The User class encapsulates all user-related state and strictly enforces
- * its invariants through a generic validation policy provided at compile time.
- * State mutations are validated instantly via the `TUserParamsValidator`.
- * * @tparam TUserParamsValidator The validator policy type ensuring data integrity.
+ * its invariants on creation through a generic validation policy provided
+ * at compile time.
+ * 
+ * To enforce unique instances, this class is made move-only.
+
  */
-template<UserValidatorFor<UserParams> TUserParamsValidator>
 class User {
 public:
 
@@ -57,7 +58,8 @@ public:
    * @return A valid, fully-constructed User instance.
    * @throws std::invalid_argument if the parameters fail validation.
    */
-  [[nodiscard]] static User<TUserParamsValidator> Create(UserParams params, const TUserParamsValidator& validator);
+  template<UserValidatorFor<UserParams> TUserParamsValidator>
+  [[nodiscard]] static User Create(UserParams params, const TUserParamsValidator& validator);
 
   /**
    * @brief Checks if the user's role permits a specific action.
@@ -90,7 +92,7 @@ public:
    * @param validator The validator to verify the new role.
    * @throws std::invalid_argument if the role fails validation.
    */
-  void SetRole(std::unique_ptr<IUserRole> role, const TUserParamsValidator& validator);
+  void SetRole(std::unique_ptr<IUserRole> role);
 
   /**
    * @brief Mutates the user's login after strictly validating the new value.
@@ -98,7 +100,7 @@ public:
    * @param validator The validator to verify the new login.
    * @throws std::invalid_argument if the login fails validation.
    */
-  void SetLogin(std::string login, const TUserParamsValidator& validator);
+  void SetLogin(std::string login);
 
   /**
    * @brief Mutates the user's password hash after strictly validating the new value.
@@ -106,7 +108,7 @@ public:
    * @param validator The validator to verify the new hash.
    * @throws std::invalid_argument if the hash fails validation.
    */
-  void SetPasswordHash(std::string hash, const TUserParamsValidator& validator);
+  void SetPasswordHash(std::string hash);
 
 private:
   /**
@@ -124,7 +126,7 @@ private:
 };
 
 template<UserValidatorFor<UserParams> TUserParamsValidator>
-User<TUserParamsValidator> User<TUserParamsValidator>::Create(UserParams params, const TUserParamsValidator& validator) {
+User User::Create(UserParams params, const TUserParamsValidator& validator) {
   if (const auto result = validator.Validate(params); !result.Ok()) {
     throw std::invalid_argument{ result.Summary() };
   }
@@ -132,63 +134,52 @@ User<TUserParamsValidator> User<TUserParamsValidator>::Create(UserParams params,
   return User{ std::move(params) };
 }
 
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-bool User<TUserParamsValidator>::CanPerform(const UserAction action) const {
+inline bool User::CanPerform(const UserAction action) const {
   return role_->CanPerform(action);
 }
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-const UserId& User<TUserParamsValidator>::GetId() const {
-    return id_;
-}
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-const tags::UserTag& User<TUserParamsValidator>::GetTag() const {
-    return tag_;
-}
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-const std::string& User<TUserParamsValidator>::GetLogin() const {
-    return login_;
-}
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-const std::string& User<TUserParamsValidator>::GetPasswordHash() const {
-    return password_hash_;
-}
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-const std::string& User<TUserParamsValidator>::GetPublicKey() const {
-    return public_key_;
-}
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-const IUserRole& User<TUserParamsValidator>::GetRole() const {
-    return *role_;
+
+inline const UserId& User::GetId() const {
+  return id_;
 }
 
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-void User<TUserParamsValidator>::SetRole(std::unique_ptr<IUserRole> role,
-  const TUserParamsValidator& validator) {
-  validation::SetOrThrow(*this, &User::role_, std::move(role), validator.GetRoleRule(),
-    "Invalid Role");
+inline const tags::UserTag& User::GetTag() const {
+  return tag_;
 }
 
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-void User<TUserParamsValidator>::SetLogin(std::string login,
-  const TUserParamsValidator& validator) {
-  validation::SetOrThrow(*this, &User::login_, std::move(login), validator.GetLoginRule(),
-    "Invalid Login");
+inline const std::string& User::GetLogin() const {
+  return login_;
 }
 
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-void User<TUserParamsValidator>::SetPasswordHash(std::string hash,
-  const TUserParamsValidator& validator) {
-  validation::SetOrThrow(*this, &User::password_hash_, std::move(hash),
-    validator.GetPasswordHashRule(), "Invalid Password Hash");
+inline const std::string& User::GetPasswordHash() const {
+  return password_hash_;
 }
 
-template <UserValidatorFor<UserParams> TUserParamsValidator>
-User<TUserParamsValidator>::User(UserParams params)
-    : id_{std::move(params.id)},
-      tag_{std::move(params.tag)},
-      login_{std::move(params.login)},
-      password_hash_{std::move(params.password_hash)},
-      public_key_{std::move(params.public_key)},
-      role_{std::move(params.role)} {}
+inline const std::string& User::GetPublicKey() const {
+  return public_key_;
+}
+
+inline const IUserRole& User::GetRole() const {
+  return *role_;
+}
+
+inline void User::SetRole(std::unique_ptr<IUserRole> role) {
+  role_ = std::move(role);
+}
+
+inline void User::SetLogin(std::string login) {
+  login_ = std::move(login);
+}
+
+inline void User::SetPasswordHash(std::string hash) {
+  password_hash_ = std::move(hash);
+}
+
+inline User::User(UserParams params)
+  : id_{std::move(params.id)},
+    tag_{std::move(params.tag)},
+    login_{std::move(params.login)},
+    password_hash_{std::move(params.password_hash)},
+    public_key_{std::move(params.public_key)},
+    role_{std::move(params.role)} {}
 
 #endif  // USER_H
