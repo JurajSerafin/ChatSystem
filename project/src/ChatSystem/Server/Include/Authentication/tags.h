@@ -5,7 +5,7 @@
 #include <random>
 #include <format>
 
-#include <Tags/tag.h>
+#include <Tags/user_tag.h>
 
 namespace tags {
 
@@ -28,7 +28,7 @@ namespace tags {
    * @param login Base login used to generate the tag.
    * @return Generated Tag containing login and random suffix.
    */
-  inline Tag GenerateFromLogin(const std::string& login) {
+  inline UserTag GenerateFromLogin(const std::string& login) {
 
     thread_local std::mt19937 twister{ std::random_device{}() };
 
@@ -43,7 +43,7 @@ namespace tags {
 
     std::uniform_int_distribution<int> number_distribution{ kMin, kMax };
 
-    return Tag{
+    return UserTag{
         std::format("{}{}{}",
             login,
             kLoginTagSeparator,
