@@ -22,15 +22,15 @@
  * Handles the full authentication lifecycle: registration, login,
  * logout, token validation, and password changes.
  *
- * @tparam TUserParamsValidator Type of the validator used for User entities.
- * @tparam TSessionParamsValidator Type of the validator used for Session entities.
+ * @tparam TUserValidator Type of the validator used for User entities.
+ * @tparam TSessionValidator Type of the validator used for Session entities.
  *
  * @see IAuthService
  * @see IUserRepository
  * @see ISessionRepository
  * @see IEncryptionService
  */
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
 class AuthService : public IAuthService {
 public:
   /**
@@ -46,13 +46,16 @@ public:
     IUserRepository& userRepo,
     ISessionRepository& sessionRepo,
     IEncryptionService& encryptionService,
-    const TUserParamsValidator& userValidator,
-    const TSessionParamsValidator& sessionValidator
+    const TUserValidator& userValidator,
+    const TSessionValidator& sessionValidator
   );
 
   AuthService(const AuthService&) = delete;
+
   AuthService& operator=(const AuthService&) = delete;
+
   AuthService(AuthService&&) = delete;
+
   AuthService& operator=(AuthService&&) = delete;
 
   /**
@@ -66,7 +69,7 @@ public:
    * @return The newly created and persisted User.
    * @throws std::invalid_argument if the login is already taken or validation fails.
    */
-  User<TUserParamsValidator> RegisterUser(const std::string& login, const std::string& password) override;
+  User RegisterUser(const std::string& login, const std::string& password) override;
 
   /**
    * @brief Authenticates a user and creates a new session.
@@ -76,7 +79,7 @@ public:
    * @return A newly created Session containing the access token.
    * @throws std::invalid_argument if credentials are invalid.
    */
-  Session<TSessionParamsValidator> Login(const std::string& login, const std::string& password) override;
+  Session Login(const std::string& login, const std::string& password) override;
 
   /**
    * @brief Invalidates the session associated with the given token.
@@ -90,7 +93,7 @@ public:
    * @param token The session token to validate.
    * @return The User associated with the token, or std::nullopt if the token is invalid or expired.
    */
-  std::optional<User<TUserParamsValidator>> ValidateToken(const std::string& token) override;
+  std::optional<User> ValidateToken(const std::string& token) override;
 
   /**
    * @brief Changes the password for the given user.
@@ -134,17 +137,17 @@ private:
   ISessionRepository& session_repo_;
   IEncryptionService& encryption_service_;
 
-  const TUserParamsValidator& user_validator_;
-  const TSessionParamsValidator& session_validator_;
+  const TUserValidator& user_validator_;
+  const TSessionValidator& session_validator_;
 };
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-AuthService<TUserParamsValidator, TSessionParamsValidator>::AuthService(
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+AuthService<TUserValidator, TSessionValidator>::AuthService(
   IUserRepository& userRepo,
   ISessionRepository& sessionRepo,
   IEncryptionService& encryptionService,
-  const TUserParamsValidator& userValidator,
-  const TSessionParamsValidator& sessionValidator)
+  const TUserValidator& userValidator,
+  const TSessionValidator& sessionValidator)
   : user_repo_{ userRepo }
   , session_repo_{ sessionRepo }
   , encryption_service_{ encryptionService }
@@ -153,18 +156,18 @@ AuthService<TUserParamsValidator, TSessionParamsValidator>::AuthService(
 }
 
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-void AuthService<TUserParamsValidator, TSessionParamsValidator>::Logout(const std::string& token) {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+void AuthService<TUserValidator, TSessionValidator>::Logout(const std::string& token) {
   session_repo_.DeleteByToken(token);
 }
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-std::string AuthService<TUserParamsValidator, TSessionParamsValidator>::GenerateToken() {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+std::string AuthService<TUserValidator, TSessionValidator>::GenerateToken() {
   return SessionId::Generate().ToString();
 }
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-User<TUserParamsValidator> AuthService<TUserParamsValidator, TSessionParamsValidator>::RegisterUser(const std::string& login, const std::string& password) {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+User AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::string& login, const std::string& password) {
   if (user_repo_.FindByLogin(login).has_value()) {
     throw std::invalid_argument{ "Login already taken" };
   }
@@ -173,7 +176,7 @@ User<TUserParamsValidator> AuthService<TUserParamsValidator, TSessionParamsValid
   std::string password_hash = encryption_service_.HashPassword(password);
   KeyPair key_pair = encryption_service_.GenerateKeyPair();
 
-  User<TUserParamsValidator> user = User<TUserParamsValidator>::Create({
+  User user = User::Create({
     .id = UserId::Generate(),
     .tag = std::move(tag),
     .login = login,
@@ -185,8 +188,8 @@ User<TUserParamsValidator> AuthService<TUserParamsValidator, TSessionParamsValid
   return user_repo_.Create(std::move(user));
 }
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-Session<TSessionParamsValidator> AuthService<TUserParamsValidator, TSessionParamsValidator>::Login(const std::string& login, const std::string& password) {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+Session AuthService<TUserValidator, TSessionValidator>::Login(const std::string& login, const std::string& password) {
   const auto user = user_repo_.FindByLogin(login);
 
   if (!user.has_value()) {
@@ -198,7 +201,7 @@ Session<TSessionParamsValidator> AuthService<TUserParamsValidator, TSessionParam
 
   const auto now = std::chrono::system_clock::now();
 
-  Session<TSessionParamsValidator> session = Session<TSessionParamsValidator>::Create({
+  Session session = Session::Create({
     .id = SessionId::Generate(),
     .user_id = user->GetId(),
     .token = GenerateToken(),
@@ -208,8 +211,8 @@ Session<TSessionParamsValidator> AuthService<TUserParamsValidator, TSessionParam
   return session_repo_.Create(std::move(session));
 }
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-std::optional<User<TUserParamsValidator>> AuthService<TUserParamsValidator, TSessionParamsValidator>::ValidateToken(const std::string& token) {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+std::optional<User> AuthService<TUserValidator, TSessionValidator>::ValidateToken(const std::string& token) {
   const auto session = session_repo_.FindByToken(token);
 
   if (!session.has_value()) {
@@ -223,8 +226,8 @@ std::optional<User<TUserParamsValidator>> AuthService<TUserParamsValidator, TSes
   return user_repo_.FindById(session->GetUserId());
 }
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-void AuthService<TUserParamsValidator, TSessionParamsValidator>::ChangePassword(const UserId userId, const std::string& oldPassword, const std::string& newPassword) {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+void AuthService<TUserValidator, TSessionValidator>::ChangePassword(const UserId userId, const std::string& oldPassword, const std::string& newPassword) {
   auto user = user_repo_.FindById(userId);
 
   if (!user.has_value()) {
@@ -239,8 +242,8 @@ void AuthService<TUserParamsValidator, TSessionParamsValidator>::ChangePassword(
   user_repo_.Update(*user);
 }
 
-template<validation::ValidatorFor<UserParams> TUserParamsValidator, validation::ValidatorFor<SessionParams> TSessionParamsValidator>
-tags::UserTag AuthService<TUserParamsValidator, TSessionParamsValidator>::GenerateUniqueTag(const std::string& login) const {
+template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+tags::UserTag AuthService<TUserValidator, TSessionValidator>::GenerateUniqueTag(const std::string& login) const {
   constexpr int kMaxRetries = 10;
 
   for (int i = 0; i < kMaxRetries; ++i) {
