@@ -31,6 +31,6 @@
  * @param Object The class or struct type.
  * @param Member The specific member to bind.
  */
-#define BIND_FIELD(Object, Member) validation::rules::Field{&Object::Member, #Member}
+#define VALIDATION_BIND_FIELD(Object, Member) validation::rules::Field{&Object::Member, #Member}
 
 #endif // VALIDATION_H

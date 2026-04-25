@@ -266,8 +266,8 @@ namespace validation::tests {
 
   TEST(BindFieldMacroTest, DeducesTypesAndStoresNameCorrectly) {
     // Arrange & Act
-    auto age_field = BIND_FIELD(MacroTestUser, age);
-    auto username_field = BIND_FIELD(MacroTestUser, username);
+    auto age_field = VALIDATION_BIND_FIELD(MacroTestUser, age);
+    auto username_field = VALIDATION_BIND_FIELD(MacroTestUser, username);
 
     // Assert
     static_assert(std::is_same_v<decltype(age_field.member), int MacroTestUser::*>);
@@ -280,7 +280,7 @@ namespace validation::tests {
 
   TEST(BindFieldMacroTest, IntegratesWithBoundRuleExecution) {
     // Arrange
-    auto age_rule = BIND_FIELD(MacroTestUser, age) | rules::IsLessThanInclusive(100);
+    auto age_rule = VALIDATION_BIND_FIELD(MacroTestUser, age) | rules::IsLessThanInclusive(100);
 
     const MacroTestUser valid_user{ .age = 25, .username = "Bob" };
     const MacroTestUser invalid_user{ .age = 150, .username = "Alice" };
@@ -303,8 +303,8 @@ namespace validation::tests {
   TEST(BindFieldCompositionTest, ChainsMultipleBoundRulesLikeAValidator) {
     // Arrange
     auto validator_tree =
-      (BIND_FIELD(MacroTestUser, username) | (rules::NotEmpty && rules::MinLength<3>)) &&
-      (BIND_FIELD(MacroTestUser, age) | rules::IsLessThanInclusive(130));
+      (VALIDATION_BIND_FIELD(MacroTestUser, username) | (rules::NotEmpty && rules::MinLength<3>)) &&
+      (VALIDATION_BIND_FIELD(MacroTestUser, age) | rules::IsLessThanInclusive(130));
 
     MacroTestUser valid_dto{ .username = "alice", .age = 30 };
 
@@ -330,22 +330,22 @@ namespace validation::tests {
     EXPECT_FALSE(partial_result.Ok());
     EXPECT_EQ(partial_result.count, 2);
 
-    EXPECT_EQ(partial_result.errors[0].field, "username_");
+    EXPECT_EQ(partial_result.errors[0].field, "username");
     EXPECT_EQ(partial_result.errors[0].message, "Is too short");
 
-    EXPECT_EQ(partial_result.errors[1].field, "age_");
+    EXPECT_EQ(partial_result.errors[1].field, "age");
     EXPECT_EQ(partial_result.errors[1].message, "Must be less than or equal to the threshold");
 
     EXPECT_FALSE(total_result.Ok());
     EXPECT_EQ(total_result.count, 3);
 
-    EXPECT_EQ(total_result.errors[0].field, "username_");
+    EXPECT_EQ(total_result.errors[0].field, "username");
     EXPECT_EQ(total_result.errors[0].message, "Must not be empty");
 
-    EXPECT_EQ(total_result.errors[1].field, "username_");
+    EXPECT_EQ(total_result.errors[1].field, "username");
     EXPECT_EQ(total_result.errors[1].message, "Is too short");
 
-    EXPECT_EQ(total_result.errors[2].field, "age_");
+    EXPECT_EQ(total_result.errors[2].field, "age");
     EXPECT_EQ(total_result.errors[2].message, "Must be less than or equal to the threshold");
   }
-}
+} // namespace validation::tests
