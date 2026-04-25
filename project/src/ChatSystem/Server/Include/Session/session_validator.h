@@ -50,14 +50,6 @@ concept SessionValidatorFor = validation::ValidatorFor<TValidator, TParams>&& re
  * - Timeline correctness (created_at <= expires_at)
  */
 class SessionValidator : public IValidator<SessionParams, 7> {
-private:
-  /**
-   * @brief Retrieves the raw validation rule for the creation timestamp.
-   * @param other The expiration time point to compare against.
-   * @return A composed rule ensuring the creation time is valid and before expiration.
-   */
-  static constexpr auto GetCreatedAtRule(std::chrono::system_clock::time_point other);
-
 public:
   /**
    * @brief Validates the entire SessionParams object.
@@ -77,6 +69,9 @@ public:
 
   /// @brief Retrieves the raw validation rule for the authentication token.
   static constexpr auto GetTokenRule();
+
+  /// @brief Retrieves the raw validation rule for the creation timestamp.
+  static constexpr auto GetCreatedAtRule(std::chrono::system_clock::time_point other);
 
   /// @brief Retrieves the raw validation rule for the expiration timestamp.
   static constexpr auto GetExpiresAtRule();
