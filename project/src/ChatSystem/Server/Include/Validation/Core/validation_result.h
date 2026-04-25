@@ -65,7 +65,7 @@ namespace validation {
      */
     constexpr void AddError(ValidationError&& error) noexcept;
 
-    [[nodiscard]] std::string Summary();
+    [[nodiscard]] std::string Summary() const;
   };
 
   template <std::size_t MaxErrors>
@@ -96,7 +96,7 @@ namespace validation {
   }
 
   template <std::size_t MaxErrors>
-  std::string ValidationResult<MaxErrors>::Summary() {
+  std::string ValidationResult<MaxErrors>::Summary() const {
     std::stringstream result_stream;
 
     for (auto&& err : errors) {
