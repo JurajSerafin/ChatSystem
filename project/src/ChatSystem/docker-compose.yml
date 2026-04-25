@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:16
+    container_name: chatsystem_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Flyway Migration Tool
+  flyway:
+    image: flyway/flyway:10-alpine
+    container_name: chatsystem_flyway
+    depends_on:
+      - postgres-db
+    volumes:
+      - ./db/migrations:/flyway/sql
+    command: 
+      - "-url=jdbc:postgresql://postgres-db:5432/${DB_NAME}"
+      - "-user=${DB_USER}"
+      - "-password=${DB_PASSWORD}"
+      - "-connectRetries=60"
+      - "migrate"
+
+volumes:
+  postgres_data:
