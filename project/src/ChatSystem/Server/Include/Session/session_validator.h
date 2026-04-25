@@ -56,7 +56,7 @@ public:
    * @param params The session parameters to validate.
    * @return A ValidationResult containing any aggregated errors.
    */
-  [[nodiscard]] validation::ValidationResult<kMaxErrors> Validate(const SessionParams& params) const override;
+  [[nodiscard]] constexpr validation::ValidationResult<kMaxErrors> Validate(const SessionParams& params) const override;
 
   /// Minimum allowed length for session tokens to enforce basic security.
   static constexpr size_t kMinTokenLength = 32;
@@ -76,5 +76,39 @@ public:
   /// @brief Retrieves the raw validation rule for the expiration timestamp.
   static constexpr auto GetExpiresAtRule();
 };
+
+constexpr auto SessionValidator::GetIdRule() {
+  return validation::rules::IsValid;
+}
+
+constexpr auto SessionValidator::GetUserIdRule() {
+  return validation::rules::IsValid;
+}
+
+constexpr auto SessionValidator::GetTokenRule() {
+  return validation::rules::NotEmpty &&
+    validation::rules::MinLength<kMinTokenLength>;
+}
+
+constexpr auto SessionValidator::GetExpiresAtRule() {
+  return validation::rules::TimePointMustBeSet;
+}
+
+constexpr auto SessionValidator::GetCreatedAtRule(std::chrono::system_clock::time_point other) {
+  return validation::rules::TimePointMustBeSet &&
+    validation::rules::IsLessThanInclusive(other);
+}
+
+constexpr validation::ValidationResult<SessionValidator::kMaxErrors> SessionValidator::Validate(const SessionParams& params) const {
+
+  auto rules =
+    (VALIDATION_BIND_FIELD(SessionParams, id) | GetIdRule()) &&
+    (VALIDATION_BIND_FIELD(SessionParams, user_id) | GetUserIdRule()) &&
+    (VALIDATION_BIND_FIELD(SessionParams, token) | GetTokenRule()) &&
+    (VALIDATION_BIND_FIELD(SessionParams, expires_at) | GetExpiresAtRule()) &&
+    (VALIDATION_BIND_FIELD(SessionParams, created_at) | GetCreatedAtRule(params.expires_at));
+
+  return rules(params);
+}
 
 #endif  // SESSION_VALIDATOR_H

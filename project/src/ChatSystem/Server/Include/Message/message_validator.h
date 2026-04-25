@@ -90,5 +90,42 @@ public:
   static constexpr auto GetCreatedAtRule();
 };
 
+constexpr auto MessageValidator::GetIdRule() {
+  return validation::rules::IsValid;
+}
+
+constexpr auto MessageValidator::GetChatIdRule() {
+  return  validation::rules::IsValid;
+}
+
+constexpr auto MessageValidator::GetSenderIdRule() {
+  return  validation::rules::IsValid;
+}
+
+constexpr auto MessageValidator::GetContentRule() {
+  return  validation::rules::NotEmpty && 
+    validation::rules::MaxLength<kMaxContentLength>;
+}
+
+constexpr auto MessageValidator::GetTypeRule() {
+  return  validation::rules::TrueRule;
+}
+
+constexpr auto MessageValidator::GetCreatedAtRule() {
+  return  validation::rules::TimePointMustBeSet;
+}
+
+constexpr validation::ValidationResult<MessageValidator::kMaxErrors> MessageValidator::Validate(const MessageParams& params) const {
+  auto rules =
+    (VALIDATION_BIND_FIELD(MessageParams, id) | GetIdRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, chat_id) | GetChatIdRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, sender_id) | GetSenderIdRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, content) | GetContentRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, type) | GetTypeRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, created_at) | GetCreatedAtRule());
+
+  return rules(params);
+}
+
 
 #endif  // MESSAGE_VALIDATOR_H
