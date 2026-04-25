@@ -78,9 +78,9 @@ namespace validation {
 
       ValidationResult<AndRule::capacity> final_result;
 
-      WriteAppliedRuleErrors(final_result, left_result);
+      WriteAppliedRuleErrors<LeftRule>(final_result, left_result);
 
-      WriteAppliedRuleErrors(final_result, right_result);
+      WriteAppliedRuleErrors<RightRule>(final_result, right_result);
 
       return final_result;
     }
