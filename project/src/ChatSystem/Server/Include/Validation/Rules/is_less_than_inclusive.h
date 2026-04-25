@@ -7,7 +7,6 @@
 
 #include <utility>
 #include <type_traits>
-#include <functional>
 
 namespace validation {
 
