@@ -6,6 +6,8 @@
 #include <Validation/Core/validation_result.h>
 
 #include <utility>
+#include <type_traits>
+#include <functional>
 
 namespace validation {
 
@@ -70,7 +72,7 @@ namespace validation {
      */
     template<typename TThreshold>
     constexpr auto IsLessThanInclusive(TThreshold&& threshold) {
-      return IsLessThanInclusive_t<TThreshold>{std::forward<TThreshold>(threshold)};
+      return IsLessThanInclusive_t<std::unwrap_ref_decay_t<TThreshold>>{std::forward<TThreshold>(threshold)};
     }
 
   } // namespace validation::rules
