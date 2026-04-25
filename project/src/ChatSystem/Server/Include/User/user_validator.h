@@ -25,7 +25,7 @@ concept UserValidatorFor = validation::ValidatorFor<TValidator, TParams> && requ
   { params.login } -> std::convertible_to<std::string>;
   { params.password_hash } -> std::convertible_to<std::string>;
   { params.public_key } -> std::convertible_to<std::string>;
-  { params.role } -> std::convertible_to<std::unique_ptr<IUserRole>>;
+  { params.role } -> std::convertible_to<std::unique_ptr<IUserRole>&>;
 
   // Ensure the validator exposes raw rules for each field that evaluate to a boolean Ok()
   { validator.GetIdRule()(params.id).Ok() } -> std::convertible_to<bool>;
@@ -84,5 +84,45 @@ public:
   /// @brief Retrieves the raw validation rule for the user role.
   static constexpr auto GetRoleRule();
 };
+
+constexpr auto UserValidator::GetIdRule() {
+  return validation::rules::IsValid;
+}
+
+constexpr auto UserValidator::GetTagRule() {
+  return validation::rules::IsValid;
+}
+
+constexpr auto UserValidator::GetLoginRule() {
+  return validation::rules::NotEmpty
+    && validation::rules::MinLength<kMinLoginLength>
+    && validation::rules::MaxLength<kMaxLoginLength>;
+}
+
+constexpr auto UserValidator::GetPasswordHashRule() {
+  return validation::rules::NotEmpty;
+}
+
+constexpr auto UserValidator::GetPublicKeyRule() {
+  return validation::rules::NotEmpty;
+}
+
+constexpr auto UserValidator::GetRoleRule() {
+  return validation::rules::IsNotNull;
+}
+
+constexpr validation::ValidationResult<UserValidator::kMaxErrors> UserValidator::Validate(const UserParams& params) const {
+  auto rules =
+    (VALIDATION_BIND_FIELD(UserParams, id) | GetIdRule()) &&
+    (VALIDATION_BIND_FIELD(UserParams, tag) | GetTagRule()) &&
+    (VALIDATION_BIND_FIELD(UserParams, login) | GetLoginRule()) &&
+    (VALIDATION_BIND_FIELD(UserParams, password_hash) | GetPasswordHashRule()) &&
+    (VALIDATION_BIND_FIELD(UserParams, public_key) | GetPublicKeyRule()) &&
+    (VALIDATION_BIND_FIELD(UserParams, role) | GetRoleRule());
+
+  return rules(params);
+}
+
+
 
 #endif  // USER_VALIDATOR_H
