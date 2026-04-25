@@ -38,7 +38,7 @@ namespace tags {
      * @brief Checks if the tag instance holds a valid state.
      * @return true if valid.
      */
-    bool IsValid();
+    bool IsValid() const;
 
   private:
     /// The character used to separate the login from the numeric suffix.
@@ -92,6 +92,10 @@ namespace tags {
 
     std::string value_;
   };
+
+  inline bool UserTag::IsValid() const {
+    return !value_.empty();
+  }
 } // namespace tags
 
 
