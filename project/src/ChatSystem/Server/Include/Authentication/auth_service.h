@@ -244,7 +244,7 @@ void AuthService<TUserValidator, TSessionValidator>::ChangePassword(const UserId
 
 template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
 tags::UserTag AuthService<TUserValidator, TSessionValidator>::GenerateUniqueTag(const std::string& login) const {
-  constexpr int kMaxRetries = 10;
+  constexpr int kMaxRetries = 100;
 
   for (int i = 0; i < kMaxRetries; ++i) {
     if (tags::UserTag tag = tags::GenerateFromLogin(login); !user_repo_.FindByTag(tag.ToString()).has_value()) {
