@@ -6,15 +6,15 @@
 
 class IRow {
 public:
-  [[nodiscard]] virtual const std::string& GetString() const;
+  [[nodiscard]] virtual std::string GetString(const std::string& columnName) const;
 
-  [[nodiscard]] virtual int GetInt() const;
+  [[nodiscard]] virtual int GetInt(const std::string& columnName) const;
 
-  [[nodiscard]] virtual const std::string& GetUuid() const;
+  [[nodiscard]] virtual std::string GetUuid(const std::string& columnName) const;
 
-  [[nodiscard]] virtual const std::chrono::system_clock::time_point & GetTimeStamp() const;
+  [[nodiscard]] virtual std::chrono::system_clock::time_point GetTimeStamp(const std::string& columnName) const;
 
-  [[nodiscard]] virtual bool IsNull() const;
+  [[nodiscard]] virtual bool IsNull(const std::string& columnName) const;
 }; 
 
 #endif // I_ROW_H
