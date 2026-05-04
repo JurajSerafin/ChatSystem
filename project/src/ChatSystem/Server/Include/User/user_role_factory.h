@@ -13,21 +13,24 @@ class UserRoleFactory;
 template<typename ... TRole>
 class UserRoleFactory<std::tuple<TRole ...>> {
 public:
-  [[nodiscard]] static std::unique_ptr<IUserRole> Create(std::string_view roleName) {
+  [[nodiscard]] static std::unique_ptr<IUserRole> Create(std::string_view roleName);
+};
+
+
+template <typename... TRole>
+std::unique_ptr<IUserRole> UserRoleFactory<std::tuple<TRole...>>::Create(std::string_view roleName) {
     std::unique_ptr<IUserRole> created_role_ptr = nullptr;
 
-    bool role_exists = (
-      (TRole{}.RoleName() == roleName
-        ? (created_role_ptr = std::make_unique<TRole>(), true)
-        : false
-      ) || ...);
-     
+    bool role_exists =
+        ((TRole{}.RoleName() == roleName 
+          ? (created_role_ptr = std::make_unique<TRole>(), true)
+          : false) || ...);
+
     if (!role_exists) {
-      throw std::runtime_error("Role that is being factoried is not present in active roles.");
+        throw std::runtime_error("Role that is being factoried is not present in active roles.");
     }
 
     return created_role_ptr;
-  }
-};
+}
 
 #endif // USER_ROLE_FACTORY_H
