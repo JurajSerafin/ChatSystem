@@ -1,8 +1,8 @@
 #ifndef REGULAR_USER_ROLE_H
 #define REGULAR_USER_ROLE_H
 
-#include <set>
-#include <string>
+#include <array>
+#include <algorithm>
 
 #include <User/user_action.h>
 #include <User/i_user_role.h>
@@ -19,13 +19,16 @@
  */
 class RegularUserRole : public IUserRole {
 private:
+
+  constexpr static std::size_t kPerformableActionsCount = 5;
+
   /**
    * @brief Set of actions permitted for regular users.
    *
    * This collection defines all operations that a regular user
    * is allowed to perform within the system.
    */
-  inline static const std::set<UserAction> kPerformableActions{
+  constexpr static std::array<UserAction, kPerformableActionsCount> kPerformableActions {
       UserAction::kSendMessage,
       UserAction::kDeleteAccount,
       UserAction::kDeleteOwnMessage,
@@ -39,7 +42,7 @@ public:
    *
    * @return Constant reference to the string that represents RegularUserRole.
    */
-  [[nodiscard]] const std::string& RoleName() const override;
+  [[nodiscard]] std::string_view RoleName() const override;
 
   /**
    * @brief Checks whether the role allows a specific user action.
@@ -80,14 +83,12 @@ public:
   ~RegularUserRole() override = default;
 };
 
-inline const std::string& RegularUserRole::RoleName() const {
-  static const std::string kRoleName = "REGULAR_USER";
-
-  return kRoleName;
+inline std::string_view RegularUserRole::RoleName() const {
+  return "REGULAR_USER";
 }
 
 inline bool RegularUserRole::CanPerform(const UserAction action) const {
-  return kPerformableActions.contains(action);
+  return std::ranges::find(kPerformableActions, action) != kPerformableActions.end();
 }
 
 #endif  // REGULAR_USER_ROLE_H

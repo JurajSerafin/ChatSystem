@@ -1,7 +1,7 @@
 #ifndef I_USER_ROLE_H
 #define I_USER_ROLE_H
 
-#include <string>
+#include <string_view>
 
 #include <User/user_action.h>
 
@@ -25,7 +25,7 @@ public:
    *
    * @return Constant reference to the role name string.
    */
-  [[nodiscard]] virtual const std::string& RoleName() const = 0;
+  [[nodiscard]] virtual std::string_view RoleName() const = 0;
 
   /**
    * @brief Checks whether the role allows performing a specific action.
