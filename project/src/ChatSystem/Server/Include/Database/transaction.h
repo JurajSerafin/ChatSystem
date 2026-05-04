@@ -16,7 +16,7 @@ public:
   [[nodiscard]] std::unique_ptr<IResultSet> Execute(std::string_view query);
 
 
-  explicit Transaction(PooledConnection&& connection);
+  explicit Transaction(PooledConnection connection);
 
   Transaction() = delete;
 
@@ -32,28 +32,28 @@ public:
 
 
 private:
-  PooledConnection* connection_obs_;
+  PooledConnection connection_;
 
   bool is_commited_{ false };
 };
 
-inline Transaction::Transaction(PooledConnection&& connection) : connection_obs_(&connection) {
-    connection_obs_->GetConnection().BeginTransaction();
+inline Transaction::Transaction(PooledConnection connection) : connection_(std::move(connection)) {
+    connection_.GetConnection().BeginTransaction();
 }
 
 inline Transaction& Transaction::operator=(Transaction&& other) noexcept {
     if (this != &other) {
-        this->connection_obs_ = other.connection_obs_;
+      this->connection_ = std::move(other.connection_);
 
-        this->is_commited_ = other.is_commited_;
+      this->is_commited_ = other.is_commited_;
     }
 
     return *this;
 }
 
 inline Transaction::~Transaction() {
-    if (!is_commited_) {
-        connection_obs_->GetConnection().RollbackTransaction();
+    if (!is_commited_ && connection_.IsAlive()) {
+        connection_.GetConnection().RollbackTransaction();
     }
 }
 
@@ -62,17 +62,17 @@ inline void Transaction::Commit() {
     return;
   }
 
-  connection_obs_->GetConnection().CommitTransaction();
+  connection_.GetConnection().CommitTransaction();
 
   is_commited_ = true;
 }
 
 inline std::unique_ptr<IResultSet> Transaction::Execute(std::string_view query, const QueryParams& params) {
-    return connection_obs_->GetConnection().Execute(query, params);
+    return connection_.Execute(query, params);
 }
 
 inline std::unique_ptr<IResultSet> Transaction::Execute(std::string_view query) {
-    return connection_obs_->GetConnection().Execute(query);
+    return connection_.Execute(query);
 }
 
 #endif // TRANSACTION_H

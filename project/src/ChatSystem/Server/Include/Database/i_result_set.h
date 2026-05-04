@@ -2,8 +2,6 @@
 #define I_RESULT_SET_H
 
 #include <functional>
-#include <optional>
-#include <cstddef>
 
 #include "i_row.h"
 

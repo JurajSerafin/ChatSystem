@@ -7,6 +7,7 @@
 #include "query_params.h"
 
 #include <memory>
+#include <utility>
 
 class PooledConnection {
 public:
@@ -14,17 +15,17 @@ public:
 
   [[nodiscard]] std::unique_ptr<IResultSet> Execute(std::string_view query);
 
+  [[nodiscard]] bool IsAlive() const noexcept;
+
   [[nodiscard]] IConnection& GetConnection();
 
   PooledConnection() = delete;
 
   PooledConnection(const PooledConnection&) = delete;
 
-  PooledConnection(PooledConnection&&) = default;
+  PooledConnection(PooledConnection&& other) noexcept;
 
-  PooledConnection(IConnection* connectionPtr, IConnectionPool* connectionPoolPtr);
-
-  PooledConnection(IConnection&& connectionPtr, IConnectionPool&& connectionPoolPtr);
+  PooledConnection(std::unique_ptr<IConnection> connectionPtr, IConnectionPool* connectionPoolPtr);
 
   PooledConnection& operator=(const PooledConnection&) = delete;
   
@@ -33,43 +34,58 @@ public:
   ~PooledConnection();
 
 private:
-  IConnection* connection_obs_;
+  std::unique_ptr<IConnection> connection_;
   IConnectionPool* connection_pool_obs_;
+
+  void ReturnExistingConnectionToPool() noexcept;
 };
 
+inline PooledConnection::PooledConnection(PooledConnection&& other) noexcept 
+  : connection_(std::move(other.connection_)), connection_pool_obs_(other.connection_pool_obs_){
+  other.connection_pool_obs_ = nullptr;
+}
 
-inline PooledConnection::PooledConnection(IConnection* connectionPtr, IConnectionPool* connectionPoolPtr) 
-  : connection_obs_(connectionPtr), connection_pool_obs_(connectionPoolPtr) {}
-
-inline PooledConnection::PooledConnection(IConnection&& connectionPtr, IConnectionPool&& connectionPoolPtr) 
-  : connection_obs_(&connectionPtr), connection_pool_obs_(&connectionPoolPtr) {}
+inline PooledConnection::PooledConnection(std::unique_ptr<IConnection> connectionPtr, IConnectionPool* connectionPoolPtr)
+  : connection_(std::move(connectionPtr)), connection_pool_obs_(connectionPoolPtr) {
+}
 
 inline PooledConnection& PooledConnection::operator=(PooledConnection&& other) noexcept {
-    if (this != &other) {
-        this->connection_obs_ = other.connection_obs_;
-        this->connection_pool_obs_ = other.connection_pool_obs_;
+  if (this != &other) {
+      ReturnExistingConnectionToPool();
 
-        other.connection_obs_ = nullptr;
-        other.connection_pool_obs_ = nullptr;
-    }
+      connection_ = std::move(other.connection_);
+      connection_pool_obs_ = other.connection_pool_obs_;
 
-    return *this;
+      other.connection_pool_obs_ = nullptr;
+  }
+
+  return *this;
 }
 
 inline PooledConnection::~PooledConnection() {
-    connection_pool_obs_->Return(std::move(*connection_obs_));
+  ReturnExistingConnectionToPool();
+}
+
+inline void PooledConnection::ReturnExistingConnectionToPool() noexcept {
+  if (connection_ && connection_pool_obs_) {
+      connection_pool_obs_->Return(std::move(connection_));
+  }
 }
 
 inline IConnection& PooledConnection::GetConnection() {
-  return *connection_obs_;
+  return *connection_;
 }
 
 inline std::unique_ptr<IResultSet> PooledConnection::Execute(std::string_view query, const QueryParams& params) {
-  return connection_obs_->Execute(query, params);
+  return connection_->Execute(query, params);
 }
 
 inline std::unique_ptr<IResultSet> PooledConnection::Execute(std::string_view query) {
-  return connection_obs_->Execute(query);
+  return connection_->Execute(query);
+}
+
+inline bool PooledConnection::IsAlive() const noexcept {
+  return connection_ != nullptr && connection_->IsAlive();
 }
 
 #endif // POOLED_CONNECTION_H
