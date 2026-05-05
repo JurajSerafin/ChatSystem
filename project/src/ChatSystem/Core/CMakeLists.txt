@@ -2,7 +2,7 @@ file(GLOB_RECURSE CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
 file(GLOB_RECURSE CORE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.h" 
                                 "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.hpp")
 
-add_library(ChatSystemCore ${CORE_SOURCES} ${CORE_HEADERS})
+add_library(ChatSystemCore STATIC ${CORE_SOURCES} ${CORE_HEADERS})
 add_library(ChatSystem::Core ALIAS ChatSystemCore)
 
 set_target_properties(ChatSystemCore PROPERTIES
