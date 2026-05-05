@@ -26,7 +26,7 @@ public:
 private:
   pqxx::row row_;
 
-  [[nodiscard]] std::chrono::system_clock::time_point ParsePqxxTimeStamp(const char* columnName) const;
+  [[nodiscard]] std::chrono::system_clock::time_point ParsePqxxTimeStamp(const std::string& dbTimeStr) const;
 };
 
 

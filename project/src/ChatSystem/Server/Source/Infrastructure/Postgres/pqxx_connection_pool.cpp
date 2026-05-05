@@ -24,7 +24,7 @@ PooledConnection PqxxConnectionPool::Acquire() {
   }
 
   auto free_connection_ptr = std::move(free_connections_.front());
-  free_connections.pop_front();
+  free_connections_.pop_front();
 
   lock.unlock();
 

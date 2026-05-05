@@ -28,7 +28,7 @@ public:
   void Init();
 
 private:
-  constexpr std::chrono::milliseconds kDefaultAcquireTimeout = 200;
+  constexpr auto kDefaultAcquireTimeout = std::chrono::milliseconds(200);
 
   constexpr static std::size_t kConnectionCount = 50;
 

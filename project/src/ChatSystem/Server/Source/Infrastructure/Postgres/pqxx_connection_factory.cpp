@@ -1,13 +1,11 @@
-#include <Infrastructure/pqxx_connection_factory.h>
+#include "Infrastructure/Postgres/pqxx_connection_factory.h"
 
 #include <Database/exceptions.h>
-
-#include <pqxx/pqxx>
-
-#include <string>
 #include <cstdlib>
-#include <stdexcept>
 #include <format>
+#include <pqxx/pqxx>
+#include <stdexcept>
+#include <string>
 
 ConfigParams PqxxConnectionFactory::LoadDbConfig() {
   return ConfigParams{

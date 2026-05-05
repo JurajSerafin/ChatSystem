@@ -1,6 +1,8 @@
 #include <Infrastructure/Postgres/Mappers/user_mapper.h>
 
 #include <User/user_role_factory.h>
+#include <User/user.h>
+
 
 #include <Database/db_hydration_validator.h>
 
@@ -19,8 +21,8 @@ namespace {
 User UserMapper::Map(const IRow& row) {
   
   UserParams params{
-    .id = row.GetUuid(kIdColumn),
-    .tag = row.GetString(kTagColumn),
+    .id = UserId::FromString(row.GetUuid(kIdColumn)),
+    .tag = tags::UserTag{std::move(row.GetString(kTagColumn))},
     .login = row.GetString(kLoginColumn),
     .password_hash = row.GetString(kPasswordHashColumn),
     .public_key = row.GetString(kPublicKeyColumn),
@@ -28,5 +30,5 @@ User UserMapper::Map(const IRow& row) {
     .created_at = row.GetTimeStamp(kCreatedAtColumn)
   };
 
-  return User::Create(std::move(params), DbHydrationValidator<UserParams>{});
+  return User::Reconstitute(std::move(params));
 }
