@@ -15,7 +15,7 @@
 class SessionId : public BaseId<SessionId> {
   friend class BaseId;
 
-public:
+protected:
   /**
     * @brief Constructs a SessionId from a string representation.
     *
