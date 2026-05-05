@@ -1,6 +1,8 @@
 #ifndef MESSAGE_PARAMS_H
 #define MESSAGE_PARAMS_H
 
+#include "Payloads/message_payload_variant.h"
+
 #include <Chat/chat_id.h>
 #include <Message/message_id.h>
 #include <Message/message_type.h>
@@ -30,11 +32,7 @@ struct MessageParams {
   /// Identifier of the sender (must be valid).
   UserId sender_id;
 
-  /// Message content.
-  std::string content;
-
-  /// Type of the message (determines content semantics).
-  MessageType type;
+  MessagePayloadVariant payload;
 
   /// Creation timestamp.
   std::chrono::system_clock::time_point created_at;

@@ -26,21 +26,19 @@
  * @tparam TParams The parameter DTO type (expected to structurally match MessageParams).
  */
 template<typename TValidator, typename TParams>
-concept MessageValidatorFor = validation::ValidatorFor<TValidator, TParams>&& requires(TValidator validator, TParams params) {
+concept MessageValidatorFor = validation::ValidatorFor<TValidator, TParams> && requires(TValidator validator, TParams params) {
   // Ensure the params object contains the expected fields
   { params.id } -> std::convertible_to<MessageId>;
   { params.chat_id } -> std::convertible_to<ChatId>;
   { params.sender_id } -> std::convertible_to<UserId>;
-  { params.content } -> std::convertible_to<std::string>;
-  { params.type } -> std::convertible_to<MessageType>;
   { params.created_at } -> std::convertible_to< std::chrono::system_clock::time_point>;
+  { params.payload } -> std::convertible_to<MessagePayloadVariant>;
 
   // Ensure the validator exposes raw rules for each field that evaluate to a boolean Ok()
   { validator.GetIdRule()(params.id).Ok() } -> std::convertible_to<bool>;
   { validator.GetChatIdRule()(params.chat_id).Ok() } -> std::convertible_to<bool>;
   { validator.GetSenderIdRule()(params.sender_id).Ok() } -> std::convertible_to<bool>;
-  { validator.GetContentRule()(params.content).Ok() } -> std::convertible_to<bool>;
-  { validator.GetTypeRule()(params.type).Ok() } -> std::convertible_to<bool>;
+  { validator.GetPayloadRule()(params.payload).Ok() } -> std::convertible_to<bool>;
   { validator.GetCreatedAtRule()(params.created_at).Ok() } -> std::convertible_to<bool>;
 };
 
@@ -58,10 +56,8 @@ concept MessageValidatorFor = validation::ValidatorFor<TValidator, TParams>&& re
  * - Non-empty tag
  * - Point of creation set, other than the epoch
  */
-class MessageValidator : public IValidator<MessageParams, 6> {
+class MessageValidator : public IValidator<MessageParams, 5> {
 private:
-  /// Maximum allowed length of message content.
-  static constexpr size_t kMaxContentLength = 10000;
 
 public:
   /**
@@ -81,10 +77,7 @@ public:
   static constexpr auto GetSenderIdRule();
 
   /// @brief Retrieves the raw validation rule for the message content.
-  static constexpr auto GetContentRule();
-
-  /// @brief Retrieves the raw validation rule for the message type.
-  static constexpr auto GetTypeRule();
+  static constexpr auto GetPayloadRule();
 
   /// @brief Retrieves the raw validation rule for the message creation time point.
   static constexpr auto GetCreatedAtRule();
@@ -95,20 +88,15 @@ constexpr auto MessageValidator::GetIdRule() {
 }
 
 constexpr auto MessageValidator::GetChatIdRule() {
-  return  validation::rules::IsValid;
+  return validation::rules::IsValid;
 }
 
 constexpr auto MessageValidator::GetSenderIdRule() {
   return  validation::rules::IsValid;
 }
 
-constexpr auto MessageValidator::GetContentRule() {
-  return  validation::rules::NotEmpty && 
-    validation::rules::MaxLength<kMaxContentLength>;
-}
-
-constexpr auto MessageValidator::GetTypeRule() {
-  return  validation::rules::TrueRule;
+constexpr auto MessageValidator::GetPayloadRule() {
+  return  validation::rules::IsValid;
 }
 
 constexpr auto MessageValidator::GetCreatedAtRule() {
@@ -120,8 +108,7 @@ constexpr validation::ValidationResult<MessageValidator::kMaxErrors> MessageVali
     (VALIDATION_BIND_FIELD(MessageParams, id) | GetIdRule()) &&
     (VALIDATION_BIND_FIELD(MessageParams, chat_id) | GetChatIdRule()) &&
     (VALIDATION_BIND_FIELD(MessageParams, sender_id) | GetSenderIdRule()) &&
-    (VALIDATION_BIND_FIELD(MessageParams, content) | GetContentRule()) &&
-    (VALIDATION_BIND_FIELD(MessageParams, type) | GetTypeRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, payload) | GetPayloadRule()) &&
     (VALIDATION_BIND_FIELD(MessageParams, created_at) | GetCreatedAtRule());
 
   return rules(params);
