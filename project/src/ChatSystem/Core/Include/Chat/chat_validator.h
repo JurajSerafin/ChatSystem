@@ -3,7 +3,7 @@
 
 #include "chat_params.h"
 
-#include "Validation/validation.h"V
+#include "Validation/validation.h"
 #include <chrono>
 
 #include <concepts>

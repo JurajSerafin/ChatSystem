@@ -1,6 +1,5 @@
 #include "Infrastructure/Postgres/Mappers/user_mapper.h"
 
-#include <Database/db_hydration_validator.h>
 #include <Infrastructure/Postgres/Mappers/session_mapper.h>
 #include <Session/session.h>
 #include <utility>
@@ -16,7 +15,7 @@ namespace {
 Session SessionMapper::Map(const IRow& row) {
 
   SessionParams params{
-    .id = SessionId{row.GetUuid(kIdColumn)},
+    .id = SessionId::FromString(row.GetUuid(kIdColumn)),
     .user_id = UserId::FromString(row.GetUuid(kUserIdColumn)),
     .token = row.GetString(kTokenColumn),
     .expires_at = row.GetTimeStamp(kCreatedAtColumn),

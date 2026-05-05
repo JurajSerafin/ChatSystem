@@ -2,6 +2,7 @@
 #define MESSAGE_PAYLOAD_FACTORY_H
 
 #include <variant>
+#include <optional>
 #include <format>
 
 #include "message_payload.h"
@@ -22,7 +23,7 @@ std::variant<TMessagePayloads...> MessagePayloadFactory<std::variant<TMessagePay
   std::string_view typeStr,
   std::string content
 ) {
-  std::variant<TMessagePayloads...> payload_variant;
+  std::optional<std::variant<TMessagePayloads...>> payload_variant;
 
   bool payload_exists = (
     (TMessagePayloads::TypeString() == typeStr
@@ -35,7 +36,7 @@ std::variant<TMessagePayloads...> MessagePayloadFactory<std::variant<TMessagePay
     throw std::invalid_argument(std::format("Unable to recognize payload: Unknown payload type string '{}'", typeStr));
   }
 
-  return payload_variant;
+  return std::move(*payload_variant);
 }
 
 #endif // MESSAGE_PAYLOAD_FACTORY_H

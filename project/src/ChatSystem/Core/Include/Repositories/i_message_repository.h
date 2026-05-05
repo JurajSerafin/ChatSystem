@@ -8,6 +8,8 @@
 
 class IMessageRepository {
 
+public:
+
   virtual void MarkDelivered(const MessageId& message_id, const UserId& recipient_id) = 0;
 
   virtual void MarkRead(const MessageId& message_id, const UserId& reader_id) = 0;

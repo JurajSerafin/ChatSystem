@@ -20,7 +20,7 @@ struct ConfigParams {
   [[nodiscard]] constexpr bool AllSet() const;
 };
 
-inline bool ConfigParams::AllSet() const {
+constexpr bool ConfigParams::AllSet() const {
   return user
     && password
     && name

@@ -11,7 +11,7 @@
 
 class IUserRepository {
 public:
-
+    virtual ~IUserRepository() = default;
     virtual std::optional<User> FindById(UserId id) = 0;
     virtual std::optional<User> FindByLogin(const std::string& login) = 0;
     virtual std::optional<User> FindByTag(const std::string& tag) = 0;

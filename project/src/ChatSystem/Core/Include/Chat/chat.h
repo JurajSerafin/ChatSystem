@@ -4,19 +4,13 @@
 #include "Id/base_id.h"
 #include "chat_id.h"
 #include "chat_params.h"
-
 #include "chat_validator.h"
 
 #include <Message/message.h>
-#include <User/user.h>
-#include <User/user_id.h>
 #include <chrono>
-#include <functional>
 #include <optional>
 #include <shared_mutex>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 class Chat {
 private:

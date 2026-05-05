@@ -4,8 +4,6 @@
 #include <User/user.h>
 
 
-#include <Database/db_hydration_validator.h>
-
 #include <utility>
 
 namespace {

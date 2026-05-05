@@ -39,7 +39,7 @@ public:
    * @param id String representation of the identifier.
    * @return Constructed derived ID instance.
    */
-  [[nodiscard]] static TDerivedId FromString(const std::string& id);
+  [[nodiscard]] static TDerivedId FromString(std::string id);
 
   /**
    * @brief Returns the string representation of the identifier.
@@ -95,8 +95,8 @@ TDerived BaseId<TDerived>::Generate() {
 }
 
 template <typename TDerived>
-TDerived BaseId<TDerived>::FromString(const std::string& id) {
-  return TDerived{id};
+TDerived BaseId<TDerived>::FromString(std::string id) {
+  return TDerived{std::move(id)};
 }
 
 template <typename TDerived>

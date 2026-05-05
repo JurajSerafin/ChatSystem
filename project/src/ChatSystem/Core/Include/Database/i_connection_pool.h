@@ -2,6 +2,7 @@
 #define I_CONNECTION_POOL_H
 
 class PooledConnection;
+class IConnection;
 
 #include <memory>
 
