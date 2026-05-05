@@ -26,6 +26,7 @@ concept UserValidatorFor = validation::ValidatorFor<TValidator, TParams> && requ
   { params.password_hash } -> std::convertible_to<std::string>;
   { params.public_key } -> std::convertible_to<std::string>;
   { params.role } -> std::convertible_to<std::unique_ptr<IUserRole>&>;
+  { params.created_at } -> std::convertible_to<std::chrono::system_clock::time_point>;
 
   // Ensure the validator exposes raw rules for each field that evaluate to a boolean Ok()
   { validator.GetIdRule()(params.id).Ok() } -> std::convertible_to<bool>;
@@ -34,6 +35,7 @@ concept UserValidatorFor = validation::ValidatorFor<TValidator, TParams> && requ
   { validator.GetPasswordHashRule()(params.password_hash).Ok() } -> std::convertible_to<bool>;
   { validator.GetPublicKeyRule()(params.public_key).Ok() } -> std::convertible_to<bool>;
   { validator.GetRoleRule()(params.role).Ok() } -> std::convertible_to<bool>;
+  { validator.GetCreatedAtRule()(params.created_at).Ok() }-> std::convertible_to<bool>;
 };
 
 /**
@@ -50,7 +52,7 @@ concept UserValidatorFor = validation::ValidatorFor<TValidator, TParams> && requ
  * - Presence of public key
  * - Valid role assignment
  */
-class UserValidator : public IValidator<UserParams, 8> {
+class UserValidator : public IValidator<UserParams, 9> {
 private:
   /// Minimum allowed length for the login field.
   static constexpr std::size_t kMinLoginLength = 3;
@@ -83,6 +85,9 @@ public:
 
   /// @brief Retrieves the raw validation rule for the user role.
   static constexpr auto GetRoleRule();
+
+  static constexpr auto GetCreatedAtRule();
+
 };
 
 constexpr auto UserValidator::GetIdRule() {
@@ -111,14 +116,19 @@ constexpr auto UserValidator::GetRoleRule() {
   return validation::rules::IsNotNull;
 }
 
+constexpr auto UserValidator::GetCreatedAtRule() {
+  return validation::rules::TimePointMustBeSet;
+}
+
 constexpr validation::ValidationResult<UserValidator::kMaxErrors> UserValidator::Validate(const UserParams& params) const {
-  auto rules =
+  constexpr auto rules =
     (VALIDATION_BIND_FIELD(UserParams, id) | GetIdRule()) &&
     (VALIDATION_BIND_FIELD(UserParams, tag) | GetTagRule()) &&
     (VALIDATION_BIND_FIELD(UserParams, login) | GetLoginRule()) &&
     (VALIDATION_BIND_FIELD(UserParams, password_hash) | GetPasswordHashRule()) &&
     (VALIDATION_BIND_FIELD(UserParams, public_key) | GetPublicKeyRule()) &&
-    (VALIDATION_BIND_FIELD(UserParams, role) | GetRoleRule());
+    (VALIDATION_BIND_FIELD(UserParams, role) | GetRoleRule()) &&
+    (VALIDATION_BIND_FIELD(UserParams, created_at) | GetCreatedAtRule());
 
   return rules(params);
 }

@@ -6,6 +6,7 @@
 #include <User/user_id.h>
 #include <memory>
 #include <string>
+#include <chrono>
 
 /**
  * @brief Data transfer object for user creation and validation.
@@ -37,6 +38,9 @@ struct UserParams {
 
   /// User role defining permissions.
   std::unique_ptr<IUserRole> role;
+
+  std::chrono::system_clock::time_point created_at;
+
 
   // Optional
 };
