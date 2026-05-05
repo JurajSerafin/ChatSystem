@@ -39,9 +39,19 @@ namespace validation {
    * @tparam TValidatable The type to check.
    */
   template<typename TValidatable>
-  concept HasIsValid = requires(const TValidatable instance) {
+  concept HasIsValidSingle = requires(const TValidatable instance) {
     { instance.IsValid() } -> std::convertible_to<bool>;
   };
+
+  template<typename TValidatable>
+  struct VariantMembersHaveIsValid : std::false_type{};
+
+  template<typename ... TValidatable>
+  struct VariantMembersHaveIsValid<std::variant<TValidatable...>> :
+    std::bool_constant<(HasIsValidSingle<TValidatable> && ...)>{};
+
+  template<typename TValidatable>
+  concept HasIsValid = HasIsValidSingle<TValidatable> || VariantMembersHaveIsValid<TValidatable>::value;
 
   /**
    * @brief Concept ensuring a type behaves like a nullable pointer.
