@@ -1,56 +1,73 @@
 #ifndef CHAT_H
 #define CHAT_H
 
+#include "Id/base_id.h"
+#include "chat_id.h"
+#include "chat_params.h"
+
+#include "chat_validator.h"
+
+#include <Message/message.h>
+#include <User/user.h>
+#include <User/user_id.h>
 #include <chrono>
+#include <functional>
 #include <optional>
 #include <shared_mutex>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "Id/base_id.h"
-#include "chat_id.h"
-
-#include <Message/message.h>
-#include <Message/message_id.h>
-#include <User/user.h>
-#include <User/user_id.h>
-
 class Chat {
 private:
-    using time_point = std::chrono::system_clock::time_point;
+  
+  ChatId id_;
 
-    std::vector<User> participants_;
+  std::chrono::system_clock::time_point created_at_;
 
-    std::unordered_map<UserId, User, BaseId<UserId>::Hasher> user_id_map_;
-    
-    ChatId id_;
+  std::optional<std::string> name_;
 
-    time_point created_at_;
-
-    std::optional<Message> last_message_;
-
-    mutable std::shared_mutex mutex_;
+  explicit Chat(ChatParams params);
 
 public:
 
-    Chat(ChatId&& id, time_point created_at) : id_(std::move(id)), created_at_(created_at) {}
+  template<ChatValidatorFor<ChatParams> TChatValidator>
+  [[nodiscard]] static Chat Create(ChatParams params, const TChatValidator& validator);
 
-    [[nodiscard]] const std::vector<User>& GetParticipants() const;
+  [[nodiscard]] static Chat Reconstitute(ChatParams params);
 
-    [[nodiscard]] bool HasUser(const UserId& id) const;
+  [[nodiscard]] const ChatId& GetId() const;
 
-    [[nodiscard]] time_point CreatedAt() const;
+  [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 
-    [[nodiscard]] bool HasLastMessage() const;
+  [[nodiscard]] const std::optional<std::string>& GetName() const;
 
-    [[nodiscard]] const std::optional<Message> GetLastMessage() const;
-
-    bool AddParticipant(const User& newParticipant);
-
-    bool RemoveUserById(const UserId& userId);
-
-    void UpdateLastMessage(const Message& message);
-    
+  void SetName(std::string name);
+  
 };
+
+template <ChatValidatorFor<ChatParams> TChatValidator>
+Chat Chat::Create(ChatParams params, const TChatValidator& validator) {
+  if (const auto result = validator.Validate(params); !result.Ok()) {
+    throw std::invalid_argument{ result.Summary() };
+  }
+
+  return Chat{ std::move(params) };
+}
+
+inline Chat::Chat(ChatParams params) : id_(std::move(params.id)), created_at_(params.created_at), name_(params.name) {}
+
+inline Chat Chat::Reconstitute(ChatParams params) {
+  return Chat{ std::move(params) };
+}
+inline const ChatId& Chat::GetId() const {
+  return id_;
+}
+inline std::chrono::system_clock::time_point Chat::CreatedAt() const {
+  return created_at_;
+}
+inline const std::optional<std::string>& Chat::GetName() const {
+  return name_;
+}
 
 #endif // CHAT_H
