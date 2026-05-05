@@ -32,6 +32,9 @@ public:
 
 
 private:
+
+  void CleanupExistingTransaction();
+
   PooledConnection connection_;
 
   bool is_commited_{ false };
@@ -42,19 +45,23 @@ inline Transaction::Transaction(PooledConnection connection) : connection_(std::
 }
 
 inline Transaction& Transaction::operator=(Transaction&& other) noexcept {
-    if (this != &other) {
-      this->connection_ = std::move(other.connection_);
+  if (this != &other) {
+    CleanupExistingTransaction();
 
-      this->is_commited_ = other.is_commited_;
-    }
+    this->connection_ = std::move(other.connection_);
+    this->is_commited_ = other.is_commited_;
+  }
 
-    return *this;
+  return *this;
 }
 
 inline Transaction::~Transaction() {
-    if (!is_commited_ && connection_.IsAlive()) {
-        connection_.GetConnection().RollbackTransaction();
-    }
+  CleanupExistingTransaction();
+}
+inline void Transaction::CleanupExistingTransaction() {
+  if (!is_commited_ && connection_.IsAlive()) {
+    connection_.GetConnection().RollbackTransaction();
+  }
 }
 
 inline void Transaction::Commit() {

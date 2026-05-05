@@ -13,8 +13,13 @@ class ISessionRepository {
 public:
 
     virtual Session Create(const Session& session) = 0;
+
+    virtual Session Create(Session&& session) = 0;
+
     virtual std::optional<Session> FindByToken(const std::string& token) = 0;
+
     virtual std::vector<Session> FindByUserId(UserId userId) = 0;
+
     virtual void DeleteByToken(const std::string& token) = 0;
 
     virtual void DeleteAllForUser(UserId userId) = 0;

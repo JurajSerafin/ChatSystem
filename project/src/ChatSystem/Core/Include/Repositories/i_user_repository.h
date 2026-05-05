@@ -19,6 +19,8 @@ public:
     virtual std::vector<User> Search(const std::string& query) = 0;
 
     virtual User Create(const User& user) = 0;
+    virtual User Create(User&& user) = 0;
+
     virtual void Update(const User& user) = 0;
     virtual void DeleteById(UserId id) = 0;
 

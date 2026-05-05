@@ -11,7 +11,6 @@ private:
   using ActiveRoles = std::tuple<RegularUserRole>;
 public:
   [[nodiscard]] User Map(const IRow& row) override;
-
 };
 
 #endif // USER_MAPPER_H

@@ -1,7 +1,8 @@
 #ifndef I_CONNECTION_POOL_H
 #define I_CONNECTION_POOL_H
 
-#include "pooled_connection.h"
+class PooledConnection;
+
 #include <memory>
 
 class IConnectionPool {

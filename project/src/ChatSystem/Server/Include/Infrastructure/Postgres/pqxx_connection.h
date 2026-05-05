@@ -1,8 +1,7 @@
 #ifndef PQXX_CONNECTION_H
 #define PQXX_CONNECTION_H
 
-#include "i_result_set.h"
-#include "query_params.h"
+
 #include "pqxx_result_set.h"
 
 #include <memory>

@@ -182,7 +182,8 @@ User AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::str
     .login = login,
     .password_hash = std::move(password_hash),
     .public_key = key_pair.GetPublicKey(),
-    .role = std::make_unique<RegularUserRole>()
+    .role = std::make_unique<RegularUserRole>(),
+    .created_at = std::chrono::system_clock::now()
     }, user_validator_);
 
   return user_repo_.Create(std::move(user));

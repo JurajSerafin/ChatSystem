@@ -5,6 +5,8 @@
 #include <Validation/Concepts/rule_concepts.h>
 #include <Validation/Core/validation_result.h>
 
+#include <variant>
+
 namespace validation {
 
   namespace rules {
@@ -23,6 +25,9 @@ namespace validation {
        */
       template<HasIsValid TValidatable>
       constexpr auto operator()(const TValidatable& validatable) const noexcept;
+
+      template <HasIsValid ... TValidatable>
+      constexpr auto operator()(const std::variant<TValidatable...>& validatable) const noexcept;
     };
 
     template <HasIsValid TValidatable>
@@ -32,6 +37,21 @@ namespace validation {
       if (!validatable.IsValid()) {
         result.AddError({ "", "Has to be valid" });
       }
+
+      return result;
+    }
+
+    template <HasIsValid ... TValidatable>
+    constexpr auto IsValid_t::operator()(const std::variant<TValidatable...>& validatable) const noexcept {
+      ValidationResult<capacity> result;
+
+      std::visit(
+        [&](auto&& validatableVal) {
+          if (!validatableVal.IsValid()) {
+            result.AddError({ "", "Has to be valid" });
+          }
+        }, validatable
+      );
 
       return result;
     }
