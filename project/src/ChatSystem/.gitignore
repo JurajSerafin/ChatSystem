@@ -38,3 +38,6 @@ _deps
 # OS
 .DS_Store
 Thumbs.db
+
+## Docker
+.env
