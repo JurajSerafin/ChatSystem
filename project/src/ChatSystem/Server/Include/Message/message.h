@@ -1,6 +1,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include "TypeLibHelpers/overload.h"
+
 #include <Chat/chat_id.h>
 #include <Message/message_id.h>
 #include <Message/message_params.h>
@@ -8,9 +10,9 @@
 #include <Message/message_validator.h>
 #include <User/user_id.h>
 #include <chrono>
+#include <functional>
 #include <stdexcept>
 #include <string>
-#include <functional>
 
 /**
  * @brief Represents a message in a chat system.
@@ -66,6 +68,8 @@ public:
   template<MessageValidatorFor<MessageParams> TMessageValidator>
   [[nodiscard]] static Message Create(MessageParams params, const TMessageValidator& validator);
 
+  [[nodiscard]] static Message Reconstitute(MessageParams params);
+
   /// @return Unique identifier of the message.
   [[nodiscard]] const MessageId& GetId() const;
 
@@ -76,10 +80,11 @@ public:
   [[nodiscard]] const UserId& GetSenderId() const;
 
   /// @return Content/body of the message.
-  [[nodiscard]] const std::string& GetContent() const;
+  [[nodiscard]] const MessagePayloadVariant& GetPayload() const;
 
-  /// @return Type of the message (e.g. text, image, system).
-  [[nodiscard]] MessageType GetType() const;
+  [[nodiscard]] std::string_view GetContent() const;
+
+  [[nodiscard]] std::string_view GetTypeStr() const;
 
   /// @return Timestamp when the message was created.
   [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
@@ -94,8 +99,7 @@ private:
     : id_{ std::move(params.id) },
     chat_id_{ std::move(params.chat_id) },
     sender_id_{ std::move(params.sender_id) },
-    content_{ std::move(params.content) },
-    type_{ params.type },
+    payload_{ std::move(params.payload) },
     created_at_{ params.created_at } {
   }
 
@@ -105,9 +109,7 @@ private:
 
   UserId sender_id_;
 
-  std::string content_;
-
-  MessageType type_;
+  MessagePayloadVariant payload_;
 
   std::chrono::system_clock::time_point created_at_;
 
@@ -118,6 +120,10 @@ Message Message::Create(MessageParams params, const TMessageValidator& validator
     throw std::invalid_argument{ result.Summary() };
   }
 
+  return Message{ std::move(params) };
+}
+
+inline Message Message::Reconstitute(MessageParams params) {
   return Message{ std::move(params) };
 }
 
@@ -133,12 +139,8 @@ inline const UserId& Message::GetSenderId() const {
   return sender_id_;
 }
 
-inline const std::string& Message::GetContent() const {
-  return content_;
-}
-
-inline MessageType Message::GetType() const {
-  return type_;
+inline const MessagePayloadVariant& Message::GetPayload() const {
+  return payload_;
 }
 
 inline std::chrono::system_clock::time_point Message::CreatedAt() const {

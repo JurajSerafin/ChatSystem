@@ -66,6 +66,8 @@ public:
   template<SessionValidatorFor<SessionParams> TSessionValidator>
   [[nodiscard]] static Session Create(SessionParams params, const TSessionValidator& validator);
 
+  [[nodiscard]] static Session Reconstitute(SessionParams params);
+
   /// @brief Retrieves the unique identifier of the session.
   [[nodiscard]] const SessionId& GetId() const;
 
@@ -120,6 +122,10 @@ Session Session::Create(SessionParams params, const TSessionValidator& validator
     throw std::invalid_argument{ result.Summary() };
   }
 
+  return Session{ std::move(params) };
+}
+
+inline Session Session::Reconstitute(SessionParams params) {
   return Session{ std::move(params) };
 }
 

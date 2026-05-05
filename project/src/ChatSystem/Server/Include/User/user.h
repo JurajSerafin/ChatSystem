@@ -64,6 +64,8 @@ public:
   template<UserValidatorFor<UserParams> TUserValidator>
   [[nodiscard]] static User Create(UserParams params, const TUserValidator& validator);
 
+  [[nodiscard]] static User Reconstitute(UserParams params);
+
   /**
    * @brief Checks if the user's role permits a specific action.
    * @param action The action attempting to be performed.
@@ -88,6 +90,8 @@ public:
 
   /// @brief Retrieves the assigned role of the user.
   [[nodiscard]] const IUserRole& GetRole() const;
+
+  [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 
   /**
    * @brief Mutates the user's role after strictly validating the new value.
@@ -126,6 +130,7 @@ private:
   std::string password_hash_;
   std::string public_key_;
   std::unique_ptr<IUserRole> role_;
+  std::chrono::system_clock::time_point created_at_;
 };
 
 template<UserValidatorFor<UserParams> TUserValidator>
@@ -134,6 +139,10 @@ User User::Create(UserParams params, const TUserValidator& validator) {
     throw std::invalid_argument{ result.Summary() };
   }
 
+  return User{ std::move(params) };
+}
+
+inline User User::Reconstitute(UserParams params) {
   return User{ std::move(params) };
 }
 
@@ -164,6 +173,9 @@ inline const std::string& User::GetPublicKey() const {
 inline const IUserRole& User::GetRole() const {
   return *role_;
 }
+inline std::chrono::system_clock::time_point User::CreatedAt() const {
+  return created_at_;
+}
 
 inline void User::SetRole(std::unique_ptr<IUserRole> role) {
   role_ = std::move(role);
@@ -183,6 +195,7 @@ inline User::User(UserParams params)
     login_{std::move(params.login)},
     password_hash_{std::move(params.password_hash)},
     public_key_{std::move(params.public_key)},
-    role_{std::move(params.role)} {}
+    role_{std::move(params.role)},
+    created_at_{params.created_at} {}
 
 #endif  // USER_H
