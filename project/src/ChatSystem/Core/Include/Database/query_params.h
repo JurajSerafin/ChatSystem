@@ -3,11 +3,13 @@
 
 #include <variant>
 #include <string>
+#include <string_view>
 #include <chrono>
 #include <cstddef>
 #include <vector>
 
 using ParamsVariant = std::variant<
+  std::string_view,
   std::string,
   int,
   bool,
@@ -19,7 +21,9 @@ using ParamsVariant = std::variant<
 class QueryParams {
 public:
 
-  QueryParams& BindParam(std::string param);
+  QueryParams& BindParam(std::string&& param);
+
+  QueryParams& BindParam(std::string_view param);
 
   QueryParams& BindParam(int param);
 
@@ -64,8 +68,12 @@ QueryParams& QueryParams::EmplaceBackAndReturnThis(TParam&& param) {
 }
 
 
-inline QueryParams& QueryParams::BindParam(std::string param) {
+inline QueryParams& QueryParams::BindParam(std::string&& param) {
   return EmplaceBackAndReturnThis(std::move(param));
+}
+
+inline QueryParams& QueryParams::BindParam(std::string_view param) {
+  return EmplaceBackAndReturnThis(param);
 }
 
 inline QueryParams& QueryParams::BindParam(int param) {
