@@ -1,13 +1,13 @@
 #ifndef USER_H
 #define USER_H
 
+#include "Roles/user_role_variant.h"
+#include "user_validator_for.h"
+
 #include <Tags/user_tag.h>
-#include <User/i_user_role.h>
 #include <User/user_action.h>
 #include <User/user_id.h>
 #include <User/user_params.h>
-#include <User/user_validator.h>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -17,7 +17,7 @@
  * The User class encapsulates all user-related state and strictly enforces
  * its invariants on creation through a generic validation policy provided
  * at compile time.
- * 
+ *
  * To enforce unique instances, this class is made move-only.
 
  */
@@ -89,7 +89,7 @@ public:
   [[nodiscard]] const std::string& GetPublicKey() const;
 
   /// @brief Retrieves the assigned role of the user.
-  [[nodiscard]] const IUserRole& GetRole() const;
+  [[nodiscard]] const UserRoleVariant& GetRole() const;
 
   [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 
@@ -99,7 +99,7 @@ public:
    * @param validator The validator to verify the new role.
    * @throws std::invalid_argument if the role fails validation.
    */
-  void SetRole(std::unique_ptr<IUserRole> role);
+  void SetRole(UserRoleVariant role);
 
   /**
    * @brief Mutates the user's login after strictly validating the new value.
@@ -129,7 +129,7 @@ private:
   std::string login_;
   std::string password_hash_;
   std::string public_key_;
-  std::unique_ptr<IUserRole> role_;
+  UserRoleVariant role_;
   std::chrono::system_clock::time_point created_at_;
 };
 
@@ -144,10 +144,6 @@ User User::Create(UserParams params, const TUserValidator& validator) {
 
 inline User User::Reconstitute(UserParams params) {
   return User{ std::move(params) };
-}
-
-inline bool User::CanPerform(const UserAction action) const {
-  return role_->CanPerform(action);
 }
 
 inline const UserId& User::GetId() const {
@@ -170,14 +166,15 @@ inline const std::string& User::GetPublicKey() const {
   return public_key_;
 }
 
-inline const IUserRole& User::GetRole() const {
-  return *role_;
+inline const UserRoleVariant& User::GetRole() const {
+  return role_;
 }
+
 inline std::chrono::system_clock::time_point User::CreatedAt() const {
   return created_at_;
 }
 
-inline void User::SetRole(std::unique_ptr<IUserRole> role) {
+inline void User::SetRole(UserRoleVariant role) {
   role_ = std::move(role);
 }
 

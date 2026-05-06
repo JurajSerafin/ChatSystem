@@ -1,18 +1,13 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include "TypeLibHelpers/overload.h"
-
 #include <Chat/chat_id.h>
 #include <Message/message_id.h>
 #include <Message/message_params.h>
-#include <Message/message_type.h>
-#include <Message/message_validator.h>
+#include <Message/message_validator_for.h>
 #include <User/user_id.h>
 #include <chrono>
-#include <functional>
 #include <stdexcept>
-#include <string>
 
 /**
  * @brief Represents a message in a chat system.

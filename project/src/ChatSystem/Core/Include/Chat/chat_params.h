@@ -1,6 +1,8 @@
 #ifndef CHAT_PARAMS_H
 #define CHAT_PARAMS_H
 
+#include "Message/message.h"
+#include "Types/chat_type_variant.h"
 #include "chat_id.h"
 
 #include <chrono>
@@ -11,7 +13,9 @@ struct ChatParams {
 
   std::chrono::system_clock::time_point created_at;
 
-  std::optional<std::string> name;
+  ChatTypeVariant type;
+
+  std::optional<Message> last_message;
 };
 
 #endif // CHAT_PARAMS_H

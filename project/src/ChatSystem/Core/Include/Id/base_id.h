@@ -31,6 +31,9 @@ public:
    */
   [[nodiscard]] static TDerivedId Generate();
 
+
+  [[nodiscard]] static TDerivedId Parse(const std::string& id);
+
   /**
    * @brief Creates an ID from an existing string representation.
    *
@@ -39,7 +42,7 @@ public:
    * @param id String representation of the identifier.
    * @return Constructed derived ID instance.
    */
-  [[nodiscard]] static TDerivedId FromString(std::string id);
+  [[nodiscard]] static TDerivedId Reconstitute(std::string id);
 
   /**
    * @brief Returns the string representation of the identifier.
@@ -69,7 +72,7 @@ public:
    * @brief Hash functor for using IDs in unordered containers.
    */
   struct Hasher {
-    size_t operator()(const TDerivedId& id) const noexcept;
+  size_t operator()(const TDerivedId& id) const noexcept;
   };
 
 protected:
@@ -94,8 +97,19 @@ TDerived BaseId<TDerived>::Generate() {
   return TDerived{GenerateUuid()};
 }
 
+template <typename TDerivedId>
+TDerivedId BaseId<TDerivedId>::Parse(const std::string& id) {
+  try {
+    const boost::uuids::string_generator gen;
+    gen(id);
+    return TDerivedId{id};
+  } catch (const std::exception&) {
+    throw std::invalid_argument("Invalid UUID format");
+  }
+}
+
 template <typename TDerived>
-TDerived BaseId<TDerived>::FromString(std::string id) {
+TDerived BaseId<TDerived>::Reconstitute(std::string id) {
   return TDerived{std::move(id)};
 }
 

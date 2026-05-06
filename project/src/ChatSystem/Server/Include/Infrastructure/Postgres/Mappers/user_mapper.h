@@ -7,8 +7,6 @@
 #include <tuple>
 
 class UserMapper : public IMapper<User> {
-private:
-  using ActiveRoles = std::tuple<RegularUserRole>;
 public:
   [[nodiscard]] User Map(const IRow& row) override;
 };

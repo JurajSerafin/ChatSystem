@@ -1,11 +1,10 @@
 #ifndef REGULAR_USER_ROLE_H
 #define REGULAR_USER_ROLE_H
 
-#include <array>
-#include <algorithm>
-
 #include <User/user_action.h>
-#include <User/i_user_role.h>
+#include <algorithm>
+#include <array>
+#include <string_view>
 
 /**
  * @brief Concrete role representing a regular user.
@@ -17,7 +16,7 @@
  *
  * Permissions are defined statically and cannot be modified at runtime.
  */
-class RegularUserRole : public IUserRole {
+class RegularUserRole {
 private:
 
   constexpr static std::size_t kPerformableActionsCount = 5;
@@ -42,7 +41,7 @@ public:
    *
    * @return Constant reference to the string that represents RegularUserRole.
    */
-  [[nodiscard]] std::string_view RoleName() const override;
+  [[nodiscard]] constexpr static std::string_view TypeString();
 
   /**
    * @brief Checks whether the role allows a specific user action.
@@ -50,44 +49,14 @@ public:
    * @param action The action to evaluate.
    * @return true if the action is permitted, false otherwise.
    */
-  [[nodiscard]] bool CanPerform(UserAction action) const override;
-
-  /**
-   * @brief Default constructor.
-   */
-  RegularUserRole() = default;
-
-  /**
-   * @brief Copy constructor.
-   */
-  RegularUserRole(const RegularUserRole& other) = default;
-
-  /**
-   * @brief Move constructor.
-   */
-  RegularUserRole(RegularUserRole&& other) = default;
-
-  /**
-   * @brief Deleted copy assignment operator.
-   */
-  RegularUserRole& operator=(const RegularUserRole& other) = delete;
-
-  /**
-   * @brief Deleted move assignment operator.
-   */
-  RegularUserRole& operator=(RegularUserRole&& other) = delete;
-
-  /**
-   * @brief Virtual destructor.
-   */
-  ~RegularUserRole() override = default;
+  [[nodiscard]] static bool CanPerform(UserAction action);
 };
 
-inline std::string_view RegularUserRole::RoleName() const {
+constexpr std::string_view RegularUserRole::TypeString() {
   return "REGULAR_USER";
 }
 
-inline bool RegularUserRole::CanPerform(const UserAction action) const {
+inline bool RegularUserRole::CanPerform(const UserAction action) {
   return std::ranges::find(kPerformableActions, action) != kPerformableActions.end();
 }
 

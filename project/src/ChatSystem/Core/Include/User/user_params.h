@@ -2,11 +2,9 @@
 #define USER_PARAMS_H
 
 #include <Tags/user_tag.h>
-#include <User/i_user_role.h>
 #include <User/user_id.h>
-#include <memory>
-#include <string>
 #include <chrono>
+#include <string>
 
 /**
  * @brief Data transfer object for user creation and validation.
@@ -37,7 +35,7 @@ struct UserParams {
   std::string public_key;
 
   /// User role defining permissions.
-  std::unique_ptr<IUserRole> role;
+  UserRoleVariant role;
 
   std::chrono::system_clock::time_point created_at;
 

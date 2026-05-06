@@ -19,7 +19,9 @@ private:
 
   std::chrono::system_clock::time_point created_at_;
 
-  std::optional<std::string> name_;
+  ChatTypeVariant type_;
+
+  std::optional<Message> last_message_;
 
   explicit Chat(ChatParams params);
 
@@ -34,7 +36,9 @@ public:
 
   [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 
-  [[nodiscard]] const std::optional<std::string>& GetName() const;
+  [[nodiscard]] const ChatTypeVariant& GetType() const;
+
+  [[nodiscard]] const std::optional<Message>& GetLastMessage() const;
 
   void SetName(std::string name);
   
@@ -49,19 +53,26 @@ Chat Chat::Create(ChatParams params, const TChatValidator& validator) {
   return Chat{ std::move(params) };
 }
 
-inline Chat::Chat(ChatParams params) : id_(std::move(params.id)), created_at_(params.created_at), name_(params.name) {}
+inline Chat::Chat(ChatParams params) 
+  : id_(std::move(params.id)),
+  created_at_(params.created_at),
+  type_(params.type),
+  last_message_(std::move(params.last_message)) {}
 
 inline Chat Chat::Reconstitute(ChatParams params) {
   return Chat{ std::move(params) };
 }
+
 inline const ChatId& Chat::GetId() const {
   return id_;
 }
+
 inline std::chrono::system_clock::time_point Chat::CreatedAt() const {
   return created_at_;
 }
-inline const std::optional<std::string>& Chat::GetName() const {
-  return name_;
+
+inline const ChatTypeVariant& Chat::GetType() const {
+  return type_;
 }
 
 #endif // CHAT_H

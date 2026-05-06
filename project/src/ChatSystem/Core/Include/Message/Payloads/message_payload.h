@@ -2,9 +2,8 @@
 #define MESSAGE_PAYLOAD_H
 
 #include <concepts>
-#include <string_view>
-#include <variant>
 #include <stdexcept>
+#include <string_view>
 
 template<typename T>
 concept MessagePayload = requires(T payload) {
@@ -13,4 +12,4 @@ concept MessagePayload = requires(T payload) {
   { payload.IsValid() } -> std::convertible_to<bool>;
 };
 
-#endif // !MESSAGE_PAYLOAD_H
+#endif // MESSAGE_PAYLOAD_H
