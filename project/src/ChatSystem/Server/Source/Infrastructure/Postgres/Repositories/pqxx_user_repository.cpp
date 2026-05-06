@@ -24,7 +24,9 @@ std::optional<User> PqxxUserRepository::TryFetchUser(std::string_view query, con
 
   std::optional<User> fetched_user = std::nullopt;
 
-  query_result->First([&fetched_user](const IRow& row) {fetched_user = UserMapper{}.Map(row); });
+  query_result->First([&fetched_user](const IRow& row) {
+    fetched_user = UserMapper{}.Map(row);
+  });
 
   return fetched_user;
 }
@@ -38,9 +40,13 @@ std::vector<User> PqxxUserRepository::TryFetchUsers(std::string_view query, Tran
     return fetched_users;
   }
 
+  fetched_users.reserve(query_result->GetSize());
+
   UserMapper mapper{};
 
-  query_result->ForEach([&fetched_users, &mapper](const IRow& row) { fetched_users.emplace_back(mapper.Map(row)); });
+  query_result->ForEach([&fetched_users, &mapper](const IRow& row) {
+    fetched_users.emplace_back(mapper.Map(row));
+  });
 
   return fetched_users;
 }
@@ -85,9 +91,9 @@ User PqxxUserRepository::Create(const User& user) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string query = R"(
-      INSERT INTO users (id, login, tag, created_at) 
-      VALUES ($1, $2, $3, $4) 
-      RETURNING *
+    INSERT INTO users (id, login, tag, created_at) 
+    VALUES ($1, $2, $3, $4) 
+    RETURNING *
   )";
 
   auto params = QueryParams{}
@@ -96,7 +102,7 @@ User PqxxUserRepository::Create(const User& user) {
     .BindParam(user.GetTag().ToString())
     .BindParam(user.CreatedAt());
 
-  auto query_result = tx.Execute(query, params);
+  const auto query_result = tx.Execute(query, params);
 
   std::optional<User> created_user = std::nullopt;
 
@@ -117,10 +123,10 @@ void PqxxUserRepository::Update(const User& user) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string query = R"(
-        UPDATE users 
-        SET login = $2, tag = $3 
-        WHERE id = $1
-    )";
+    UPDATE users 
+    SET login = $2, tag = $3 
+    WHERE id = $1
+  )";
 
   auto params = QueryParams{}
     .BindParam(user.GetId().ToString())
