@@ -6,6 +6,14 @@
 #include <Infrastructure/Postgres/Mappers/user_mapper.h>
 
 #include <string>
+#include <stdexcept>
+
+PqxxUserRepository::PqxxUserRepository(IConnectionPool* connectionPoolObs) : connection_pool_obs_(connectionPoolObs) {
+
+  if (!connection_pool_) {
+    throw std::invalid_argument("PqxxUserRepository requires a valid IConnectionPool pointer.");
+  }
+}
 
 std::optional<User> PqxxUserRepository::TryFetchUser(std::string_view query, const QueryParams& params, Transaction&& tx) {
   const auto query_result = tx.Execute(query, params);
