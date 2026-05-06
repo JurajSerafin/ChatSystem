@@ -11,10 +11,9 @@
 
 class ISessionRepository {
 public:
+    virtual ~ISessionRepository() = default;
 
     virtual Session Create(const Session& session) = 0;
-
-    virtual Session Create(Session&& session) = 0;
 
     virtual std::optional<Session> FindByToken(const std::string& token) = 0;
 
