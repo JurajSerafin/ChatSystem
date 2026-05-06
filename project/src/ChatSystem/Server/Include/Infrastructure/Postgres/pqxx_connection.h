@@ -20,9 +20,9 @@ public:
     : connection_(connection_uri) {
   }
 
-  [[nodiscard]] std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params) override;
+  std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params) override;
 
-  [[nodiscard]] std::unique_ptr<IResultSet> Execute(std::string_view query) override;
+  std::unique_ptr<IResultSet> Execute(std::string_view query) override;
 
   void BeginTransaction() override;
 

@@ -9,9 +9,9 @@
 
 class IConnection {
 public:
-  [[nodiscard]] virtual std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params) = 0;
+  virtual std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params) = 0;
 
-  [[nodiscard]] virtual std::unique_ptr<IResultSet> Execute(std::string_view query) = 0;
+  virtual std::unique_ptr<IResultSet> Execute(std::string_view query) = 0;
 
   virtual void BeginTransaction() = 0;
 

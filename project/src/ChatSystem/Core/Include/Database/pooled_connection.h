@@ -11,9 +11,9 @@
 
 class PooledConnection {
 public:
-  [[nodiscard]] std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params);
+  std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params);
 
-  [[nodiscard]] std::unique_ptr<IResultSet> Execute(std::string_view query);
+  std::unique_ptr<IResultSet> Execute(std::string_view query);
 
   [[nodiscard]] bool IsAlive() const noexcept;
 
