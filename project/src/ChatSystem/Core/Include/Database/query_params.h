@@ -11,7 +11,7 @@
 using ParamsVariant = std::variant<
   std::string_view,
   std::string,
-  int,
+  int64_t,
   bool,
   std::chrono::system_clock::time_point,
   std::nullptr_t
@@ -25,7 +25,9 @@ public:
 
   QueryParams& BindParam(std::string_view param);
 
-  QueryParams& BindParam(int param);
+  QueryParams& BindParam(int64_t param);
+
+  QueryParams& BindParam(std::size_t param);
 
   QueryParams& BindParam(bool param);
 
@@ -76,8 +78,12 @@ inline QueryParams& QueryParams::BindParam(std::string_view param) {
   return EmplaceBackAndReturnThis(param);
 }
 
-inline QueryParams& QueryParams::BindParam(int param) {
+inline QueryParams& QueryParams::BindParam(int64_t param) {
   return EmplaceBackAndReturnThis(param);
+}
+
+inline QueryParams& QueryParams::BindParam(std::size_t param) {
+  return EmplaceBackAndReturnThis(static_cast<int64_t>(param));
 }
 
 inline QueryParams& QueryParams::BindParam(bool param) {

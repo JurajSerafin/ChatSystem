@@ -16,6 +16,8 @@ struct ChatParams {
   ChatTypeVariant type;
 
   std::optional<Message> last_message;
+
+  std::vector<UserId> participant_ids;
 };
 
 #endif // CHAT_PARAMS_H
