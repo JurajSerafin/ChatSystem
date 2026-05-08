@@ -22,9 +22,9 @@ Chat PqxxChatRepository::Create(const Chat& chat) {
   );
 
   const std::string chat_sql = R"(
-        INSERT INTO chats (id, type, created_at) 
-        VALUES ($1, $2, $3) RETURNING *
-    )";
+    INSERT INTO chats (id, type, created_at) 
+    VALUES ($1, $2, $3) RETURNING *
+  )";
 
   const auto params = QueryParams{}
     .BindParam(chat.GetId().ToString())
@@ -48,13 +48,13 @@ std::optional<Chat> PqxxChatRepository::FindById(const ChatId& id) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string sql = R"(
-      SELECT c.*, 
-              m.id AS msg_id, m.sender_id AS msg_sender_id, 
-              m.type AS msg_type, m.content AS msg_content, 
-              m.created_at AS msg_created_at
-      FROM chats c
-      LEFT JOIN messages m ON c.last_message_id = m.id
-      WHERE c.id = $1
+    SELECT c.*, 
+      m.id AS msg_id, m.sender_id AS msg_sender_id, 
+      m.type AS msg_type, m.content AS msg_content, 
+      m.created_at AS msg_created_at
+    FROM chats c
+    LEFT JOIN messages m ON c.last_message_id = m.id
+    WHERE c.id = $1
   )";
 
   const auto fetched_chat_result = tx.Execute(sql, QueryParams{}.BindParam(id.ToString()));
@@ -86,17 +86,17 @@ std::vector<Chat> PqxxChatRepository::FindByUserId(const UserId& userId, std::si
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string sql = R"(
-        SELECT c.*, 
-               m.id AS msg_id, m.sender_id AS msg_sender_id, 
-               m.type AS msg_type, m.content AS msg_content, 
-               m.created_at AS msg_created_at
-        FROM chats c
-        JOIN chat_participants cp ON c.id = cp.chat_id
-        LEFT JOIN messages m ON c.last_message_id = m.id
-        WHERE cp.user_id = $1
-        ORDER BY c.last_message_timestamp DESC NULLS LAST
-        LIMIT $2 OFFSET $3
-    )";
+    SELECT c.*, 
+      m.id AS msg_id, m.sender_id AS msg_sender_id, 
+      m.type AS msg_type, m.content AS msg_content, 
+      m.created_at AS msg_created_at
+    FROM chats c
+    JOIN chat_participants cp ON c.id = cp.chat_id
+    LEFT JOIN messages m ON c.last_message_id = m.id
+    WHERE cp.user_id = $1
+    ORDER BY c.last_message_timestamp DESC NULLS LAST
+    LIMIT $2 OFFSET $3
+  )";
 
   const auto fetched_user_ids_result = tx.Execute(sql, QueryParams{}
     .BindParam(userId.ToString())
