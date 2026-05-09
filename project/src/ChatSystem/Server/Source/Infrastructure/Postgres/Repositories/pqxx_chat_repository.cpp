@@ -13,7 +13,7 @@ PqxxChatRepository::PqxxChatRepository(IConnectionPool* connectionPoolObs)
   }
 }
 
-Chat PqxxChatRepository::Create(const Chat& chat) {
+Chat PqxxChatRepository::Create(Chat chat) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const auto chat_type = std::visit(

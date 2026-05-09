@@ -15,19 +15,15 @@ public:
 
   std::optional<User> FindByLogin(const std::string& login) override;
 
-  std::optional<User> FindByTag(const std::string& tag) override;
+  std::optional<User> FindByTag(const tags::UserTag& tag) override;
 
-  std::vector<User> Search(const std::string& query) override;
+  std::vector<User> Search(const std::string& query, std::size_t limit, std::size_t offset) override;
 
   User Create(const User& user) override;
 
   void Update(const User& user) override;
 
   void DeleteById(const UserId& id) override;
-
-  void StorePublicKey(const UserId& id, const std::string& publicKey) override;
-
-  std::optional<std::string> GetPublicKey(const UserId& id) override;
 
   explicit PqxxUserRepository(IConnectionPool* connectionPoolObs);
 
@@ -36,7 +32,7 @@ private:
 
   std::optional<User> TryFetchUser(std::string_view query, const QueryParams& params, Transaction&& tx);
 
-  std::vector<User> TryFetchUsers(std::string_view query, Transaction&& tx);
+  std::vector<User> TryFetchUsers(std::string_view query, const QueryParams& params, Transaction&& tx);
 };
 
  
