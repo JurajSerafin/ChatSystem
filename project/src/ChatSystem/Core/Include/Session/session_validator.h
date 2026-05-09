@@ -60,7 +60,7 @@ constexpr auto SessionValidator::GetCreatedAtRule(std::chrono::system_clock::tim
 }
 
 constexpr validation::ValidationResult<SessionValidator::kMaxErrors> SessionValidator::Validate(const SessionParams& params) const {
-  constexpr auto rules =
+  const auto rules =
     (VALIDATION_BIND_FIELD(SessionParams, token) | GetTokenRule()) &&
     (VALIDATION_BIND_FIELD(SessionParams, expires_at) | GetExpiresAtRule()) &&
     (VALIDATION_BIND_FIELD(SessionParams, created_at) | GetCreatedAtRule(params.expires_at));
