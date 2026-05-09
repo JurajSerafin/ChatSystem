@@ -27,6 +27,8 @@ public:
 
   QueryParams& BindParam(int64_t param);
 
+  QueryParams& BindParam(int param);
+
   QueryParams& BindParam(std::size_t param);
 
   QueryParams& BindParam(bool param);
@@ -80,6 +82,10 @@ inline QueryParams& QueryParams::BindParam(std::string_view param) {
 
 inline QueryParams& QueryParams::BindParam(int64_t param) {
   return EmplaceBackAndReturnThis(param);
+}
+
+inline QueryParams& QueryParams::BindParam(int param) {
+  return EmplaceBackAndReturnThis(static_cast<int64_t>(param));
 }
 
 inline QueryParams& QueryParams::BindParam(std::size_t param) {
