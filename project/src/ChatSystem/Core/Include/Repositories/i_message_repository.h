@@ -1,22 +1,36 @@
 #ifndef I_MESSAGE_REPOSITORY_H
 #define I_MESSAGE_REPOSITORY_H
 
+#include "Message/message.h"
+
 #include <Message/message_id.h>
 #include <User/user_id.h>
-
 #include <vector>
 
 class IMessageRepository {
-
 public:
+  [[nodiscard]] virtual std::optional<Message> FindById(const MessageId& id) = 0;
 
-  virtual void MarkDelivered(const MessageId& message_id, const UserId& recipient_id) = 0;
+  [[nodiscard]] virtual std::vector<Message> FindByChatId(const ChatId& chatId, std::size_t limit, std::size_t offset) = 0;
 
-  virtual void MarkRead(const MessageId& message_id, const UserId& reader_id) = 0;
+  [[nodiscard]] virtual std::vector<Message> Search(const ChatId& chat_id, const std::string& keywords, std::size_t limit, std::size_t offset) = 0;
 
-  virtual std::vector<UserId> GetReaders(const MessageId& message_id) = 0;
+  [[nodiscard]] virtual std::vector<Message> FindUndelivered(const UserId& recipientId) = 0;
 
-  virtual std::vector<UserId> GetRecipients(const MessageId& message_id) = 0;
+  [[nodiscard]] virtual std::vector<UserId> GetReaders(const MessageId& messageId) = 0;
+
+  [[nodiscard]] virtual std::vector<UserId> GetDeliveredTo(const MessageId& messageId) = 0;
+
+  virtual void DeleteById(const MessageId& id) = 0;
+
+  virtual void MarkDelivered(const MessageId& messageId, const UserId& recipientId) = 0;
+
+  virtual void MarkRead(const MessageId& messageId, const UserId& readerId) = 0;
+
+  virtual Message Save(Message message) = 0;
+
+  virtual ~IMessageRepository() = default;
+
 };
 
-#endif // I_MESSAgE_REPOSITORY_H
+#endif // I_MESSAGE_REPOSITORY_H
