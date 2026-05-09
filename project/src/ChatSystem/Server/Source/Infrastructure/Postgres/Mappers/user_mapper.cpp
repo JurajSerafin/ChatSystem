@@ -1,9 +1,8 @@
+#include "TypeLibHelpers/domain_class_type_variant_factory.h"
+#include "Database/i_row.h"
+
 #include <Infrastructure/Postgres/Mappers/user_mapper.h>
-
-#include <User/user_role_factory.h>
 #include <User/user.h>
-
-
 #include <utility>
 
 namespace {
@@ -19,12 +18,12 @@ namespace {
 User UserMapper::Map(const IRow& row) {
   
   UserParams params{
-    .id = UserId::FromString(row.GetUuid(kIdColumn)),
-    .tag = tags::UserTag{std::move(row.GetString(kTagColumn))},
+    .id = UserId::Reconstitute(row.GetUuid(kIdColumn)),
+    .tag = tags::UserTag::Reconstitute(std::move(row.GetString(kTagColumn))),
     .login = row.GetString(kLoginColumn),
     .password_hash = row.GetString(kPasswordHashColumn),
     .public_key = row.GetString(kPublicKeyColumn),
-    .role = UserRoleFactory<ActiveRoles>::Create(row.GetString(kRoleColumn)),
+    .role = DomainClassTypeVariantFactory<UserRoleVariant>::Create(row.GetString(kRoleColumn)),
     .created_at = row.GetTimeStamp(kCreatedAtColumn)
   };
 

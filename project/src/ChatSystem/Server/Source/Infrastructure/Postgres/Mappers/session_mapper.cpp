@@ -1,4 +1,5 @@
 #include "Infrastructure/Postgres/Mappers/user_mapper.h"
+#include "Database/i_row.h"
 
 #include <Infrastructure/Postgres/Mappers/session_mapper.h>
 #include <Session/session.h>
@@ -15,8 +16,8 @@ namespace {
 Session SessionMapper::Map(const IRow& row) {
 
   SessionParams params{
-    .id = SessionId::FromString(row.GetUuid(kIdColumn)),
-    .user_id = UserId::FromString(row.GetUuid(kUserIdColumn)),
+    .id = SessionId::Reconstitute(row.GetUuid(kIdColumn)),
+    .user_id = UserId::Reconstitute(row.GetUuid(kUserIdColumn)),
     .token = row.GetString(kTokenColumn),
     .expires_at = row.GetTimeStamp(kCreatedAtColumn),
     .created_at = row.GetTimeStamp(kExpiresAtColumn),

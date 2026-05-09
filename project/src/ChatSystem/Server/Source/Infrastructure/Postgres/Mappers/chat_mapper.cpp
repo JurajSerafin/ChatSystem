@@ -1,28 +1,48 @@
 #include <Infrastructure/Postgres/Mappers/chat_mapper.h>
+
+#include "Database/i_row.h"
+#include "TypeLibHelpers/domain_class_type_variant_factory.h"
+
 #include <optional>
 #include <string>
 #include <utility>
 
 namespace {
-  constexpr const char* kIdColumn = "id";
-  constexpr const char* kNameColumn = "name";
-  constexpr const char* kCreatedAtColumn = "created_at";
+  constexpr auto kIdColumn = "id";
+  constexpr auto kTypeColumn = "type";
+  constexpr auto kCreatedAtColumn = "created_at";
+
+  constexpr const char* kMsgIdColumn = "msg_id";
+  constexpr const char* kMsgSenderIdColumn = "msg_sender_id";
+  constexpr const char* kMsgContentColumn = "msg_content";
+  constexpr const char* kMsgCreatedAtColumn = "msg_created_at";
 }
 
-Chat ChatMapper::Map(const IRow& row) {
+Chat ChatMapper::Map(const IRow& row, std::vector<UserId> participants) {
 
-  std::optional<std::string> chat_name = std::nullopt;
+  std::optional<Message> last_message = std::nullopt;
 
-  if (!row.IsNull(kNameColumn)) {
-    if (std::string fetched_name = row.GetString(kNameColumn); !fetched_name.empty()) {
-      chat_name = std::move(fetched_name);
-    }
+  if (!row.IsNull(kMsgIdColumn)) {
+
+    MessageParams msg_params{
+      .id = MessageId::Reconstitute(row.GetUuid(kIdColumn)),
+      .chat_id = ChatId::Reconstitute(row.GetUuid(kIdColumn)),
+      .sender_id = UserId::Reconstitute(row.GetUuid(kMsgSenderIdColumn)),
+      .payload = DomainClassTypeVariantFactory<MessagePayloadVariant>::Create(
+        row.GetString(kTypeColumn), row.GetString(kMsgContentColumn)
+      ),
+      .created_at = row.GetTimeStamp(kMsgCreatedAtColumn),
+    };
+
+    last_message = Message::Reconstitute(std::move(msg_params));
   }
 
   ChatParams params{
-    .id = ChatId::FromString(row.GetUuid(kIdColumn)),
+    .id = ChatId::Reconstitute(row.GetUuid(kIdColumn)),
     .created_at = row.GetTimeStamp(kCreatedAtColumn),
-    .name = std::move(chat_name)
+    .type = DomainClassTypeVariantFactory<ChatTypeVariant>::Create(row.GetString(kTypeColumn)),
+    .last_message = std::move(last_message),
+    .participant_ids = std::move(participants)
   };
 
   return Chat::Reconstitute(std::move(params));

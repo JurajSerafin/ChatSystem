@@ -1,12 +1,13 @@
 #ifndef SESSION_MAPPER_H
 #define SESSION_MAPPER_H
 
-#include <Database/i_mapper.h>
 #include <Session/session.h>
 
-class SessionMapper : public IMapper<Session> {
+class IRow;
+
+class SessionMapper {
 public:
-  [[nodiscard]] Session Map(const IRow& row) override;
+  [[nodiscard]] static Session Map(const IRow& row);
 };
 
 #endif // SESSION_MAPPER_H
