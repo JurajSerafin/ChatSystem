@@ -31,12 +31,9 @@ concept MessageValidatorFor = validation::ValidatorFor<TValidator, TParams>&& re
   { params.ciphertext } -> std::convertible_to<std::string>;
   { params.type } -> std::convertible_to<MessageTypeVariant>;
   { params.created_at } -> std::convertible_to< std::chrono::system_clock::time_point>;
-  { params.encrypted_keys} -> std::convertible_to<std::unordered_map<UserId, std::string>>;
 
   { validator.GetCiphertextRule()(params.ciphertext).Ok() } -> std::same_as<bool>;
   { validator.GetCreatedAtRule()(params.created_at).Ok() } -> std::same_as<bool>;
-  { validator.GetEncryptedKeysRule()(params.encrypted_keys).Ok() } -> std::same_as<bool>;
-
 };
 
 

@@ -98,8 +98,7 @@ private:
     sender_id_{std::move(params.sender_id)},
     ciphertext_{std::move(params.ciphertext)},
     type_{params.type},
-    created_at_{params.created_at},
-    encrypted_keys_{std::move(params.encrypted_keys)} {}
+    created_at_{params.created_at} {}
 
   MessageId id_;
 
@@ -112,8 +111,6 @@ private:
   MessageTypeVariant type_;
 
   std::chrono::system_clock::time_point created_at_;
-
-  std::unordered_map<UserId, std::string, BaseId<UserId>::Hasher> encrypted_keys_;
 
 };
 template<MessageValidatorFor<MessageParams> TMessageValidator>

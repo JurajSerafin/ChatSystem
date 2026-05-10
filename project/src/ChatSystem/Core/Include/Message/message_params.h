@@ -39,8 +39,6 @@ struct MessageParams {
   /// Creation timestamp.
   std::chrono::system_clock::time_point created_at;
 
-  std::unordered_map<UserId, std::string, BaseId<UserId>::Hasher> encrypted_keys;
-
   // Optional
 };
 
