@@ -1,6 +1,7 @@
 #ifndef I_MESSAGE_REPOSITORY_H
 #define I_MESSAGE_REPOSITORY_H
 
+#include "Message/encrypted_keys_map.h"
 #include "Message/message.h"
 
 #include <Message/message_id.h>
@@ -12,8 +13,6 @@ public:
   [[nodiscard]] virtual std::optional<Message> FindById(const MessageId& id) = 0;
 
   [[nodiscard]] virtual std::vector<Message> FindByChatId(const ChatId& chatId, std::size_t limit, std::size_t offset) = 0;
-
-  [[nodiscard]] virtual std::vector<Message> Search(const ChatId& chat_id, const std::string& keywords, std::size_t limit, std::size_t offset) = 0;
 
   [[nodiscard]] virtual std::vector<Message> FindUndelivered(const UserId& recipientId) = 0;
 
@@ -27,7 +26,9 @@ public:
 
   virtual void MarkRead(const MessageId& messageId, const UserId& readerId) = 0;
 
-  virtual Message Save(Message message) = 0;
+  virtual Message Save(Message message, const EncryptedKeysMap& encryptedKeys) = 0;
+
+  virtual std::optional<std::string> GetEncryptedKey(const MessageId& messageId, const UserId& userId) = 0;
 
   virtual ~IMessageRepository() = default;
 

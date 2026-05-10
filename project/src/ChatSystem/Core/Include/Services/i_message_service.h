@@ -1,16 +1,17 @@
 #ifndef I_MESSAGE_SERVICE_H
 #define I_MESSAGE_SERVICE_H
 
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <optional>
+#include "Message/encrypted_keys_map.h"
 
 #include <Chat/chat_id.h>
-#include <User/user_id.h>
+#include <Message/message.h>
 #include <Message/message_id.h>
 #include <Message/message_type.h>
-#include <Message/message.h>
+#include <User/user_id.h>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 /**
  * @brief Interface for Zero-Knowledge message routing and synchronization.
@@ -42,7 +43,7 @@ public:
     const UserId& senderId,
     const ChatId& chatId,
     const std::string& ciphertext,
-    const std::unordered_map<UserId, std::string, BaseId<UserId>::Hasher>& encryptedKeys,
+    const EncryptedKeysMap& encryptedKeys,
     MessageTypeVariant type) = 0;
 
   /**
