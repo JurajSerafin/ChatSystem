@@ -27,22 +27,26 @@
 class IAuthService {
 public:
   /**
-   * @brief Registers a new user.
+   * @brief Registers a new user and automatically logs them in.
    *
-   * Creates a new user account with the provided login and password.
-   * Implementations should ensure that:
-   *  - The login is unique.
-   *  - The password is securely hashed before storage.
-   *  - Any required validation rules are applied.
+   * Creates a new user account with the provided login, password, and
+   * E2EE public key. Upon successful creation, immediately generates
+   * and returns a new active Session.
+   * * Implementations should ensure that:
+   * - The login is unique.
+   * - The password is securely hashed before storage.
+   * - The client-generated public key is persisted.
+   * - Any required validation rules are applied.
    *
    * @param login The desired unique login name.
    * @param password The plaintext password.
-   * @return The newly created User.
+   * @param publicKey The client-generated RSA public key in PEM format.
+   * @return A newly created Session containing the access token.
    *
    * @throws std::invalid_argument If the login is already in use
    * or validation fails.
    */
-  virtual User RegisterUser(const std::string& login, const std::string& password) = 0;
+  virtual Session RegisterUser(const std::string& login, const std::string& password, const std::string& publicKey) = 0;
 
   /**
    * @brief Authenticates a user and creates a session.
@@ -59,6 +63,7 @@ public:
    * invalid credentials.
    */
   virtual Session Login(const std::string& login, const std::string& password) = 0;
+
 
   /**
    * @brief Logs out a user by invalidating their session.
@@ -102,8 +107,8 @@ public:
    * the old password is incorrect.
    */
   virtual void ChangePassword(UserId userId,
-    const std::string& oldPassword,
-    const std::string& newPassword) = 0;
+  const std::string& oldPassword,
+  const std::string& newPassword) = 0;
 
   /**
    * @brief Virtual destructor.
