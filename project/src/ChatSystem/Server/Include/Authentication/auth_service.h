@@ -1,6 +1,8 @@
 ﻿#ifndef AUTH_SERVICE_H
 #define AUTH_SERVICE_H
 
+#include "Services/i_server_encryption_service.h"
+
 #include <Repositories/i_session_repository.h>
 #include <Repositories/i_user_repository.h>
 #include <Services/i_auth_service.h>
@@ -13,8 +15,8 @@
 #include <User/user_params.h>
 #include <Validation/validation.h>
 #include <chrono>
-#include <string>
 #include <optional>
+#include <string>
 
 /**
  * @brief Concrete implementation of IAuthService.
@@ -45,7 +47,7 @@ public:
   AuthService(
     IUserRepository& userRepo,
     ISessionRepository& sessionRepo,
-    IEncryptionService& encryptionService,
+    IServerEncryptionService& encryptionService,
     const TUserValidator& userValidator,
     const TSessionValidator& sessionValidator
   );
@@ -59,17 +61,21 @@ public:
   AuthService& operator=(AuthService&&) = delete;
 
   /**
-   * @brief Registers a new user with the given login and password.
+   * @brief Registers a new user and automatically logs them in.
    *
-   * Checks for login uniqueness, generates a unique tag, hashes the
-   * password, generates a key pair, validates, and persists the user.
+   * Creates a new user account with the provided login, password, and
+   * E2EE public key. Upon successful creation, immediately generates
+   * and returns a new active Session.
    *
-   * @param login The desired login name.
-   * @param password The plaintext password to hash and store.
-   * @return The newly created and persisted User.
-   * @throws std::invalid_argument if the login is already taken or validation fails.
+   * @param login The desired unique login name.
+   * @param password The plaintext password.
+   * @param publicKey The client-generated RSA public key in PEM format.
+   * @return A newly created Session containing the access token.
+   *
+   * @throws std::invalid_argument If the login is already in use
+   * or validation fails.
    */
-  User RegisterUser(const std::string& login, const std::string& password) override;
+  Session RegisterUser(const std::string& login, const std::string& password, const std::string& publicKey) override;
 
   /**
    * @brief Authenticates a user and creates a new session.
@@ -135,7 +141,7 @@ private:
    */
   IUserRepository& user_repo_;
   ISessionRepository& session_repo_;
-  IEncryptionService& encryption_service_;
+  IServerEncryptionService& encryption_service_;
 
   const TUserValidator& user_validator_;
   const TSessionValidator& session_validator_;
@@ -145,7 +151,7 @@ template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<Sessio
 AuthService<TUserValidator, TSessionValidator>::AuthService(
   IUserRepository& userRepo,
   ISessionRepository& sessionRepo,
-  IEncryptionService& encryptionService,
+  IServerEncryptionService& encryptionService,
   const TUserValidator& userValidator,
   const TSessionValidator& sessionValidator)
   : user_repo_{ userRepo }
@@ -167,26 +173,38 @@ std::string AuthService<TUserValidator, TSessionValidator>::GenerateToken() {
 }
 
 template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
-User AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::string& login, const std::string& password) {
+Session AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::string& login, const std::string& password, const std::string& publicKey) {
   if (user_repo_.FindByLogin(login).has_value()) {
     throw std::invalid_argument{ "Login already taken" };
   }
 
   tags::UserTag tag = GenerateUniqueTag(login);
+
   std::string password_hash = encryption_service_.HashPassword(password);
-  KeyPair key_pair = encryption_service_.GenerateKeyPair();
+
+  const auto now = std::chrono::system_clock::now();
 
   User user = User::Create({
     .id = UserId::Generate(),
     .tag = std::move(tag),
     .login = login,
     .password_hash = std::move(password_hash),
-    .public_key = key_pair.GetPublicKey(),
-    .role = std::make_unique<RegularUserRole>(),
-    .created_at = std::chrono::system_clock::now()
+    .public_key = publicKey,
+    .role = RegularUserRole{},
+    .created_at = now
     }, user_validator_);
 
-  return user_repo_.Create(std::move(user));
+  user_repo_.Create(std::move(user));
+
+  Session session = Session::Create({
+    .id = SessionId::Generate(),
+    .user_id = user.GetId(),
+    .token = GenerateToken(),
+    .expires_at = now + kSessionDuration,
+    .created_at = now
+    }, session_validator_);
+
+  return session_repo_.Create(std::move(session));
 }
 
 template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
