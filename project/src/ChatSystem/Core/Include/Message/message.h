@@ -1,6 +1,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include "Types/message_type_variant.h"
+
 #include <Chat/chat_id.h>
 #include <Message/message_id.h>
 #include <Message/message_params.h>
@@ -75,11 +77,11 @@ public:
   [[nodiscard]] const UserId& GetSenderId() const;
 
   /// @return Content/body of the message.
-  [[nodiscard]] const MessagePayloadVariant& GetPayload() const;
+  [[nodiscard]] const MessageTypeVariant& GetType() const;
 
-  [[nodiscard]] std::string_view GetContent() const;
+  [[nodiscard]] std::string_view GetCiphertext() const;
 
-  [[nodiscard]] std::string_view GetTypeStr() const;
+  [[nodiscard]] std::string GetTypeStr() const;
 
   /// @return Timestamp when the message was created.
   [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
@@ -91,12 +93,13 @@ private:
    * @param params Validated message parameters.
    */
   explicit Message(MessageParams params)
-    : id_{ std::move(params.id) },
-    chat_id_{ std::move(params.chat_id) },
-    sender_id_{ std::move(params.sender_id) },
-    payload_{ std::move(params.payload) },
-    created_at_{ params.created_at } {
-  }
+    : id_{std::move(params.id)},
+    chat_id_{std::move(params.chat_id)},
+    sender_id_{std::move(params.sender_id)},
+    ciphertext_{std::move(params.ciphertext)},
+    type_{params.type},
+    created_at_{params.created_at},
+    encrypted_keys_{std::move(params.encrypted_keys)} {}
 
   MessageId id_;
 
@@ -104,9 +107,13 @@ private:
 
   UserId sender_id_;
 
-  MessagePayloadVariant payload_;
+  std::string ciphertext_;
+
+  MessageTypeVariant type_;
 
   std::chrono::system_clock::time_point created_at_;
+
+  std::unordered_map<UserId, std::string, BaseId<UserId>::Hasher> encrypted_keys_;
 
 };
 template<MessageValidatorFor<MessageParams> TMessageValidator>
@@ -134,8 +141,8 @@ inline const UserId& Message::GetSenderId() const {
   return sender_id_;
 }
 
-inline const MessagePayloadVariant& Message::GetPayload() const {
-  return payload_;
+inline const MessageTypeVariant& Message::GetType() const {
+  return type_;
 }
 
 inline std::chrono::system_clock::time_point Message::CreatedAt() const {

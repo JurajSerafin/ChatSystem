@@ -4,7 +4,7 @@
 #include <chrono>
 #include <string>
 
-#include <Message/message_type.h>
+#include <Message/message_type_variant.h>
 #include <User/user_id.h>
 #include <Chat/chat_id.h>
 
@@ -16,7 +16,7 @@ struct RawMessage {
 
     std::string content;
 
-    MessageType type;
+    MessageTypeVariant type;
 
     std::chrono::system_clock::time_point timestamp;
 };

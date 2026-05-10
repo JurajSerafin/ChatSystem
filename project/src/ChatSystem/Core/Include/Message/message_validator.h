@@ -13,7 +13,7 @@
  * The validation checks include:
  * - Point of creation set, other than the epoch
  */
-class MessageValidator : public IValidator<MessageParams, 1> {
+class MessageValidator : public IValidator<MessageParams, 3> {
 public:
   /**
    * @brief Validates the entire MessageParams object.
@@ -24,14 +24,28 @@ public:
 
   /// @brief Retrieves the raw validation rule for the message creation time point.
   static constexpr auto GetCreatedAtRule();
+
+  static constexpr auto GetCiphertextRule();
+
+  static constexpr auto GetEncryptedKeysRule();
 };
 constexpr auto MessageValidator::GetCreatedAtRule() {
-  return  validation::rules::TimePointMustBeSet;
+  return validation::rules::TimePointMustBeSet;
+}
+
+constexpr auto MessageValidator::GetCiphertextRule() {
+  return validation::rules::NotEmpty;
+}
+
+constexpr auto MessageValidator::GetEncryptedKeysRule() {
+  return validation::rules::NotEmpty;
 }
 
 constexpr validation::ValidationResult<MessageValidator::kMaxErrors> MessageValidator::Validate(const MessageParams& params) const {
-  constexpr auto rules =
-    (VALIDATION_BIND_FIELD(MessageParams, created_at) | GetCreatedAtRule());
+  const auto rules =
+    (VALIDATION_BIND_FIELD(MessageParams, created_at) | GetCreatedAtRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, ciphertext) | GetCiphertextRule()) &&
+    (VALIDATION_BIND_FIELD(MessageParams, encrypted_keys) | GetEncryptedKeysRule());
 
   return rules(params);
 }

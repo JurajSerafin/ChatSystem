@@ -2,7 +2,7 @@
 #define MESSAGE_VALIDATOR_FOR_H
 
 #include "message_id.h"
-#include "Payloads/message_payload_variant.h"
+#include "Types/message_type_variant.h"
 
 
 #include <Chat/chat_id.h>
@@ -28,10 +28,15 @@ concept MessageValidatorFor = validation::ValidatorFor<TValidator, TParams>&& re
   { params.id } -> std::convertible_to<MessageId>;
   { params.chat_id } -> std::convertible_to<ChatId>;
   { params.sender_id } -> std::convertible_to<UserId>;
+  { params.ciphertext } -> std::convertible_to<std::string>;
+  { params.type } -> std::convertible_to<MessageTypeVariant>;
   { params.created_at } -> std::convertible_to< std::chrono::system_clock::time_point>;
-  { params.payload } -> std::convertible_to<MessagePayloadVariant>;
+  { params.encrypted_keys} -> std::convertible_to<std::unordered_map<UserId, std::string>>;
 
+  { validator.GetCiphertextRule()(params.ciphertext).Ok() } -> std::same_as<bool>;
   { validator.GetCreatedAtRule()(params.created_at).Ok() } -> std::same_as<bool>;
+  { validator.GetEncryptedKeysRule()(params.encrypted_keys).Ok() } -> std::same_as<bool>;
+
 };
 
 

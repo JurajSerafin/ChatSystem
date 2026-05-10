@@ -1,14 +1,14 @@
 #ifndef MESSAGE_PARAMS_H
 #define MESSAGE_PARAMS_H
 
-#include "Payloads/message_payload_variant.h"
+#include "Types/message_type_variant.h"
 
 #include <Chat/chat_id.h>
 #include <Message/message_id.h>
-#include <Message/message_type.h>
 #include <User/user_id.h>
 #include <chrono>
 #include <string>
+#include <unordered_map>
 
 /**
  * @brief Data transfer object for message creation and validation.
@@ -32,10 +32,14 @@ struct MessageParams {
   /// Identifier of the sender (must be valid).
   UserId sender_id;
 
-  MessagePayloadVariant payload;
+  std::string ciphertext;
+
+  MessageTypeVariant type;
 
   /// Creation timestamp.
   std::chrono::system_clock::time_point created_at;
+
+  std::unordered_map<UserId, std::string, BaseId<UserId>::Hasher> encrypted_keys;
 
   // Optional
 };
