@@ -129,6 +129,8 @@ private:
    */
   static std::string GenerateToken();
 
+  void HandlePasswordRehash(User& user, const std::string& password);
+
   /// Duration after which a session expires.
   static constexpr auto kSessionDuration = std::chrono::hours{ 24 };
 
@@ -171,9 +173,18 @@ template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<Sessio
 std::string AuthService<TUserValidator, TSessionValidator>::GenerateToken() {
   return SessionId::Generate().ToString();
 }
+template <UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+void AuthService<TUserValidator, TSessionValidator>::HandlePasswordRehash(User& user, const std::string& password) {
+  if (encryption_service_.NeedsRehash(user.GetPasswordHash())) {
+    user.SetPasswordHash(encryption_service_.HashPassword(password), user_validator_);
 
-template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
+    user_repo_.Update(user);
+  }
+}
+
+template <UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
 Session AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::string& login, const std::string& password, const std::string& publicKey) {
+  
   if (user_repo_.FindByLogin(login).has_value()) {
     throw std::invalid_argument{ "Login already taken" };
   }
@@ -184,7 +195,7 @@ Session AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::
 
   const auto now = std::chrono::system_clock::now();
 
-  User user = User::Create({
+  User new_user = User::Create({
     .id = UserId::Generate(),
     .tag = std::move(tag),
     .login = login,
@@ -194,11 +205,11 @@ Session AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::
     .created_at = now
     }, user_validator_);
 
-  user_repo_.Create(std::move(user));
+  user_repo_.Create(std::move(new_user));
 
   Session session = Session::Create({
     .id = SessionId::Generate(),
-    .user_id = user.GetId(),
+    .user_id = new_user.GetId(),
     .token = GenerateToken(),
     .expires_at = now + kSessionDuration,
     .created_at = now
@@ -215,8 +226,11 @@ Session AuthService<TUserValidator, TSessionValidator>::Login(const std::string&
     throw std::invalid_argument{ "Invalid credentials" };
   }
 
-  if (!encryption_service_.VerifyPassword(password, user->GetPasswordHash()))
+  if (!encryption_service_.VerifyPassword(password, user->GetPasswordHash())) {
     throw std::invalid_argument{ "Invalid credentials" };
+  }
+
+  HandlePasswordRehash(*user, password);
 
   const auto now = std::chrono::system_clock::now();
 
