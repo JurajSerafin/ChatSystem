@@ -6,7 +6,6 @@
 #include <Chat/chat_id.h>
 #include <Message/message.h>
 #include <Message/message_id.h>
-#include <Message/message_type.h>
 #include <User/user_id.h>
 #include <optional>
 #include <string>
