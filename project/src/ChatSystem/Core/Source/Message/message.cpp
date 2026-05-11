@@ -2,16 +2,13 @@
 #include <string_view>
 #include <variant>
 
-std::string_view Message::GetContent() const {
-  return std::visit(
-    [](auto&& payload) { return payload.GetContent(); },
-    payload_
-  );
+std::string_view Message::GetCiphertext() const {
+  return ciphertext_;
 }
 
-std::string_view Message::GetTypeStr() const{
+std::string Message::GetTypeStr() const{
   return std::visit(
-    [](auto&& payload) { return payload.TypeString(); },
-    payload_
+    [](auto&& payload) { return std::string(payload.TypeString()); },
+    type_
   );
 }
