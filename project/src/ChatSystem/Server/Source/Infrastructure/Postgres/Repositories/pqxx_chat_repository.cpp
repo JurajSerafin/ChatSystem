@@ -50,8 +50,9 @@ std::optional<Chat> PqxxChatRepository::FindById(const ChatId& id) {
   const std::string sql = R"(
     SELECT c.*, 
       m.id AS msg_id, m.sender_id AS msg_sender_id, 
-      m.type AS msg_type, m.content AS msg_content, 
-      m.created_at AS msg_created_at
+      m.type AS msg_type, m.ciphertext AS msg_ciphertext, 
+      m.created_at AS msg_created_at,
+      (SELECT STRING_AGG(user_id::text, ',') FROM chat_participants WHERE chat_id = c.id) AS participants_csv
     FROM chats c
     LEFT JOIN messages m ON c.last_message_id = m.id
     WHERE c.id = $1
@@ -63,19 +64,16 @@ std::optional<Chat> PqxxChatRepository::FindById(const ChatId& id) {
     return std::nullopt;
   }
 
-  std::vector<UserId> participants;
-  const auto fetched_participants_result = tx.Execute(
-    "SELECT user_id FROM chat_participants WHERE chat_id = $1",
-    QueryParams{}.BindParam(id.ToString())
-  );
-
-  fetched_participants_result->ForEach([&participants](const IRow& row) {
-    participants.push_back(UserId::Reconstitute(row.GetString("user_id")));
-   });
-
   std::optional<Chat> fetched_chat;
 
-  fetched_chat_result->First([&fetched_chat, &participants](const IRow& row) {
+  fetched_chat_result->First([&fetched_chat](const IRow& row) {
+    std::vector<UserId> participants;
+    std::stringstream ss(row.GetString("participants_csv"));
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+      participants.push_back(UserId::Reconstitute(token));
+    }
+
     fetched_chat = ChatMapper::Map(row, std::move(participants));
   });
 
@@ -88,8 +86,9 @@ std::vector<Chat> PqxxChatRepository::FindByUserId(const UserId& userId, std::si
   const std::string sql = R"(
     SELECT c.*, 
       m.id AS msg_id, m.sender_id AS msg_sender_id, 
-      m.type AS msg_type, m.content AS msg_content, 
-      m.created_at AS msg_created_at
+      m.type AS msg_type, m.ciphertext AS msg_ciphertext, 
+      m.created_at AS msg_created_at,
+      (SELECT STRING_AGG(user_id::text, ',') FROM chat_participants WHERE chat_id = c.id) AS participants_csv
     FROM chats c
     JOIN chat_participants cp ON c.id = cp.chat_id
     LEFT JOIN messages m ON c.last_message_id = m.id
@@ -98,24 +97,21 @@ std::vector<Chat> PqxxChatRepository::FindByUserId(const UserId& userId, std::si
     LIMIT $2 OFFSET $3
   )";
 
-  const auto fetched_user_ids_result = tx.Execute(sql, QueryParams{}
+  const auto fetched_chats_result = tx.Execute(sql, QueryParams{}
     .BindParam(userId.ToString())
     .BindParam(limit)
     .BindParam(offset));
 
   std::vector<Chat> chats;
 
-  fetched_user_ids_result->ForEach([&](const IRow& row) {
+  fetched_chats_result->ForEach([&](const IRow& row) {
     std::vector<UserId> participants;
+    std::stringstream ss(row.GetString("participants_csv"));
+    std::string token;
 
-    const auto fetched_participants_result = tx.Execute(
-      "SELECT user_id FROM chat_participants WHERE chat_id = $1",
-      QueryParams{}.BindParam(row.GetString("id"))
-    );
-
-    fetched_participants_result->ForEach([&participants](const IRow& p_row) {
-      participants.push_back(UserId::Reconstitute(p_row.GetString("user_id")));
-    });
+    while (std::getline(ss, token, ',')) {
+      participants.push_back(UserId::Reconstitute(token));
+    }
 
     chats.push_back(ChatMapper::Map(row, std::move(participants)));
   });
