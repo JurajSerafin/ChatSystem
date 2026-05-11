@@ -1,5 +1,6 @@
 #include "Infrastructure/Postgres/Repositories/pqxx_message_repository.h"
 
+#include "Message/encrypted_keys_map.h"
 #include "Message/message.h"
 
 #include <Database/query_params.h>
@@ -15,32 +16,56 @@ PqxxMessageRepository::PqxxMessageRepository(IConnectionPool* connectionPoolObs)
 }
 
 
-Message PqxxMessageRepository::Save(Message message) {
+Message PqxxMessageRepository::Save(Message message, const EncryptedKeysMap& encryptedKeys) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
-  const std::string sql = R"(
-    INSERT INTO messages (id, chat_id, sender_id, type, content, created_at) 
-    VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
-  )";
+  const std::string msg_sql = "INSERT INTO messages (id, chat_id, sender_id, ciphertext, type, created_at) VALUES ($1, $2, $3, $4, $5, $6)";
 
-  const auto params = QueryParams{}
+  tx.Execute(msg_sql, QueryParams{}
     .BindParam(message.GetId().ToString())
     .BindParam(message.GetChatId().ToString())
     .BindParam(message.GetSenderId().ToString())
+    .BindParam(message.GetCiphertext())
     .BindParam(message.GetTypeStr())
-    .BindParam(message.GetContent())
-    .BindParam(message.CreatedAt());
+    .BindParam(message.CreatedAt())
+  );
 
-  const auto fetched_saved_msg_result = tx.Execute(sql, params);
+  const std::string keys_sql = "INSERT INTO message_keys (message_id, user_id, encrypted_key) VALUES ($1, $2, $3)";
 
-  std::optional<Message> saved_msg;
-
-  fetched_saved_msg_result->First([&saved_msg](const IRow& row) {
-    saved_msg = MessageMapper::Map(row);
-  });
+  for (const auto& [user_id, key] : encryptedKeys) {
+    tx.Execute(keys_sql, QueryParams{}
+      .BindParam(message.GetId().ToString())
+      .BindParam(user_id.ToString())
+      .BindParam(key)
+    );
+  }
 
   tx.Commit();
-  return std::move(*saved_msg);
+
+  return message;
+}
+
+std::optional<std::string> PqxxMessageRepository::GetEncryptedKey(const MessageId& messageId, const UserId& userId) {
+  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+
+  const std::string sql = "SELECT encrypted_key FROM message_keys WHERE message_id = $1 AND user_id = $2";
+
+  const auto fetched_encr_keys_result_result = tx.Execute(
+    sql,
+    QueryParams{}.BindParam(messageId.ToString()).BindParam(userId.ToString())
+  );
+
+  std::optional<std::string> encr_key;
+
+  if (fetched_encr_keys_result_result->IsEmpty()) {
+    return std::nullopt;
+  }
+
+  fetched_encr_keys_result_result->First([&encr_key](const IRow& row) {
+    encr_key = row.GetString("encrypted_key");
+  });
+
+  return encr_key;
 }
 
 std::optional<Message> PqxxMessageRepository::FindById(const MessageId& id) {
@@ -86,25 +111,6 @@ std::vector<Message> PqxxMessageRepository::FindByChatId(const ChatId& chatId, s
   return messages;
 }
 
-std::vector<Message> PqxxMessageRepository::Search(const ChatId& chatId, const std::string& keywords, std::size_t limit, std::size_t offset) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
-
-  const std::string sql = "SELECT * FROM messages WHERE chat_id = $1 AND content ILIKE $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4";
-
-  const std::string search_term = "%" + keywords + "%";
-
-  const auto fetched_msg_result = tx.Execute(sql, QueryParams{}
-    .BindParam(chatId.ToString())
-    .BindParam(search_term)
-    .BindParam(limit)
-    .BindParam(offset));
-
-  std::vector<Message> messages;
-
-  fetched_msg_result->ForEach([&messages](const IRow& row) { messages.push_back(MessageMapper::Map(row)); });
-
-  return messages;
-}
 
 std::vector<Message> PqxxMessageRepository::FindUndelivered(const UserId& recipientId) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };

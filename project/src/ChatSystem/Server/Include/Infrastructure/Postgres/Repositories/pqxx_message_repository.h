@@ -14,8 +14,6 @@ public:
 
   [[nodiscard]] std::vector<Message> FindByChatId(const ChatId& chatId, std::size_t limit, std::size_t offset) override;
 
-  [[nodiscard]] std::vector<Message> Search(const ChatId& chatId, const std::string& keywords, std::size_t limit, std::size_t offset) override;
-
   [[nodiscard]] std::vector<Message> FindUndelivered(const UserId& recipientId) override;
 
   [[nodiscard]] std::vector<UserId> GetReaders(const MessageId& messageId) override;
@@ -28,8 +26,9 @@ public:
 
   void MarkRead(const MessageId& messageId, const UserId& readerId) override;
 
-  Message Save(Message message) override;
+  Message Save(Message message, const EncryptedKeysMap& encryptedKeys) override;
 
+  std::optional<std::string> GetEncryptedKey(const MessageId& messageId, const UserId& userId) override;
 private:
   IConnectionPool* connection_pool_obs_;
 };

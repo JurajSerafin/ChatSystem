@@ -14,7 +14,8 @@ namespace {
 
   constexpr const char* kMsgIdColumn = "msg_id";
   constexpr const char* kMsgSenderIdColumn = "msg_sender_id";
-  constexpr const char* kMsgContentColumn = "msg_content";
+  constexpr const char* kMsgCiphertextColumn = "msg_ciphertext";
+  constexpr auto kMsgTypeColumn = "msg_type";
   constexpr const char* kMsgCreatedAtColumn = "msg_created_at";
 }
 
@@ -25,12 +26,11 @@ Chat ChatMapper::Map(const IRow& row, std::vector<UserId> participants) {
   if (!row.IsNull(kMsgIdColumn)) {
 
     MessageParams msg_params{
-      .id = MessageId::Reconstitute(row.GetUuid(kIdColumn)),
+      .id = MessageId::Reconstitute(row.GetUuid(kMsgIdColumn)),
       .chat_id = ChatId::Reconstitute(row.GetUuid(kIdColumn)),
       .sender_id = UserId::Reconstitute(row.GetUuid(kMsgSenderIdColumn)),
-      .payload = DomainClassTypeVariantFactory<MessagePayloadVariant>::Create(
-        row.GetString(kTypeColumn), row.GetString(kMsgContentColumn)
-      ),
+      .ciphertext = row.GetString(kMsgCiphertextColumn),
+      .type = DomainClassTypeVariantFactory<MessageTypeVariant>::Create(row.GetString(kMsgTypeColumn)),
       .created_at = row.GetTimeStamp(kMsgCreatedAtColumn),
     };
 

@@ -11,7 +11,7 @@ namespace {
   constexpr auto kIdColumn = "id";
   constexpr auto kChatIdColumn = "chat_id";
   constexpr auto kTypeColumn = "type";
-  constexpr auto kContentColumn = "content";
+  constexpr auto kContentColumn = "ciphertext";
   constexpr auto kSenderIdColumn = "sender_id";
   constexpr auto kCreatedAtColumn = "created_at";
 }
@@ -22,10 +22,9 @@ Message MessageMapper::Map(const IRow& row) {
     .id = MessageId::Reconstitute(row.GetUuid(kIdColumn)),
     .chat_id = ChatId::Reconstitute(row.GetUuid(kChatIdColumn)),
     .sender_id = UserId::Reconstitute(row.GetUuid(kSenderIdColumn)),
-    .payload = DomainClassTypeVariantFactory<MessagePayloadVariant>::Create(
-      row.GetString(kTypeColumn), row.GetString(kContentColumn)
-    ),
-    .created_at = row.GetTimeStamp(kCreatedAtColumn),
+    .ciphertext = row.GetString(kContentColumn),
+    .type = DomainClassTypeVariantFactory<MessageTypeVariant>::Create(row.GetString(kTypeColumn)),
+    .created_at = row.GetTimeStamp(kCreatedAtColumn)
   };
 
   return Message::Reconstitute(std::move(params));
