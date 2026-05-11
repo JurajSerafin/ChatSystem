@@ -280,7 +280,7 @@ tags::UserTag AuthService<TUserValidator, TSessionValidator>::GenerateUniqueTag(
   constexpr int kMaxRetries = 100;
 
   for (int i = 0; i < kMaxRetries; ++i) {
-    if (tags::UserTag tag = tags::GenerateFromLogin(login); !user_repo_.FindByTag(tag.ToString()).has_value()) {
+    if (tags::UserTag tag = tags::GenerateFromLogin(login); !user_repo_.FindByTag(tag).has_value()) {
       return tag;
     }
   }
