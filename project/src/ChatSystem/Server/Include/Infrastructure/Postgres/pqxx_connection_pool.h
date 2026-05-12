@@ -27,12 +27,14 @@ public:
 
   void Init();
 
+  PqxxConnectionPool() = default;
+
 private:
   constexpr static auto kDefaultAcquireTimeout = std::chrono::milliseconds(200);
 
   constexpr static std::size_t kConnectionCount = 50;
 
-  const std::chrono::milliseconds acquire_timeout_;
+  const std::chrono::milliseconds acquire_timeout_{ kDefaultAcquireTimeout };
 
   std::deque<std::unique_ptr<IConnection>> free_connections_;
 
