@@ -63,7 +63,7 @@ public:
    * @param offset The pagination offset.
    * @return A vector of Message objects (containing ciphertext).
    */
-  virtual std::vector<Message> GetHistory(const ChatId& chatId, const UserId& requestingUserId, int limit, int offset) = 0;
+  virtual std::vector<Message> GetHistory(const ChatId& chatId, const UserId& requestingUserId, std::size_t limit, std::size_t offset) = 0;
 
   /**
    * @brief Marks a message as read and notifies the original sender.
