@@ -1,9 +1,10 @@
 #ifndef PQXX_SESSION_REPOSITORY_H
 #define PQXX_SESSION_REPOSITORY_H
 
-#include <Repositories/i_session_repository.h>
 #include <Database/i_connection_pool.h>
+#include <Repositories/i_session_repository.h>
 
+class Transaction;
 class QueryParams;
 
 class PqxxSessionRepository : public ISessionRepository {
