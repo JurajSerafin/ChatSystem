@@ -53,8 +53,8 @@ Session PqxxSessionRepository::Create(const Session& session) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string sql = R"(
-    INSERT INTO sessions (id, user_id, token, expires_at) 
-    VALUES ($1, $2, $3, $4) 
+    INSERT INTO sessions (id, user_id, token, expires_at, created_at) 
+    VALUES ($1, $2, $3, $4, $5) 
     RETURNING *
   )";
 
@@ -62,15 +62,15 @@ Session PqxxSessionRepository::Create(const Session& session) {
     .BindParam(session.GetId().ToString())
     .BindParam(session.GetUserId().ToString())
     .BindParam(session.GetToken())
-    .BindParam(session.ExpiresAt());
+    .BindParam(session.ExpiresAt())
+    .BindParam(session.CreatedAt());
 
   const auto query_result = tx.Execute(sql, params);
 
   std::optional<Session> created_session = std::nullopt;
-
   query_result->First([&created_session](const IRow& row) {
-    created_session = SessionMapper{}.Map(row);
-  });
+    created_session = SessionMapper::Map(row);
+    });
 
   if (!created_session) {
     throw std::runtime_error("Failed to insert session.");

@@ -95,8 +95,8 @@ User PqxxUserRepository::Create(const User& user) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string sql = R"(
-    INSERT INTO users (id, login, tag, created_at) 
-    VALUES ($1, $2, $3, $4) 
+    INSERT INTO users (id, login, tag, password_hash, public_key, role, created_at) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7) 
     RETURNING *
   )";
 
@@ -104,31 +104,40 @@ User PqxxUserRepository::Create(const User& user) {
     .BindParam(user.GetId().ToString())
     .BindParam(user.GetLogin())
     .BindParam(user.GetTag().ToString())
+    .BindParam(user.GetPasswordHash())
+    .BindParam(user.GetPublicKey())
+    .BindParam(std::string{ user.GetRoleStr() })
     .BindParam(user.CreatedAt());
 
   const auto query_result = tx.Execute(sql, params);
 
   std::optional<User> created_user = std::nullopt;
-
   query_result->First([&created_user](const IRow& row) {
     created_user = UserMapper{}.Map(row);
-  });
+    });
 
   if (!created_user) throw std::runtime_error("Failed to insert user.");
 
   tx.Commit();
-
   return std::move(*created_user);
 }
 
 void PqxxUserRepository::Update(const User& user) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
-  const std::string sql = "UPDATE users SET login = $2, tag = $3 WHERE id = $1";
+
+  const std::string sql = R"(
+    UPDATE users 
+    SET login = $2, tag = $3, password_hash = $4, public_key = $5, role = $6 
+    WHERE id = $1
+  )";
 
   const auto params = QueryParams{}
     .BindParam(user.GetId().ToString())
     .BindParam(user.GetLogin())
-    .BindParam(user.GetTag().ToString());
+    .BindParam(user.GetTag().ToString())
+    .BindParam(user.GetPasswordHash())
+    .BindParam(user.GetPublicKey())
+    .BindParam(std::string{ user.GetRoleStr() });
 
   tx.Execute(sql, params);
   tx.Commit();
