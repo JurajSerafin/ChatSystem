@@ -6,6 +6,8 @@
   "dependencies": [
     "wxwidgets",
     "boost-asio",
+    "boost-beast",
+    "boost-url",
     "boost-system",
     "boost-thread",
     "boost-uuid",
