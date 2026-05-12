@@ -248,23 +248,13 @@ template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<Sessio
 std::optional<User> AuthService<TUserValidator, TSessionValidator>::ValidateToken(const std::string& token) {
   const auto session = session_repo_.FindByToken(token);
 
-  if (!session.has_value()) {
-    std::cout << "[DEBUG] Fail: session_repo_.FindByToken returned nullopt for token: " << token << std::endl;
-    return std::nullopt;
-  }
-
-  if (session->IsExpired()) {
-    auto expires_sec = std::chrono::duration_cast<std::chrono::seconds>(session->ExpiresAt().time_since_epoch()).count();
-    auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-    std::cout << "[DEBUG] Fail: Session is EXPIRED! Expires_at epoch: " << expires_sec << ", Now epoch: " << now_sec << std::endl;
+  if (!session.has_value() || session->IsExpired()) {
     return std::nullopt;
   }
 
   auto user = user_repo_.FindById(session->GetUserId());
 
   if (!user.has_value()) {
-    std::cout << "[DEBUG] Fail: user_repo_.FindById returned nullopt for UserId: " << session->GetUserId().ToString() << std::endl;
     return std::nullopt;
   }
 
