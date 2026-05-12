@@ -43,13 +43,13 @@ namespace tags {
 
     std::uniform_int_distribution<int> number_distribution{ kMin, kMax };
 
-    return UserTag{
+    return UserTag::Reconstitute(
         std::format("{}{}{}",
             login,
             kLoginTagSeparator,
             number_distribution(twister)
         )
-    };
+    );
   }
 
 } // namespace tags
