@@ -19,8 +19,8 @@ Session SessionMapper::Map(const IRow& row) {
     .id = SessionId::Reconstitute(row.GetUuid(kIdColumn)),
     .user_id = UserId::Reconstitute(row.GetUuid(kUserIdColumn)),
     .token = row.GetString(kTokenColumn),
-    .expires_at = row.GetTimeStamp(kCreatedAtColumn),
-    .created_at = row.GetTimeStamp(kExpiresAtColumn),
+    .expires_at = row.GetTimeStamp(kExpiresAtColumn),
+    .created_at = row.GetTimeStamp(kCreatedAtColumn),
   };
 
   return Session::Reconstitute(std::move(params));
