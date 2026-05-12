@@ -42,7 +42,7 @@ std::unique_ptr<PqxxConnection> PqxxConnectionFactory::Create() {
     HandleUnsetConfigVar();
   }
 
-  auto connection = std::make_unique<PqxxConnection>(ConstructConnectionUri(std::move(db_config)));
+  auto connection = std::make_unique<PqxxConnection>(ConstructConnectionUri(db_config));
 
   if (!connection->IsAlive()) {
     HandleClosedDbConnection();
