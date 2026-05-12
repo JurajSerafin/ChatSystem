@@ -109,7 +109,7 @@ public:
    * @param newPassword The new plaintext password to hash and store.
    * @throws std::invalid_argument if the user is not found or the current password is incorrect.
    */
-  void ChangePassword(UserId userId, const std::string& oldPassword, const std::string& newPassword) override;
+  void ChangePassword(const UserId& userId, const std::string& oldPassword, const std::string& newPassword) override;
 
 private:
   /**
@@ -262,7 +262,7 @@ std::optional<User> AuthService<TUserValidator, TSessionValidator>::ValidateToke
 }
 
 template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
-void AuthService<TUserValidator, TSessionValidator>::ChangePassword(const UserId userId, const std::string& oldPassword, const std::string& newPassword) {
+void AuthService<TUserValidator, TSessionValidator>::ChangePassword(const UserId& userId, const std::string& oldPassword, const std::string& newPassword) {
   auto user = user_repo_.FindById(userId);
 
   if (!user.has_value()) {

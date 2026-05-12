@@ -106,9 +106,7 @@ public:
    * @throws std::invalid_argument If the user does not exist or
    * the old password is incorrect.
    */
-  virtual void ChangePassword(UserId userId,
-  const std::string& oldPassword,
-  const std::string& newPassword) = 0;
+  virtual void ChangePassword(const UserId& userId, const std::string& oldPassword, const std::string& newPassword) = 0;
 
   /**
    * @brief Virtual destructor.
