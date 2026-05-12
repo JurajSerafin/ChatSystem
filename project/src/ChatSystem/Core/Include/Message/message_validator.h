@@ -13,7 +13,7 @@
  * The validation checks include:
  * - Point of creation set, other than the epoch
  */
-class MessageValidator : public IValidator<MessageParams, 3> {
+class MessageValidator : public IValidator<MessageParams, 2> {
 public:
   /**
    * @brief Validates the entire MessageParams object.
@@ -44,8 +44,7 @@ constexpr auto MessageValidator::GetEncryptedKeysRule() {
 constexpr validation::ValidationResult<MessageValidator::kMaxErrors> MessageValidator::Validate(const MessageParams& params) const {
   const auto rules =
     (VALIDATION_BIND_FIELD(MessageParams, created_at) | GetCreatedAtRule()) &&
-    (VALIDATION_BIND_FIELD(MessageParams, ciphertext) | GetCiphertextRule()) &&
-    (VALIDATION_BIND_FIELD(MessageParams, encrypted_keys) | GetEncryptedKeysRule());
+    (VALIDATION_BIND_FIELD(MessageParams, ciphertext) | GetCiphertextRule());
 
   return rules(params);
 }
