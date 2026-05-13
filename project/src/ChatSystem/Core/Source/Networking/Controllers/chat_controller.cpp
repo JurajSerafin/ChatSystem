@@ -1,25 +1,20 @@
 #include "Networking/Controllers/chat_controller.h"
-#include "Networking/api_errors.h"
+
 #include "Chat/chat.h"
+#include "Networking/Controllers/utils.h"
+#include "Networking/api_errors.h"
 
 #include <nlohmann/json.hpp>
-#include <boost/url.hpp>
 
 namespace {
-  constexpr std::string_view kJsonStrMime = "application/json";
-  constexpr std::string_view kAuthSchemeIdf = "Bearer ";
-  constexpr std::size_t kAuthSchemeIdfPrefixLen = 7;
-
   constexpr std::string_view kParticipantIdsField = "participant_ids";
 
-  // JSON Keys (Must be const char* for nlohmann::json initializer lists)
-  constexpr const char* kIdField = "id";
-  constexpr const char* kCreatedAtField = "created_at";
-  constexpr const char* kUserIdField = "user_id";
-  constexpr const char* kUsernameField = "login";
-  constexpr const char* kTagField = "tag";
+  constexpr std::string_view kIdField = "id";
+  constexpr std::string_view kCreatedAtField = "created_at";
+  constexpr std::string_view kUserIdField = "user_id";
+  constexpr std::string_view kUsernameField = "login";
+  constexpr std::string_view kTagField = "tag";
 
-  // Path Param Keys
   constexpr std::string_view kPathParamChatId = "id";
   constexpr std::string_view kPathParamUserId = "user_id";
 }  // namespace
@@ -41,7 +36,7 @@ http::response<http::string_body> ChatController::HandleCreateChat(
 
     const auto new_chat = chat_service_obs_->CreateChat(*caller_id, participant_ids);
 
-    return BuildAndReturnOkResponse(req, FormatJsonOutput(new_chat));
+    return netw::utils::BuildAndReturnOkResponse(req, FormatJsonOutput(new_chat));
   }
   catch (const nlohmann::json::exception&) {
     return api::errors::BadRequest(req, "Invalid JSON format.");
@@ -67,10 +62,11 @@ http::response<http::string_body> ChatController::HandleGetChats(
 
     std::size_t offset = 0;
 
-    ExtractPaginationLimitAndOffset(req, limit, offset);
+    netw::utils::ExtractPaginationLimitAndOffset(req, limit, offset);
 
     const auto chats = chat_service_obs_->GetChatsForUser(*caller_id, limit, offset);
-    return BuildAndReturnOkResponse(req, FormatJsonOutput(chats));
+
+    return netw::utils::BuildAndReturnOkResponse(req, FormatJsonOutput(chats));
   }
   catch (const std::exception& e) {
     return api::errors::BadRequest(req, e.what());
@@ -89,7 +85,7 @@ http::response<http::string_body> ChatController::HandleGetChatById(
       return api::errors::Unauthorized(req);
     }
 
-    const ChatId chat_id = ChatId::Reconstitute(ExtractPathParam(params, kPathParamChatId));
+    const ChatId chat_id = ChatId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamChatId));
 
     const auto chat = chat_service_obs_->GetChatById(chat_id, *caller_id);
 
@@ -97,7 +93,7 @@ http::response<http::string_body> ChatController::HandleGetChatById(
       return api::errors::NotFound(req, "Chat not found.");
     }
 
-    return BuildAndReturnOkResponse(req, FormatJsonOutput(*chat));
+    return netw::utils::BuildAndReturnOkResponse(req, FormatJsonOutput(*chat));
   }
   catch (const std::exception& e) {
     return api::errors::BadRequest(req, e.what());
@@ -116,11 +112,11 @@ http::response<http::string_body> ChatController::HandleGetParticipants(
       return api::errors::Unauthorized(req);
     }
 
-    const ChatId chat_id = ChatId::Reconstitute(ExtractPathParam(params, kPathParamChatId));
+    const ChatId chat_id = ChatId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamChatId));
 
     const auto participants = chat_service_obs_->GetParticipants(chat_id, *caller_id);
 
-    return BuildAndReturnOkResponse(req, FormatJsonOutput(participants));
+    return netw::utils::BuildAndReturnOkResponse(req, FormatJsonOutput(participants));
   }
   catch (const std::exception& e) {
     return api::errors::BadRequest(req, e.what());
@@ -139,7 +135,7 @@ http::response<http::string_body> ChatController::HandleAddParticipant(
       return api::errors::Unauthorized(req);
     }
 
-    const ChatId chat_id = ChatId::Reconstitute(ExtractPathParam(params, kPathParamChatId));
+    const ChatId chat_id = ChatId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamChatId));
 
     auto body = nlohmann::json::parse(req.body());
 
@@ -147,7 +143,7 @@ http::response<http::string_body> ChatController::HandleAddParticipant(
 
     chat_service_obs_->AddParticipant(chat_id, *caller_id, new_user_id);
 
-    return BuildAndReturnNoContentResponse(req);
+    return netw::utils::BuildAndReturnNoContentResponse(req);
   }
   catch (const std::exception& e) {
     return api::errors::BadRequest(req, e.what());
@@ -166,13 +162,13 @@ http::response<http::string_body> ChatController::HandleRemoveParticipant(
       return api::errors::Unauthorized(req);
     }
 
-    const ChatId chat_id = ChatId::Reconstitute(ExtractPathParam(params, kPathParamChatId));
+    const ChatId chat_id = ChatId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamChatId));
 
-    const UserId user_to_remove = UserId::Reconstitute(ExtractPathParam(params, kPathParamUserId));
+    const UserId user_to_remove = UserId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamUserId));
 
     chat_service_obs_->RemoveParticipant(chat_id, *caller_id, user_to_remove);
 
-    return BuildAndReturnNoContentResponse(req);
+    return netw::utils::BuildAndReturnNoContentResponse(req);
   }
   catch (const std::exception& e) {
     return api::errors::BadRequest(req, e.what());
@@ -191,11 +187,11 @@ http::response<http::string_body> ChatController::HandleDeleteChat(
       return api::errors::Unauthorized(req);
     }
 
-    const ChatId chat_id = ChatId::Reconstitute(ExtractPathParam(params, kPathParamChatId));
+    const ChatId chat_id = ChatId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamChatId));
 
     chat_service_obs_->DeleteChat(chat_id, *caller_id);
 
-    return BuildAndReturnNoContentResponse(req);
+    return netw::utils::BuildAndReturnNoContentResponse(req);
   }
   catch (const std::exception& e) {
     return api::errors::BadRequest(req, e.what());
@@ -203,22 +199,13 @@ http::response<http::string_body> ChatController::HandleDeleteChat(
 }
 
 std::optional<UserId> ChatController::GetAuthenticatedUserId(const http::request<http::string_body>& req) const {
-  const std::string auth_header = GetAuthHeader(req);
+  const std::string auth_header = netw::utils::GetAuthHeader(req);
 
-  if (!IsValidToken(auth_header)) {
+  if (!netw::utils::IsValidToken(auth_header)) {
     return std::nullopt;
   }
 
-  return auth_service_obs_->ValidateToken(GetToken(auth_header))->GetId();
-}
-
-std::string ChatController::ExtractPathParam(const Router::PathParams& params, std::string_view key) {
-  for (auto&& [param_key, param_val] : params) {
-    if (param_key == key) {
-      return std::string(param_val);
-    }
-  }
-  throw std::invalid_argument("Missing required path parameter.");
+  return auth_service_obs_->ValidateToken(netw::utils::GetToken(auth_header))->GetId();
 }
 
 std::vector<UserId> ChatController::ExtractParticipantIds(const nlohmann::json& reqBody) {
@@ -230,8 +217,6 @@ std::vector<UserId> ChatController::ExtractParticipantIds(const nlohmann::json& 
 
   return participant_ids;
 }
-
-
 
 nlohmann::json ChatController::FormatJsonOutput(const Chat& chat) {
   return {
@@ -261,59 +246,4 @@ nlohmann::json ChatController::FormatJsonOutput(const std::vector<User>& partici
   }
 
   return json_array;
-}
-
-
-http::response<http::string_body> ChatController::BuildAndReturnOkResponse(
-  const http::request<http::string_body>& req,
-  const nlohmann::json& responseJson)
-{
-  http::response<http::string_body> res{ http::status::ok, req.version() };
-
-  res.set(http::field::content_type, kJsonStrMime);
-
-  res.body() = responseJson.dump();
-
-  res.prepare_payload();
-
-  return res;
-}
-
-http::response<http::string_body> ChatController::BuildAndReturnNoContentResponse(
-  const http::request<http::string_body>& req)
-{
-  http::response<http::string_body> res{ http::status::no_content, req.version() };
-
-  res.prepare_payload();
-
-  return res;
-}
-
-bool ChatController::IsValidToken(std::string_view header) {
-  return header.starts_with(kAuthSchemeIdf);
-}
-
-std::string ChatController::GetToken(const std::string& header) {
-  return header.substr(kAuthSchemeIdfPrefixLen);
-}
-
-std::string ChatController::GetAuthHeader(const http::request<http::string_body>& req) {
-  return std::string(req[http::field::authorization]);
-}
-
-void ChatController::ExtractPaginationLimitAndOffset(
-  const http::request<http::string_body>& req,
-  std::size_t& limitOut,
-  std::size_t& offsetOut)
-{
-  if (auto rv = urls::parse_origin_form(req.target())) {
-    const auto params = rv->params();
-
-    if (const auto it = params.find("limit"); it != params.end()) {
-      limitOut = std::stoull(it->value);
-    }
-    if (const auto it = params.find("offset"); it != params.end()) {
-      offsetOut = std::stoull(it->value);
-    }
-  }
 }

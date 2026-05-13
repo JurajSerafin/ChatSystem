@@ -52,8 +52,6 @@ public:
 private:
   std::optional<UserId> GetAuthenticatedUserId(const http::request<http::string_body>& req) const;
 
-  static std::string ExtractPathParam(const Router::PathParams& params, std::string_view key);
-
   static std::vector<UserId> ExtractParticipantIds(const nlohmann::json& reqBody);
 
   static nlohmann::json FormatJsonOutput(const Chat& chat);
@@ -61,18 +59,6 @@ private:
   static nlohmann::json FormatJsonOutput(const std::vector<Chat>& chats);
 
   static nlohmann::json FormatJsonOutput(const std::vector<User>& participants);
-
-  static http::response<http::string_body> BuildAndReturnOkResponse(const http::request<http::string_body>& req, const nlohmann::json& responseJson);
-
-  static http::response<http::string_body> BuildAndReturnNoContentResponse(const http::request<http::string_body>& req);
-
-  static bool IsValidToken(std::string_view header);
-
-  static std::string GetToken(const std::string& header);
-
-  static std::string GetAuthHeader(const http::request<http::string_body>& req);
-
-  static void ExtractPaginationLimitAndOffset(const http::request<http::string_body>& req, std::size_t& limitOut, std::size_t& offsetOut);
 
   IAuthService* auth_service_obs_;
   IChatService* chat_service_obs_;
