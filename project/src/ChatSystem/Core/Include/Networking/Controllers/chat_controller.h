@@ -6,49 +6,66 @@
 #include "Services/i_chat_service.h"
 #include "Session/session_validator.h"
 #include "User/user_validator.h"
-#include <nlohmann/json.hpp>
 
-#include <string_view>
+#include <nlohmann/json.hpp>
 #include <optional>
+
 #include <boost/beast/http.hpp>
 
-
 /**
- * @brief Presentation layer controller for handling all Chat-related REST API endpoints.
+ * @brief Presentation layer controller for Chat room management and participant tracking endpoints.
  *
- * The ChatController acts as the translation boundary between the raw HTTP network
- * traffic and the application's core business logic. It is strictly responsible for:
- * 1. Extracting and validating Bearer authentication tokens.
- * 2. Parsing incoming JSON bodies, URL path parameters, and query parameters.
- * 3. Delegating the actual business operations to the underlying services.
- * 4. Serializing C++ domain entities (like Chat and UserProfile) back into
- * standardized JSON HTTP responses.
+ * Exposes the HTTP interface for creating and deleting End-to-End Encrypted chat rooms,
+ * retrieving paginated lists of a user's active chats, and managing chat participants
+ * (adding, removing, and listing members).
  */
 class ChatController {
 public:
   explicit ChatController(IAuthService* authServiceObs, IChatService* chatServiceObs);
 
-  // POST /chats
+  /**
+   * @brief Creates a new chat room with the specified participants.
+   * @route POST /chats
+   * @body { "participant_ids": ["uuid-1", "uuid-2"] }
+   */
   http::response<http::string_body> HandleCreateChat(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  // GET /chats?limit=&offset=
+  /**
+   * @brief Retrieves a paginated list of all chats the authenticated user is a member of.
+   * @route GET /chats?limit=&offset=
+   */
   http::response<http::string_body> HandleGetChats(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  // GET /chats/{id}
+  /**
+   * @brief Retrieves the metadata and details of a specific chat by its ID.
+   * @route GET /chats/{id}
+   */
   http::response<http::string_body> HandleGetChatById(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  // GET /chats/{id}/participants
+  /**
+   * @brief Fetches the list of user profiles for everyone currently in the chat.
+   * @route GET /chats/{id}/participants
+   */
   http::response<http::string_body> HandleGetParticipants(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  // POST /chats/{id}/participants
+  /**
+   * @brief Adds a new user to an existing chat.
+   * @route POST /chats/{id}/participants
+   * @body { "user_id": "uuid-to-add" }
+   */
   http::response<http::string_body> HandleAddParticipant(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  // DELETE /chats/{id}/participants/{user_id}
+  /**
+   * @brief Removes a user from a chat (or allows a user to leave the chat).
+   * @route DELETE /chats/{id}/participants/{user_id}
+   */
   http::response<http::string_body> HandleRemoveParticipant(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  // DELETE /chats/{id}
+  /**
+   * @brief Deletes a chat entirely for all users.
+   * @route DELETE /chats/{id}
+   */
   http::response<http::string_body> HandleDeleteChat(const http::request<http::string_body>& req, const Router::PathParams& params) const;
-
 private:
   std::optional<UserId> GetAuthenticatedUserId(const http::request<http::string_body>& req) const;
 
