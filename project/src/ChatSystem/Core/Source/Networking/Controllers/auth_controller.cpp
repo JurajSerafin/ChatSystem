@@ -10,6 +10,12 @@ namespace {
   constexpr std::string_view kOldPasswordField = "old_password";
   constexpr std::string_view kNewPasswordField = "new_password";
   constexpr std::string_view kTokenField = "token";
+
+
+  constexpr std::string_view kRegisterRoute = "/auth/register";
+  constexpr std::string_view kLoginRoute = "/auth/login";
+  constexpr std::string_view kLogoutRoute = "/auth/logout";
+  constexpr std::string_view kChangePasswordRoute = "/auth/password";
 }  // namespace
 
 
@@ -156,3 +162,21 @@ void AuthController::ExtractAndChangePassword(const nlohmann::json& passChangeBo
   auth_service_obs_->ChangePassword(userId, old_pass, new_pass);
 
 }
+
+void AuthController::RegisterRoutes(Router& router) {
+  router.AddRoute(http::verb::post, std::string{kRegisterRoute},
+    [this](const auto& req, const auto& params) {return HandleRegister(req, params); }
+  );
+
+  router.AddRoute(http::verb::post, std::string{ kLoginRoute },
+    [this](const auto& req, const auto& params) {return HandleLogin(req, params); }
+  );
+
+  router.AddRoute(http::verb::post, std::string{ kLogoutRoute },
+    [this](const auto& req, const auto& params) {return HandleLogout(req, params); }
+  );
+
+  router.AddRoute(http::verb::post, std::string{ kChangePasswordRoute },
+    [this](const auto& req, const auto& params) {return HandleChangePassword(req, params); }
+  );
+};

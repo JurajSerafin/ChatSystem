@@ -17,6 +17,12 @@ namespace {
 
   constexpr std::string_view kPathParamChatId = "id";
   constexpr std::string_view kPathParamUserId = "user_id";
+
+
+  constexpr std::string_view kChatsRoute = "/chats";
+  constexpr std::string_view kGetChatByIdRoute = "/chats/{id}";
+  constexpr std::string_view kParticipantsRoute = "/chats/{id}/participants";
+  constexpr std::string_view kDeleteParticipantRoute = "/chats/{id}/participants/{user_id}";
 }  // namespace
 
 
@@ -246,4 +252,34 @@ nlohmann::json ChatController::FormatJsonOutput(const std::vector<User>& partici
   }
 
   return json_array;
+}
+
+void ChatController::AddRoutes(Router& router) {
+  router.AddRoute(http::verb::post, std::string{kChatsRoute},
+    [this] (const auto& req, const auto& params) { return HandleCreateChat(req, params); }
+  );
+
+  router.AddRoute(http::verb::get, std::string{ kChatsRoute },
+    [this] (const auto& req, const auto& params) { return HandleGetChats(req, params); }
+  );
+
+  router.AddRoute(http::verb::get, std::string{ kGetChatByIdRoute },
+    [this](const auto& req, const auto& params) { return HandleGetChatById(req, params); }
+  );
+
+  router.AddRoute(http::verb::get, std::string{ kParticipantsRoute },
+    [this] (const auto& req, const auto& params) { return HandleGetParticipants(req, params); }
+  );
+
+  router.AddRoute(http::verb::post, std::string{ kParticipantsRoute },
+    [this](const auto& req, const auto& params) {return HandleAddParticipant(req, params); }
+  );
+
+  router.AddRoute(http::verb::delete_, std::string{ kDeleteParticipantRoute },
+    [this](const auto& req, const auto& params) { return HandleRemoveParticipant(req, params); }
+  );
+
+  router.AddRoute(http::verb::delete_, std::string{ kChatsRoute },
+    [this](const auto& req, const auto& params) { return HandleDeleteChat(req, params); }
+  );
 }

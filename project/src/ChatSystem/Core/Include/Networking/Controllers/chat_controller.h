@@ -66,6 +66,9 @@ public:
    * @route DELETE /chats/{id}
    */
   http::response<http::string_body> HandleDeleteChat(const http::request<http::string_body>& req, const Router::PathParams& params) const;
+
+  void AddRoutes(Router& router);
+
 private:
   std::optional<UserId> GetAuthenticatedUserId(const http::request<http::string_body>& req) const;
 

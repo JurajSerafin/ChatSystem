@@ -17,12 +17,21 @@ namespace {
   constexpr std::string_view kPathParamTag = "tag";
 
   constexpr std::size_t kDefaultSearchResultsLimit = 50;
+
+  
+  constexpr std::string_view kHandleSearchRoute = "/users/search";
+  constexpr std::string_view kHandleHandleGetByIdRoute = "/users/{id}";
+  constexpr std::string_view kHandleGetByTagRoute = "/users/tag/{tag}";
+  constexpr std::string_view kHandleGetPublicKeyRoute = "/users/{id}/public-key";
+
+
 } // namespace
 
 // GET /users/search?q=&limit=&offset=
 http::response<http::string_body> UserController::HandleSearchUsers(
   const http::request<http::string_body>& req,
-  const Router::PathParams& params) const {
+  const Router::PathParams& params) const 
+{
   try {
     const auto caller_id = GetAuthenticatedUserId(req);
 
@@ -41,7 +50,6 @@ http::response<http::string_body> UserController::HandleSearchUsers(
 
     netw::utils::ExtractPaginationLimitAndOffset(req, limit, offset);
 
-    // Assuming your service method is called SearchUsers
     const auto found_users = user_service_obs_->Search(query, *caller_id, limit, offset);
 
     return netw::utils::BuildAndReturnOkResponse(req, FormatJsonOutput(found_users));
@@ -52,9 +60,10 @@ http::response<http::string_body> UserController::HandleSearchUsers(
 }
 
 // GET /users/{id}
-http::response<http::string_body> UserController::HandleGetByID(
+http::response<http::string_body> UserController::HandleGetById(
   const http::request<http::string_body>& req,
-  const Router::PathParams& params) const {
+  const Router::PathParams& params) const 
+{
   try {
     const auto caller_id = GetAuthenticatedUserId(req);
 
@@ -80,7 +89,7 @@ http::response<http::string_body> UserController::HandleGetByID(
 // GET /users/tag/{tag}
 http::response<http::string_body> UserController::HandleGetByTag(
   const http::request<http::string_body>& req,
-  const Router::PathParams& params)
+  const Router::PathParams& params) const
 {
   try {
     const auto caller_id = GetAuthenticatedUserId(req);
@@ -91,7 +100,7 @@ http::response<http::string_body> UserController::HandleGetByTag(
 
     std::string target_tag = netw::utils::ExtractPathParam(params, kPathParamTag);
 
-    const auto profile = user_service_obs_->GetByTag(target_tag);
+    const auto profile = user_service_obs_->GetByTag(tags::UserTag::Reconstitute(target_tag));
 
     if (!profile) {
       return api::errors::NotFound(req, "User not found.");
@@ -107,7 +116,8 @@ http::response<http::string_body> UserController::HandleGetByTag(
 // GET /users/{id}/public-key
 http::response<http::string_body> UserController::HandleGetPublicKey(
   const http::request<http::string_body>& req,
-  const Router::PathParams& params) const {
+  const Router::PathParams& params) const 
+{
   try {
     const auto caller_id = GetAuthenticatedUserId(req);
 
@@ -115,7 +125,7 @@ http::response<http::string_body> UserController::HandleGetPublicKey(
       return api::errors::Unauthorized(req);
     }
 
-    UserId target_id = UserId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamId));
+    const UserId target_id = UserId::Reconstitute(netw::utils::ExtractPathParam(params, kPathParamId));
 
     auto public_key = user_service_obs_->GetPublicKey(target_id);
 
@@ -162,7 +172,7 @@ nlohmann::json UserController::FormatJsonOutput(const std::vector<UserProfile>& 
 
 nlohmann::json UserController::FormatJsonOutput(const UserProfile& userProfile) {
   return nlohmann::json{
-      {kProfileIdField, userProfile.id.ToString()}, // Assuming ID needs ToString()
+      {kProfileIdField, userProfile.id},
       {kTagField, userProfile.tag},
       {kLoginField, userProfile.login},
       {kRoleField, userProfile.role}
@@ -180,4 +190,19 @@ std::string UserController::ExtractSearchQuery(const http::request<http::string_
   }
 
   return query;
+}
+
+
+void UserController::AddRoutes(Router& router) {
+  router.AddRoute(http::verb::get, std::string(kHandleSearchRoute),
+    [this](const auto& req, const auto& params) { return HandleSearchUsers(req, params); });
+
+  router.AddRoute(http::verb::get, std::string(kHandleHandleGetByIdRoute),
+    [this](const auto& req, const auto& params) { return HandleGetById(req, params); });
+
+  router.AddRoute(http::verb::get, std::string(kHandleGetByTagRoute),
+    [this](const auto& req, const auto& params) { return HandleGetByTag(req, params); });
+
+  router.AddRoute(http::verb::get, std::string(kHandleGetPublicKeyRoute),
+    [this](const auto& req, const auto& params) { return HandleGetPublicKey(req, params); });
 }

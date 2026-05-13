@@ -49,6 +49,8 @@ public:
    */
   http::response<http::string_body> HandleChangePassword(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
+  void RegisterRoutes(Router& router);
+
 private:
 
   static std::string ExtractRequiredString(const nlohmann::json& body, std::string_view fieldName);

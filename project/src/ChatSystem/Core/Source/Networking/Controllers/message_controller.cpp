@@ -26,7 +26,11 @@ namespace {
   constexpr std::size_t kDefaultMsgHistoryPaginationLimit = 50;
   constexpr std::size_t kDefaultUndeliveredMsgPaginationLimit = 50;
 
-
+  constexpr std::string_view kChatMessagesRoute = "/chats/{id}/messages";
+  constexpr std::string_view kMessageKeyRoute = "/messages/{id}/key";
+  constexpr std::string_view kReadMessageRoute = "/messages/{id}/read";
+  constexpr std::string_view kGetUndeliveredRoute = "/messages/undelivered";
+  constexpr std::string_view kMessageIdRoute = "/messages/{id}";
 } // namespace
 
 // POST /chats/{id}/messages
@@ -242,3 +246,28 @@ EncryptedKeysMap MessageController::ExtractEncryptedKeys(const nlohmann::json& r
 }
 
 
+void MessageController::AddRoutes(Router& router) {
+  router.AddRoute(http::verb::post, std::string{ kChatMessagesRoute },
+    [this](const auto& req, const auto& params) { return HandleSendMessage(req, params); }
+  );
+
+  router.AddRoute(http::verb::get, std::string{ kChatMessagesRoute },
+    [this](const auto& req, const auto& params) { return HandleGetMessageHistory(req, params); }
+  );
+
+  router.AddRoute(http::verb::get, std::string{ kMessageKeyRoute },
+    [this](const auto& req, const auto& params) { return HandleGetMessagePublicKey(req, params); }
+  );
+
+  router.AddRoute(http::verb::post, std::string{ kReadMessageRoute },
+    [this](const auto& req, const auto& params) { return HandleReadMessage(req, params); }
+  );
+
+  router.AddRoute(http::verb::post, std::string{ kGetUndeliveredRoute },
+    [this](const auto& req, const auto& params) {return HandleGetUndelivered(req, params); }
+  );
+
+  router.AddRoute(http::verb::delete_, std::string{ kMessageIdRoute },
+    [this](const auto& req, const auto& params) { return HandleDeleteMessage(req, params); }
+  );
+}

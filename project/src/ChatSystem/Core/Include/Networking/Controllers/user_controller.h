@@ -31,7 +31,7 @@ public:
    * @brief Fetches a user's public profile by their internal immutable ID.
    * @route GET /users/{id}
    */
-  http::response<http::string_body> HandleGetByID(const http::request<http::string_body>& req, const Router::PathParams& params) const;
+  http::response<http::string_body> HandleGetById(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
   /**
    * @brief Fetches a user's public profile by their unique tag.
@@ -44,6 +44,8 @@ public:
    * @route GET /users/{id}/public-key
    */
   http::response<http::string_body> HandleGetPublicKey(const http::request<http::string_body>& req, const Router::PathParams& params) const;
+
+  void AddRoutes(Router& router);
 
 private:
   std::optional<UserId> GetAuthenticatedUserId(const http::request<http::string_body>& req) const;
