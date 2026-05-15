@@ -1,7 +1,7 @@
-#include "Services/DTOs/user_profile.h"
+#include "Services/Interface/DTOs/user_profile.h"
 #include "User/user.h"
 
-#include <Services/user_service.h>
+#include <Services/Implementation/user_service.h>
 #include <stdexcept>
 
 UserService::UserService(IUserRepository* userRepoObs) : user_repo_obs_(userRepoObs) {
