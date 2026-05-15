@@ -38,7 +38,7 @@ public:
    * @return The Message domain object.
    * @throws std::logic_error if the sender is not a participant in the chat.
    */
-  virtual Message SendMessage(
+  virtual Message SendChatMessage(
     const UserId& senderId,
     const ChatId& chatId,
     const std::string& ciphertext,
@@ -81,7 +81,7 @@ public:
    * @param userId The reconnecting user.
    * @return A vector of undelivered messages.
    */
-  virtual std::vector<Message> GetUndelivered(const UserId& userId) = 0;
+  virtual std::vector<Message> GetUndelivered(const UserId& userId, std::size_t limit, std::optional<MessageId> afterMessageId) = 0;
 
   /**
    * @brief Deletes a specific message.

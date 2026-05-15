@@ -1,7 +1,7 @@
 #ifndef NOTIFICATION_SERVICE_H
 #define NOTIFICATION_SERVICE_H
 
-#include "Services/i_notification_service.h"
+#include "Services/Interface/i_notification_service.h"
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>

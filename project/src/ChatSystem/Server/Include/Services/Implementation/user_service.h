@@ -1,7 +1,7 @@
 #ifndef USER_SERVICE_H
 #define USER_SERVICE_H
 
-#include <Services/i_user_service.h>
+#include <Services/Interface/i_user_service.h>
 #include <Repositories/i_user_repository.h>
 #include <User/user.h>
 

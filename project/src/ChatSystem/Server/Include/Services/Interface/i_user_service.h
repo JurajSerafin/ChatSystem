@@ -3,6 +3,8 @@
 
 #include "DTOs/user_profile.h"
 
+#include "Tags/user_tag.h"
+
 #include <User/user_id.h>
 #include <optional>
 #include <string>

@@ -54,7 +54,7 @@ public:
    * @return The Chat object if found, or std::nullopt.
    * @throws std::logic_error if the requesting user is not a participant.
    */
-  virtual std::optional<Chat> GetChatById(const ChatId& id, const UserId& requestingUserId) = 0;
+  virtual std::optional<Chat> GetById(const ChatId& id, const UserId& requestingUserId) = 0;
 
   /**
    * @brief Retrieves the user profiles of all participants in a chat.

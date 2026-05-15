@@ -2,11 +2,11 @@
 #define AUTH_SERVICE_H
 
 #include "Authentication/tags.h"
-#include "Services/i_server_encryption_service.h"
+#include "Services/Interface/i_server_encryption_service.h"
 
 #include <Repositories/i_session_repository.h>
 #include <Repositories/i_user_repository.h>
-#include <Services/i_auth_service.h>
+#include <Services/Interface/i_auth_service.h>
 #include <Session/session.h>
 #include <Session/session_id.h>
 #include <Session/session_params.h>
@@ -205,7 +205,7 @@ Session AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::
     .created_at = now
     }, user_validator_);
 
-  user_repo_.Create(std::move(new_user));
+  user_repo_.Add(std::move(new_user));
 
   Session session = Session::Create({
     .id = SessionId::Generate(),
@@ -215,7 +215,9 @@ Session AuthService<TUserValidator, TSessionValidator>::RegisterUser(const std::
     .created_at = now
     }, session_validator_);
 
-  return session_repo_.Create(std::move(session));
+  session_repo_.Add(session);
+
+  return session;
 }
 
 template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>
@@ -227,7 +229,7 @@ Session AuthService<TUserValidator, TSessionValidator>::Login(const std::string&
   }
 
   if (!encryption_service_.VerifyPassword(password, user->GetPasswordHash())) {
-    throw std::invalid_argument{ "Invalid credentials" };
+    throw std::runtime_error("Invalid credentials");
   }
 
   HandlePasswordRehash(*user, password);
@@ -241,7 +243,9 @@ Session AuthService<TUserValidator, TSessionValidator>::Login(const std::string&
     .expires_at = now + kSessionDuration,
     .created_at = now }, session_validator_);
 
-  return session_repo_.Create(std::move(session));
+  session_repo_.Add(session);
+
+  return session;
 }
 
 template<UserValidatorFor<UserParams> TUserValidator, SessionValidatorFor<SessionParams> TSessionValidator>

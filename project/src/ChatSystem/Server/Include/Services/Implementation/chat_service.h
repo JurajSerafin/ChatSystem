@@ -3,7 +3,7 @@
 
 #include <TypeLibHelpers/domain_class_type_variant_factory.h>
 
-#include <Services/i_chat_service.h>
+#include <Services/Interface/i_chat_service.h>
 #include <Repositories/i_chat_repository.h>
 #include <Repositories/i_user_repository.h>
 
@@ -45,7 +45,7 @@ public:
    * @return The Chat object, or std::nullopt if it doesn't exist.
    * @throws std::logic_error if the requesting user is not a participant.
    */
-  std::optional<Chat> GetChatById(const ChatId& id, const UserId& requestingUserId) override;
+  std::optional<Chat> GetById(const ChatId& id, const UserId& requestingUserId) override;
 
   /**
    * @brief Retrieves the user profiles of everyone in a specific chat.

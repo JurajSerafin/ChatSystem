@@ -3,8 +3,8 @@
 
 #include "Message/encrypted_keys_map.h"
 #include "Message/message_validator.h"
-#include "Services/i_message_service.h"
-#include "Services/i_notification_service.h"
+#include "Services/Interface/i_message_service.h"
+#include "Services/Interface/i_notification_service.h"
 
 #include <Repositories/i_chat_repository.h>
 #include <Repositories/i_message_repository.h>
@@ -41,7 +41,7 @@ public:
    * @return The Message domain object.
    * @throws std::logic_error if the sender is not a participant in the chat.
    */
-  Message SendMessage(
+  Message SendChatMessage(
     const UserId& senderId,
     const ChatId& chatId,
     const std::string& ciphertext,
@@ -84,7 +84,7 @@ public:
    * @param userId The reconnecting user.
    * @return A vector of undelivered messages.
    */
-  std::vector<Message> GetUndelivered(const UserId& userId) override;
+  std::vector<Message> GetUndelivered(const UserId& userId, std::size_t limit, std::optional<MessageId> afterMessageId) override;
 
   /**
    * @brief Deletes a specific message.

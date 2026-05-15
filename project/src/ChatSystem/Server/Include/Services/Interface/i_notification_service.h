@@ -1,7 +1,7 @@
 #ifndef I_NOTIFICATION_SERVICE_H
 #define I_NOTIFICATION_SERVICE_H
 
-#include "Services/notification_events.h"
+#include "Services/Interface/notification_events.h"
 #include <User/user_id.h>
 #include <Message/message_id.h>
 #include <Message/message.h>
