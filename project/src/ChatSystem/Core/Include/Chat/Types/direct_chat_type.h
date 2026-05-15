@@ -8,7 +8,7 @@ struct DirectChatType {
     return "DIRECT";
   }
 
-  static constexpr static bool IsValid() noexcept {
+  static constexpr bool IsValid() noexcept {
     return !TypeString().empty();
   }
 };
