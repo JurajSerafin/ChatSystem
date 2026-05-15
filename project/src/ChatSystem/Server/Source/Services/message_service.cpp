@@ -1,17 +1,18 @@
-#include <Services/message_service.h>
+#include <Services/Implementation/message_service.h>
+#include <Services/Interface/i_notification_service.h>
+
 
 #include "TypeLibHelpers/domain_class_type_variant_factory.h"
 #include <stdexcept>
 #include <format>
 
-inline MessageService::MessageService(
+MessageService::MessageService(
   INotificationService* notificationServiceObs,
   IMessageRepository* messageRepoObs,
   IChatRepository* chatRepoObs
 ) : notification_service_obs_(notificationServiceObs), message_repo_obs_(messageRepoObs), chat_repo_obs_(chatRepoObs) {
-  if (notification_service_obs_ || message_repo_obs_ || chat_repo_obs_) {
-    throw std::invalid_argument(
-      "MessageService requires valid INotificationService,IMessageRepository and IChatRepository observers.");
+  if (!notification_service_obs_ || !message_repo_obs_ || !chat_repo_obs_) {
+    throw std::invalid_argument("MessageService requires valid INotificationService...");
   }
 }
 
@@ -28,7 +29,7 @@ void MessageService::EnforceChatExistence(const ChatId& chatId) const {
   }
 }
 
-Message MessageService::SendMessage(
+Message MessageService::SendChatMessage(
   const UserId& senderId,
   const ChatId& chatId,
   const std::string& ciphertext,
@@ -48,19 +49,21 @@ Message MessageService::SendMessage(
     .created_at = std::chrono::system_clock::now(),
   };
 
-  auto saved_msg = message_repo_obs_->Save(Message::Create(std::move(msg_params), msg_validator_), encryptedKeys);
+  auto new_message = Message::Create(std::move(msg_params), msg_validator_);
 
-  chat_repo_obs_->UpdateLastMessage(chatId, saved_msg);
+  message_repo_obs_->Add(new_message, encryptedKeys);
+
+  chat_repo_obs_->UpdateLastMessage(chatId, new_message);
 
   auto chat = chat_repo_obs_->FindById(chatId);
 
   for (auto&& participant_id : chat->GetParticipantIds()) {
     if (participant_id != senderId) {
-      notification_service_obs_->NotifyNewMessage(participant_id, saved_msg);
+      notification_service_obs_->NotifyNewMessage(participant_id, new_message);
     }
   }
 
-  return saved_msg;
+  return new_message;
 }
 
 std::optional<std::string> MessageService::GetEncryptedKey(const MessageId& messageId, const UserId& userId) {
@@ -91,8 +94,12 @@ void MessageService::MarkAsRead(const MessageId& id, const UserId& readerId) {
   notification_service_obs_->NotifyReadReceipt(msg->GetSenderId(), id, readerId);
 }
 
-std::vector<Message> MessageService::GetUndelivered(const UserId& userId) {
-  auto missed_messages = message_repo_obs_->FindUndelivered(userId);
+std::vector<Message> MessageService::GetUndelivered(const UserId& userId, std::size_t limit, std::optional<MessageId> afterMessageId) {
+  constexpr std::size_t kMaxLimit = 100;
+
+  const std::size_t safe_limit = std::min(kMaxLimit, limit);
+
+  auto missed_messages = message_repo_obs_->FindUndelivered(userId, safe_limit, afterMessageId);
 
   for (auto&& msg : missed_messages) {
     message_repo_obs_->MarkDelivered(msg.GetId(), userId);
