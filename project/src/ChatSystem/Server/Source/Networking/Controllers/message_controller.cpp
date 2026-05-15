@@ -58,8 +58,6 @@ http::response<http::string_body> MessageController::HandleSendMessage(
 
     auto encrypted_keys = ExtractEncryptedKeys(body);
 
-    ExtractEncryptedKeys(body);
-
     const auto new_message = message_service_obs_->SendChatMessage(
       *caller_id, chat_id, ciphertext, encrypted_keys, msg_type
     );
@@ -282,7 +280,7 @@ void MessageController::AddRoutes(Router& router) {
     [this](const auto& req, const auto& params) { return HandleReadMessage(req, params); }
   );
 
-  router.AddRoute(http::verb::post, std::string{ kGetUndeliveredRoute },
+  router.AddRoute(http::verb::get, std::string{ kGetUndeliveredRoute },
     [this](const auto& req, const auto& params) {return HandleGetUndelivered(req, params); }
   );
 
