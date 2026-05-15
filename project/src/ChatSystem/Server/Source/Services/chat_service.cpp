@@ -2,7 +2,7 @@
 #include "User/user.h"
 
 #include <Chat/chat_validator.h>
-#include <Services/chat_service.h>
+#include <Services/Implementation/chat_service.h>
 #include <algorithm>
 #include <stdexcept>
 
@@ -47,10 +47,13 @@ void ChatService::EnforceUsersExistence(const std::vector<UserId>& userIds) cons
 }
 
 Chat ChatService::CreateNewChatType(const UserId& creatorId, const std::vector<UserId>& participantIds) {
-  std::vector all_participants{ creatorId };
-
+  std::vector<UserId> all_participants{ creatorId };
   all_participants.insert(all_participants.end(), participantIds.begin(), participantIds.end());
 
+  std::sort(all_participants.begin(), all_participants.end());
+
+  all_participants.erase(std::ranges::unique(all_participants).begin(), all_participants.end());
+  
   ChatParams params{
       .id = ChatId::Generate(),
       .created_at = std::chrono::system_clock::now(),
@@ -62,7 +65,9 @@ Chat ChatService::CreateNewChatType(const UserId& creatorId, const std::vector<U
   const ChatValidator validator;
   Chat new_chat = Chat::Create(std::move(params), validator);
 
-  return chat_repo_obs_->Create(std::move(new_chat));
+  chat_repo_obs_->Add(new_chat);
+
+  return new_chat;
 }
 
 void ChatService::HandleSelfChat(const UserId& selfId, const UserId& otherId) {
@@ -95,7 +100,7 @@ std::vector<Chat> ChatService::GetChatsForUser(const UserId& userId, std::size_t
   return chat_repo_obs_->FindByUserId(userId, limit, offset);
 }
 
-std::optional<Chat> ChatService::GetChatById(const ChatId& id, const UserId& requestingUserId) {
+std::optional<Chat> ChatService::GetById(const ChatId& id, const UserId& requestingUserId) {
   EnforceParticipant(id, requestingUserId);
 
   return chat_repo_obs_->FindById(id);
