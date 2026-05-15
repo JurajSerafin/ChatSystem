@@ -11,7 +11,7 @@ find_package(Boost REQUIRED CONFIG COMPONENTS system thread asio)
 
 # Boost
 cmake_policy(SET CMP0167 NEW)
-find_package(Boost REQUIRED CONFIG COMPONENTS system thread asio)
+find_package(Boost REQUIRED CONFIG COMPONENTS system thread asio url)
 if(Boost_FOUND)
     message(STATUS "Found Boost ${Boost_VERSION}")
 endif()
@@ -65,6 +65,7 @@ target_link_libraries(ChatSystem_Dependencies INTERFACE
     Boost::system
     Boost::thread
     Boost::asio
+    Boost::url
     OpenSSL::SSL
     OpenSSL::Crypto
     libpqxx::pqxx
