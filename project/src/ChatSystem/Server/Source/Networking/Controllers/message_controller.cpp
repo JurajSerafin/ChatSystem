@@ -263,7 +263,7 @@ void MessageController::ExtractCursorPagination(
 }
 
 
-void MessageController::AddRoutes(Router& router) {
+void MessageController::RegisterRoutes(Router& router) {
   router.AddRoute(http::verb::post, std::string{ kChatMessagesRoute },
     [this](const auto& req, const auto& params) { return HandleSendMessage(req, params); }
   );

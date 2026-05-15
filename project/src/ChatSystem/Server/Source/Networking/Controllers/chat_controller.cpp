@@ -254,7 +254,7 @@ nlohmann::json ChatController::FormatJsonOutput(const std::vector<User>& partici
   return json_array;
 }
 
-void ChatController::AddRoutes(Router& router) {
+void ChatController::RegisterRoutes(Router& router) {
   router.AddRoute(http::verb::post, std::string{kChatsRoute},
     [this] (const auto& req, const auto& params) { return HandleCreateChat(req, params); }
   );

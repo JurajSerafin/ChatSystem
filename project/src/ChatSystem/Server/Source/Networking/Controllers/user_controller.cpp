@@ -205,7 +205,7 @@ std::string UserController::ExtractSearchQuery(const http::request<http::string_
 }
 
 
-void UserController::AddRoutes(Router& router) {
+void UserController::RegisterRoutes(Router& router) {
   router.AddRoute(http::verb::get, std::string(kHandleSearchRoute),
     [this](const auto& req, const auto& params) { return HandleSearchUsers(req, params); });
 

@@ -45,7 +45,7 @@ public:
    */
   http::response<http::string_body> HandleGetPublicKey(const http::request<http::string_body>& req, const Router::PathParams& params) const;
 
-  void AddRoutes(Router& router);
+  void RegisterRoutes(Router& router);
 
 private:
   std::optional<UserId> GetAuthenticatedUserId(const http::request<http::string_body>& req) const;
