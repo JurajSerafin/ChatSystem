@@ -49,7 +49,7 @@ public:
   /**
    * @brief The routing hot-path. Matches an incoming request to a registered route.
    */
-  static http::response<http::string_body> RouteRequest(const http::request<http::string_body>& req);
+  http::response<http::string_body> RouteRequest(const http::request<http::string_body>& req);
 
 private:
 
