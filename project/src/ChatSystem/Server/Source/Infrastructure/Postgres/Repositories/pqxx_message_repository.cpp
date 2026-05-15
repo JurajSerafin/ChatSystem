@@ -113,24 +113,30 @@ std::vector<Message> PqxxMessageRepository::FindByChatId(const ChatId& chatId, s
 std::vector<Message> PqxxMessageRepository::FindUndelivered(const UserId& recipientId, std::size_t limit, std::optional<MessageId> afterMessageId) {
   auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
-  const std::string sql = R"(
+  std::string sql = R"(
     SELECT m.* FROM messages m
     JOIN chat_participants cp ON m.chat_id = cp.chat_id
     LEFT JOIN message_receipts mr ON m.id = mr.message_id AND mr.user_id = cp.user_id
     WHERE cp.user_id = $1 
       AND m.sender_id != $1 
       AND mr.delivered_at IS NULL
-      AND m.id > $3
-    ORDER BY m.created_at ASC
-    LIMIT $1
   )";
 
   auto params = QueryParams{}
-    .BindParam(recipientId.ToString())
-    .BindParam(limit);
+  .BindParam(recipientId.ToString());
 
   if (afterMessageId.has_value()) {
     params.BindParam(afterMessageId->ToString());
+    params.BindParam(limit);
+
+    sql += " AND m.created_at > (SELECT created_at from messages WHERE id = $2) ";
+
+    sql += " ORDER BY m.created_at ASC LIMIT $3 ";
+  }
+  else {
+    params.BindParam(limit);
+
+    sql += "ORDER BY m.created_at ASC LIMIT $2 ";
   }
 
   const auto fetched_undelivered_result = tx.Execute(sql, params);
