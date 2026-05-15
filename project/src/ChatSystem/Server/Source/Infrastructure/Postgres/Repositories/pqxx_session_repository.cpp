@@ -49,7 +49,7 @@ std::vector<Session> PqxxSessionRepository::TryFetchSessions(std::string_view qu
   return fetched_sessions;
 }
 
-Session PqxxSessionRepository::Create(const Session& session) {
+void PqxxSessionRepository::Add(const Session& session) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string sql = R"(
@@ -65,19 +65,9 @@ Session PqxxSessionRepository::Create(const Session& session) {
     .BindParam(session.ExpiresAt())
     .BindParam(session.CreatedAt());
 
-  const auto query_result = tx.Execute(sql, params);
-
-  std::optional<Session> created_session = std::nullopt;
-  query_result->First([&created_session](const IRow& row) {
-    created_session = SessionMapper::Map(row);
-    });
-
-  if (!created_session) {
-    throw std::runtime_error("Failed to insert session.");
-  }
+  tx.Execute(sql, params);
 
   tx.Commit();
-  return std::move(*created_session);
 }
 
 std::optional<Session> PqxxSessionRepository::FindByToken(const std::string& token) {

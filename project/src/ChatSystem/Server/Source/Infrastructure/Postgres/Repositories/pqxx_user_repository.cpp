@@ -91,7 +91,7 @@ std::vector<User> PqxxUserRepository::Search(const std::string& query, std::size
   return TryFetchUsers(sql, params, Transaction{ std::move(connection_pool_obs_->Acquire()) });
 }
 
-User PqxxUserRepository::Create(const User& user) {
+void PqxxUserRepository::Add(const User& user) {
   auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
 
   const std::string sql = R"(
@@ -109,17 +109,9 @@ User PqxxUserRepository::Create(const User& user) {
     .BindParam(std::string{ user.GetRoleStr() })
     .BindParam(user.CreatedAt());
 
-  const auto query_result = tx.Execute(sql, params);
-
-  std::optional<User> created_user = std::nullopt;
-  query_result->First([&created_user](const IRow& row) {
-    created_user = UserMapper{}.Map(row);
-    });
-
-  if (!created_user) throw std::runtime_error("Failed to insert user.");
+  tx.Execute(sql, params);
 
   tx.Commit();
-  return std::move(*created_user);
 }
 
 void PqxxUserRepository::Update(const User& user) {

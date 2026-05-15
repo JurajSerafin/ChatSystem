@@ -15,9 +15,8 @@ PqxxMessageRepository::PqxxMessageRepository(IConnectionPool* connectionPoolObs)
   }
 }
 
-
-Message PqxxMessageRepository::Save(Message message, const EncryptedKeysMap& encryptedKeys) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+void PqxxMessageRepository::Add(const Message& message, const EncryptedKeysMap& encryptedKeys) {
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const std::string msg_sql = "INSERT INTO messages (id, chat_id, sender_id, ciphertext, type, created_at) VALUES ($1, $2, $3, $4, $5, $6)";
 
@@ -42,11 +41,10 @@ Message PqxxMessageRepository::Save(Message message, const EncryptedKeysMap& enc
 
   tx.Commit();
 
-  return message;
 }
 
 std::optional<std::string> PqxxMessageRepository::GetEncryptedKey(const MessageId& messageId, const UserId& userId) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const std::string sql = "SELECT encrypted_key FROM message_keys WHERE message_id = $1 AND user_id = $2";
 
@@ -69,7 +67,7 @@ std::optional<std::string> PqxxMessageRepository::GetEncryptedKey(const MessageI
 }
 
 std::optional<Message> PqxxMessageRepository::FindById(const MessageId& id) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const auto fetched_msg_result = tx.Execute("SELECT * FROM messages WHERE id = $1",
     QueryParams{}.BindParam(id.ToString()));
@@ -86,7 +84,7 @@ std::optional<Message> PqxxMessageRepository::FindById(const MessageId& id) {
 }
 
 void PqxxMessageRepository::DeleteById(const MessageId& id) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   tx.Execute("DELETE FROM messages WHERE id = $1",QueryParams{}.BindParam(id.ToString()));
 
@@ -95,7 +93,7 @@ void PqxxMessageRepository::DeleteById(const MessageId& id) {
 
 
 std::vector<Message> PqxxMessageRepository::FindByChatId(const ChatId& chatId, std::size_t limit, std::size_t offset) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const std::string sql = "SELECT * FROM messages WHERE chat_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3";
 
@@ -112,8 +110,8 @@ std::vector<Message> PqxxMessageRepository::FindByChatId(const ChatId& chatId, s
 }
 
 
-std::vector<Message> PqxxMessageRepository::FindUndelivered(const UserId& recipientId) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+std::vector<Message> PqxxMessageRepository::FindUndelivered(const UserId& recipientId, std::size_t limit, std::optional<MessageId> afterMessageId) {
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const std::string sql = R"(
     SELECT m.* FROM messages m
@@ -122,10 +120,20 @@ std::vector<Message> PqxxMessageRepository::FindUndelivered(const UserId& recipi
     WHERE cp.user_id = $1 
       AND m.sender_id != $1 
       AND mr.delivered_at IS NULL
+      AND m.id > $3
     ORDER BY m.created_at ASC
+    LIMIT $1
   )";
 
-  const auto fetched_undelivered_result = tx.Execute(sql, QueryParams{}.BindParam(recipientId.ToString()));
+  auto params = QueryParams{}
+    .BindParam(recipientId.ToString())
+    .BindParam(limit);
+
+  if (afterMessageId.has_value()) {
+    params.BindParam(afterMessageId->ToString());
+  }
+
+  const auto fetched_undelivered_result = tx.Execute(sql, params);
 
   std::vector<Message> messages;
 
@@ -134,9 +142,8 @@ std::vector<Message> PqxxMessageRepository::FindUndelivered(const UserId& recipi
   return messages;
 }
 
-
 void PqxxMessageRepository::MarkDelivered(const MessageId& messageId, const UserId& recipientId) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const std::string sql = R"(
     INSERT INTO message_receipts (message_id, user_id, delivered_at) 
@@ -153,7 +160,7 @@ void PqxxMessageRepository::MarkDelivered(const MessageId& messageId, const User
 }
 
 void PqxxMessageRepository::MarkRead(const MessageId& messageId, const UserId& readerId) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire()};
 
   const std::string sql = R"(
     INSERT INTO message_receipts (message_id, user_id, delivered_at, read_at) 
@@ -171,7 +178,7 @@ void PqxxMessageRepository::MarkRead(const MessageId& messageId, const UserId& r
 }
 
 std::vector<UserId> PqxxMessageRepository::GetDeliveredTo(const MessageId& messageId) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const auto fetched_delivered_to_result = tx.Execute(
     "SELECT user_id FROM message_receipts WHERE message_id = $1 AND delivered_at IS NOT NULL",
@@ -187,7 +194,7 @@ std::vector<UserId> PqxxMessageRepository::GetDeliveredTo(const MessageId& messa
 }
 
 std::vector<UserId> PqxxMessageRepository::GetReaders(const MessageId& messageId) {
-  auto tx = Transaction{ std::move(connection_pool_obs_->Acquire()) };
+  auto tx = Transaction{ connection_pool_obs_->Acquire() };
 
   const auto fetched_readers_result = tx.Execute("SELECT user_id FROM message_receipts WHERE message_id = $1 AND read_at IS NOT NULL",
     QueryParams{}.BindParam(messageId.ToString()));
