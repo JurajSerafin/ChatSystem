@@ -14,7 +14,7 @@ public:
 
   [[nodiscard]] virtual std::vector<Message> FindByChatId(const ChatId& chatId, std::size_t limit, std::size_t offset) = 0;
 
-  [[nodiscard]] virtual std::vector<Message> FindUndelivered(const UserId& recipientId) = 0;
+  [[nodiscard]] virtual std::vector<Message> FindUndelivered(const UserId& recipientId, std::size_t limit, std::optional<MessageId> afterMessageId) = 0;
 
   [[nodiscard]] virtual std::vector<UserId> GetReaders(const MessageId& messageId) = 0;
 
@@ -26,7 +26,7 @@ public:
 
   virtual void MarkRead(const MessageId& messageId, const UserId& readerId) = 0;
 
-  virtual Message Save(Message message, const EncryptedKeysMap& encryptedKeys) = 0;
+  virtual void Add(const Message& message, const EncryptedKeysMap& encryptedKeys) = 0;
 
   virtual std::optional<std::string> GetEncryptedKey(const MessageId& messageId, const UserId& userId) = 0;
 

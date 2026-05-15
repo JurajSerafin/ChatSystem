@@ -19,7 +19,7 @@ public:
 
   std::vector<User> Search(const std::string& query, std::size_t limit, std::size_t offset) override;
 
-  User Create(const User& user) override;
+  void Add(const User& user) override;
 
   void Update(const User& user) override;
 

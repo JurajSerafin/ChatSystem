@@ -11,7 +11,7 @@ class IChatRepository {
 public:
   virtual ~IChatRepository() = default;
 
-  virtual Chat Create(Chat chat) = 0;
+  virtual void Add(const Chat& chat) = 0;
 
   virtual std::optional<Chat> FindById(const ChatId& id) = 0;
 

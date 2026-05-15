@@ -11,7 +11,7 @@ class PqxxSessionRepository : public ISessionRepository {
 public:
   explicit PqxxSessionRepository(IConnectionPool* connectionPoolObs);
 
-  Session Create(const Session& session) override;
+  void Add(const Session& session) override;
 
   std::optional<Session> FindByToken(const std::string& token) override;
 

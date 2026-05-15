@@ -8,7 +8,7 @@ class PqxxChatRepository : public IChatRepository {
 public:
   explicit PqxxChatRepository(IConnectionPool* connectionPoolObs);
 
-  Chat Create(Chat chat) override;
+  void Add(const Chat& chat) override;
 
   std::optional<Chat> FindById(const ChatId& id) override;
 
