@@ -1,7 +1,7 @@
 #ifndef OPEN_SSL_ENCRYPTION_SERVICE_H
 #define OPEN_SSL_ENCRYPTION_SERVICE_H
 
-#include "Services/i_server_encryption_service.h"
+#include "Services/Interface/i_server_encryption_service.h"
 
 #include <memory>
 #include <openssl/err.h>
