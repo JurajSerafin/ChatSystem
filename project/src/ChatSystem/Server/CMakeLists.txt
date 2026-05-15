@@ -41,6 +41,10 @@ target_link_libraries(ChatSystemServer PRIVATE
     ChatSystemServerLib
 )
 
+target_compile_definitions(ChatSystemServer PRIVATE
+    ENV_FILE_PATH=\"${CMAKE_SOURCE_DIR}/.env\"
+)
+
 # Source groups for IDEs
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Include" PREFIX "Header Files" FILES ${SERVER_HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Source" PREFIX "Source Files" FILES ${SERVER_SOURCES})
