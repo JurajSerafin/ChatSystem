@@ -44,6 +44,10 @@ public:
 
   [[nodiscard]] const std::vector<UserId>& GetParticipantIds() const;
 
+  void AddParticipant(UserId userId);
+
+  void RemoveParticipant(const UserId& userId);
+
   void SetLastMessage(Message message);
 };
 
@@ -89,6 +93,17 @@ inline const std::vector<UserId>& Chat::GetParticipantIds() const {
   return participant_ids_;
 }
 
+inline void Chat::AddParticipant(UserId userId) {
+  participant_ids_.emplace_back(std::move(userId));
+}
+
+inline void Chat::RemoveParticipant(const UserId& userId) {
+  if (std::holds_alternative<DirectChatType>(type_)) {
+    throw std::logic_error("Cannot remove participants from a Direct Message.");
+  }
+
+  std::erase(participant_ids_, userId);
+}
 
 inline void Chat::SetLastMessage(Message message) {
   last_message_ = std::move(message);
