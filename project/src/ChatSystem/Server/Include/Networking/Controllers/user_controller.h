@@ -2,8 +2,8 @@
 #define USER_CONTROLLER_H
 
 #include "Networking/router.h"
-#include "Services/i_auth_service.h"
-#include "Services/i_user_service.h"
+#include "Services/Interface/i_auth_service.h"
+#include "Services/Interface/i_user_service.h"
 
 #include <nlohmann/json.hpp>
 #include <optional>

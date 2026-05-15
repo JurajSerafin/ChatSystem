@@ -2,8 +2,8 @@
 #define CHAT_CONTROLLER_H
 
 #include "Networking/router.h"
-#include "Services/i_auth_service.h"
-#include "Services/i_chat_service.h"
+#include "Services/Interface/i_auth_service.h"
+#include "Services/Interface/i_chat_service.h"
 #include "Session/session_validator.h"
 #include "User/user_validator.h"
 

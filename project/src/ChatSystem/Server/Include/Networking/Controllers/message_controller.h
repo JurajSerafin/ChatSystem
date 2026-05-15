@@ -2,8 +2,8 @@
 #define MESSAGE_CONTROLLER_H
 
 #include "Networking/router.h"
-#include "Services/i_auth_service.h"
-#include "Services/i_message_service.h"
+#include "Services/Interface/i_auth_service.h"
+#include "Services/Interface/i_message_service.h"
 
 #include <nlohmann/json.hpp>
 #include <optional>
