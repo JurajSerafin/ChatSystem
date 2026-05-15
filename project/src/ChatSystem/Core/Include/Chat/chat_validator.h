@@ -12,9 +12,7 @@
  * a Chat entity is created.
  *
  * Validation includes:
- * - Valid chat id
  * - Creation timestamp set
- * - Optionally, name set
  */
 class ChatValidator : public IValidator<ChatParams, 1> {
 public:

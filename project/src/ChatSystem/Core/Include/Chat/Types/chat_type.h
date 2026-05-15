@@ -5,11 +5,14 @@
 #include <stdexcept>
 #include <string_view>
 
+/**
+ * @brief Concept enforcing the interface for chat type implementations.
+ * Every ChatType must provide a unique string identifier and a validity check.
+ */
 template<typename T>
 concept ChatType = requires(T chatType) {
   { T::TypeString() } -> std::convertible_to<std::string_view>;
   { chatType.IsValid() } -> std::same_as<bool>;
 };
-
 #endif // CHAT_TYPE_H
 

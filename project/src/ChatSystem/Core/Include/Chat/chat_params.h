@@ -8,6 +8,12 @@
 #include <chrono>
 #include <optional>
 
+/**
+ * @struct ChatParams
+ * 
+ * @brief Data Transfer Object (DTO) for transferring Chat state.
+ * Used primarily for construction and reconstitution of Chat entities.
+ */
 struct ChatParams {
   ChatId id;
 

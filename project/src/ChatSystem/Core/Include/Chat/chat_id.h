@@ -4,6 +4,8 @@
 #include <Id/base_id.h>
 
 /**
+ * @class ChatId
+ * 
  * @brief Strongly typed identifier for chats.
  *
  * ChatId represents a unique identifier for a chat entity in the system.

@@ -14,25 +14,34 @@
 #include <stdexcept>
 #include <vector>
 
+/**
+ * @class Chat
+ * @brief Domain Aggregate Root representing a communication channel between users.
+ * 
+ * This class encapsulates the state of a chat, including its participants and metadata.
+ * It enforces business rules, such as preventing participant removal in Direct Messages.
+ */
 class Chat {
-private:
-  ChatId id_;
-
-  std::chrono::system_clock::time_point created_at_;
-
-  ChatTypeVariant type_;
-
-  std::optional<Message> last_message_;
-
-  std::vector<UserId> participant_ids_;
-
-  explicit Chat(ChatParams params);
-
 public:
+  /**
+   * @brief Factory method to create a new Chat with domain validation.
+   * 
+   * @tparam TChatValidator A type satisfying the ChatValidatorFor concept.
+   * 
+   * @param params Initial state parameters for the chat.
+   * @param validator The validator instance to check invariants.
+   * @throws std::invalid_argument If parameters fail validation rules.
+   * @return A validated Chat instance.
+   */
   template<ChatValidatorFor<ChatParams> TChatValidator>
   [[nodiscard]] static Chat Create(ChatParams params, const TChatValidator& validator);
 
+  /**
+   * @brief Reconstitutes a Chat object from trusted storage (e.g., Database).
+   * bypasses validation rules as the data is assumed to be valid.
+   */
   [[nodiscard]] static Chat Reconstitute(ChatParams params);
+
 
   [[nodiscard]] const ChatId& GetId() const;
 
@@ -44,11 +53,29 @@ public:
 
   [[nodiscard]] const std::vector<UserId>& GetParticipantIds() const;
 
+  /// @brief Adds a user with specified id to the chat participants.
   void AddParticipant(UserId userId);
 
+  /**
+   * @brief Removes a user from the chat.
+   * 
+   * @param userId The ID of the participant to remove.
+   * @throws std::logic_error If the chat is a Direct Message (DM), as DMs have fixed participants.
+   */
   void RemoveParticipant(const UserId& userId);
 
+  /// @brief Updates the preview of the most recent message sent in this chat.
   void SetLastMessage(Message message);
+
+private:
+  ChatId id_;
+  std::chrono::system_clock::time_point created_at_;
+  ChatTypeVariant type_;
+  std::optional<Message> last_message_;
+  std::vector<UserId> participant_ids_;
+
+  /// @brief Private constructor to enforce creation through factory methods.
+  explicit Chat(ChatParams params);
 };
 
 
