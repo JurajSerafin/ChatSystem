@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 #include <format>
+#include <fstream>
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
@@ -88,12 +89,53 @@ namespace {
     }
 
   }
+
+  void LoadtEnvironment() {
+#ifdef ENV_FILE_PATH
+    std::ifstream file(ENV_FILE_PATH);
+
+    constexpr char kCommentLineStartCHar = '#';
+    constexpr char kKeyValueDelim = '=';
+
+    if (!file.is_open()) {
+      return;
+    }
+
+    std::string line;
+
+    while (std::getline(file, line)) {
+
+      if (line.empty() || line[0] == kCommentLineStartCHar) {
+        continue;
+      }
+
+      auto delimiter_pos = line.find(kKeyValueDelim);
+
+      if (delimiter_pos != std::string::npos) {
+        std::string key = line.substr(0, delimiter_pos);
+
+        std::string value = line.substr(delimiter_pos + 1);
+
+        if (!value.empty() && value.back() == '\r') {
+          value.pop_back();
+        }
+#ifdef _WIN32
+        _putenv_s(key.c_str(), value.c_str());
+#else // _WIN32
+        setenv(key.c_str(), value.c_str(), 1);
+#endif // _WIN32 else
+      }
+    }
+#endif // ENV_FILE_PATH
+  }
 } // namespace
 
 
 int main() {
 
   try {
+    LoadtEnvironment();
+
     std::cout << "[1/4] Initializing Database Connection Pool...\n";
 
     PqxxConnectionPool connection_pool{};
