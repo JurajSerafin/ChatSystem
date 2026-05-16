@@ -38,6 +38,16 @@ public:
 
   virtual std::vector<std::string> GetChatParticipantIds(std::string_view chatId) = 0;
 
+  virtual void DeleteMessage(std::string_view messageId) = 0;
+
+  virtual void DeleteUser(std::string_view userId) = 0;
+
+  virtual void DeleteChat(std::string_view chatId) = 0;
+
+  virtual void DeleteUserFromChat(std::string_view userId, std::string_view chatId) = 0;
+
+
+
 
   virtual void SaveMessageForChat(const CachedMessage& message) = 0;
 

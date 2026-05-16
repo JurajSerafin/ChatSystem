@@ -19,6 +19,9 @@ struct CachedUser {
   std::string public_key;
 
   std::chrono::system_clock::time_point cached_at;
+
+  bool is_deleted;
+
 };
 
 struct CachedChat {
@@ -29,6 +32,8 @@ struct CachedChat {
 
   std::chrono::system_clock::time_point last_activity_at;
   std::chrono::system_clock::time_point cached_at;
+
+  bool is_deleted = false;
 };
 
 struct CachedMessage {
@@ -42,6 +47,8 @@ struct CachedMessage {
 
   bool is_read;
   bool is_delivered;
+
+  bool is_deleted = false;
 };
 
 #endif // LOCAL_DB_MODELS_H
