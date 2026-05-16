@@ -35,7 +35,9 @@ Sqlite3KeyStore& Sqlite3KeyStore::operator=(Sqlite3KeyStore&& other) noexcept {
 Sqlite3KeyStore::Sqlite3KeyStore(std::string_view dbPath) {
   if (sqlite3_open(dbPath.data(), &db_obs_) != SQLITE_OK) {
     std::string error = sqlite3_errmsg(db_obs_);
+
     sqlite3_close(db_obs_);
+
     throw std::runtime_error("Failed to open SQLite database: " + error);
   }
   InitSchema();

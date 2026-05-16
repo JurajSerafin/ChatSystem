@@ -2,7 +2,8 @@
 #define OPEN_SSL_KEY_DERIVATION_SERVICE_H
 
 #include "Services/i_key_derivation_service.h"
-#include <cstddef>
+
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -10,7 +11,7 @@ class OpenSSLKeyDerivationService : public IKeyDerivationService {
 public:
   OpenSSLKeyDerivationService() = default;
 
-  std::vector<unsigned char> GenerateSalt() override;
+  static std::vector<unsigned char> GenerateSalt() override;
 
   std::string DeriveKey(std::string_view password, const std::vector<unsigned char>& salt, const KdfParams& params) override;
 
@@ -22,6 +23,7 @@ public:
 
 private:
   static std::string Base64Encode(const unsigned char* buffer, std::size_t length);
+
   static constexpr std::size_t GetMaxBase64StrSize(std::size_t length);
 
   static bool TryDeriveKey(std::string_view password, const std::vector<unsigned char>& salt, const KdfParams& params, unsigned char* derivedKey);
