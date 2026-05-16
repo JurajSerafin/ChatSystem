@@ -1,8 +1,6 @@
 #include "local_message_repository.h"
 
-#include <algorithm>
 #include <execution>
-#include <ranges>
 
 std::vector<CachedMessage> LocalMessageRepository::FindByChatId(std::string_view chatId, std::size_t limit, std::size_t offset) {
   return db_obs_->LoadMessagesForChat(chatId, limit, offset);
