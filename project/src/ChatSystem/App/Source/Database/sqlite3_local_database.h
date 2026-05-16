@@ -48,7 +48,7 @@ public:
 
   void SaveMessageForChat(const CachedMessage& message) override;
 
-  std::vector<CachedMessage> GetMessagesForChat(
+  std::vector<CachedMessage> LoadMessagesForChat(
     std::string_view chatId,
     std::size_t limit,
     std::size_t offset

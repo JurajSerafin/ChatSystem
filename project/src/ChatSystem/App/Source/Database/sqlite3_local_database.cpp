@@ -389,7 +389,7 @@ void Sqlite3LocalDatabase::SaveMessageForChat(const CachedMessage& message) {
 
 }
 
-std::vector<CachedMessage> Sqlite3LocalDatabase::GetMessagesForChat(std::string_view chatId, std::size_t limit, std::size_t offset) {
+std::vector<CachedMessage> Sqlite3LocalDatabase::LoadMessagesForChat(std::string_view chatId, std::size_t limit, std::size_t offset) {
   constexpr auto sql = R"(
     SELECT id, sender_id, plaintext, type, created_at, is_read, is_delivered, is_deleted
     FROM cached_messages 

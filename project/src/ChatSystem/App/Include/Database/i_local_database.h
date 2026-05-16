@@ -49,7 +49,7 @@ public:
 
   virtual void SaveMessageForChat(const CachedMessage& message) = 0;
 
-  virtual std::vector<CachedMessage> GetMessagesForChat(
+  virtual std::vector<CachedMessage> LoadMessagesForChat(
     std::string_view chatId,
     std::size_t limit,
     std::size_t offset
