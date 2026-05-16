@@ -80,11 +80,16 @@ private:
 
   static std::string ReadStringFromPreparedStmt(sqlite3_stmt* rawStmt);
 
+  static CachedIdentity ReadIdentityFromPreparedStmt(sqlite3_stmt* rawStmt);
+
+  static void BindIdentity(sqlite3_stmt* rawStmt, const CachedIdentity& identity);
+
   static void BindUser(sqlite3_stmt* rawStmt, const CachedUser& user);
 
   static void BindChat(sqlite3_stmt* rawStmt, const CachedChat& chat);
 
   static void BindMessage(sqlite3_stmt* rawStmt, const CachedMessage& msg);
+
 };
 
 

@@ -47,8 +47,6 @@ public:
   virtual void DeleteUserFromChat(std::string_view userId, std::string_view chatId) = 0;
 
 
-
-
   virtual void SaveMessageForChat(const CachedMessage& message) = 0;
 
   virtual std::vector<CachedMessage> GetMessagesForChat(

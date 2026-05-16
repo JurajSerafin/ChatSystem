@@ -37,6 +37,58 @@ Sqlite3LocalDatabase::~Sqlite3LocalDatabase() {
   }
 }
 
+void Sqlite3LocalDatabase::SaveIdentity(const CachedIdentity& identity) {
+  constexpr auto sql = "INSERT OR REPLACE INTO identity (id, login, tag, session_token) VALUES (?, ?, ?, ?);";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: SaveIdentity");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  BindIdentity(stmt.get(), identity);
+
+  if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
+    throw std::runtime_error("Execute failed: SaveIdentity");
+  }
+}
+
+std::optional<CachedIdentity> Sqlite3LocalDatabase::LoadIdentity() {
+  constexpr auto sql = "SELECT id, login, tag, session_token FROM identity;";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: LoadIdentity");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  if (!Sqlite3Utils::TryExecuteLoad(stmt.get())) {
+    return std::nullopt;
+  }
+
+  return ReadIdentityFromPreparedStmt(stmt.get()); 
+}
+
+void Sqlite3LocalDatabase::ClearIdentity() {
+  constexpr auto sql = "DELETE FROM identity;";
+
+  if (char* err_msg = nullptr; !Sqlite3Utils::TryExecute(db_obs_, sql, err_msg)) {
+    std::string err_str = err_msg
+      ? err_msg
+      : "Unknown error";
+
+    if (err_msg) {
+      sqlite3_free(err_msg);
+    }
+
+    throw std::runtime_error(std::format("Failed to clear identity: {}", err_str));
+  }
+}
+
 void Sqlite3LocalDatabase::InitSchema() const {
   constexpr auto sql = R"(
     CREATE TABLE IF NOT EXISTS identity (
@@ -83,6 +135,8 @@ void Sqlite3LocalDatabase::InitSchema() const {
 
   Sqlite3Utils::InitSchemaOrThrow(db_obs_, sql);
 }
+
+
 
 void Sqlite3LocalDatabase::UpsertUser(const CachedUser& user) {
   constexpr auto sql = R"(
@@ -534,15 +588,33 @@ std::string Sqlite3LocalDatabase::ReadStringFromPreparedStmt(sqlite3_stmt* rawSt
   return str;
 }
 
+CachedIdentity Sqlite3LocalDatabase::ReadIdentityFromPreparedStmt(sqlite3_stmt* rawStmt) {
+  CachedIdentity identity;
+
+  Sqlite3Utils::TryReadText(rawStmt, identity.login, 0);
+  Sqlite3Utils::TryReadText(rawStmt, identity.login, 1);
+  Sqlite3Utils::TryReadText(rawStmt, identity.tag, 2);
+  Sqlite3Utils::TryReadText(rawStmt, identity.session_token, 3);
+
+  return identity;
+}
+
+void Sqlite3LocalDatabase::BindIdentity(sqlite3_stmt* rawStmt, const CachedIdentity& identity) {
+  Sqlite3Utils::BindStr(rawStmt, identity.id, 1);
+  Sqlite3Utils::BindStr(rawStmt, identity.login, 2);
+  Sqlite3Utils::BindStr(rawStmt, identity.tag, 3);
+  Sqlite3Utils::BindStr(rawStmt, identity.session_token, 4);
+}
+
 void Sqlite3LocalDatabase::BindUser(sqlite3_stmt* rawStmt, const CachedUser& user) {
-    Sqlite3Utils::BindStr(rawStmt, user.id, 1);
-    Sqlite3Utils::BindStr(rawStmt, user.login, 2);
-    Sqlite3Utils::BindStr(rawStmt, user.tag, 3);
-    Sqlite3Utils::BindStr(rawStmt, user.public_key, 4);
+  Sqlite3Utils::BindStr(rawStmt, user.id, 1);
+  Sqlite3Utils::BindStr(rawStmt, user.login, 2);
+  Sqlite3Utils::BindStr(rawStmt, user.tag, 3);
+  Sqlite3Utils::BindStr(rawStmt, user.public_key, 4);
 
-    Sqlite3Utils::BindTimestamp(rawStmt, user.cached_at, 5);
+  Sqlite3Utils::BindTimestamp(rawStmt, user.cached_at, 5);
 
-    Sqlite3Utils::BindBool(rawStmt, user.is_deleted, 6);    
+  Sqlite3Utils::BindBool(rawStmt, user.is_deleted, 6);    
 }
 
 void Sqlite3LocalDatabase::BindChat(sqlite3_stmt* rawStmt, const CachedChat& chat) {
@@ -559,17 +631,17 @@ void Sqlite3LocalDatabase::BindChat(sqlite3_stmt* rawStmt, const CachedChat& cha
 }
 
 void Sqlite3LocalDatabase::BindMessage(sqlite3_stmt* rawStmt, const CachedMessage& msg) {
-    Sqlite3Utils::BindStr(rawStmt, msg.id, 1);
-    Sqlite3Utils::BindStr(rawStmt, msg.chat_id, 2);
-    Sqlite3Utils::BindStr(rawStmt, msg.sender_id, 3);
-    Sqlite3Utils::BindStr(rawStmt, msg.plaintext, 4);
-    Sqlite3Utils::BindStr(rawStmt, msg.type, 5);
+  Sqlite3Utils::BindStr(rawStmt, msg.id, 1);
+  Sqlite3Utils::BindStr(rawStmt, msg.chat_id, 2);
+  Sqlite3Utils::BindStr(rawStmt, msg.sender_id, 3);
+  Sqlite3Utils::BindStr(rawStmt, msg.plaintext, 4);
+  Sqlite3Utils::BindStr(rawStmt, msg.type, 5);
 
-    Sqlite3Utils::BindTimestamp(rawStmt, msg.created_at, 6);
+  Sqlite3Utils::BindTimestamp(rawStmt, msg.created_at, 6);
 
-    Sqlite3Utils::BindBool(rawStmt, msg.is_read, 7);
-    Sqlite3Utils::BindBool(rawStmt, msg.is_delivered, 8);
-    Sqlite3Utils::BindBool(rawStmt, msg.is_deleted, 9);
+  Sqlite3Utils::BindBool(rawStmt, msg.is_read, 7);
+  Sqlite3Utils::BindBool(rawStmt, msg.is_delivered, 8);
+  Sqlite3Utils::BindBool(rawStmt, msg.is_deleted, 9);
 
 }
 
