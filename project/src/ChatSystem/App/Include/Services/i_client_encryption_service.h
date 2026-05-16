@@ -7,6 +7,7 @@
 
 class IClientEncryptionService {
 public:
+  virtual ~IClientEncryptionService() = default;
 
   virtual KeyPair GenerateKeyPair() = 0;
 
@@ -26,4 +27,4 @@ public:
 
 };
 
-#endif // !I_CLIENT_ENCRYPTION_SERVICE_H
+#endif // I_CLIENT_ENCRYPTION_SERVICE_H
