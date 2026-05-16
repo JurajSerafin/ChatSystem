@@ -56,6 +56,8 @@ public:
 
   void MarkMessageAsRead(std::string_view messageId) override;
 
+  std::vector<CachedMessage> SearchMessages(std::string_view chatId, std::string_view keyword) override;
+
   void EvictOldMessages(std::chrono::system_clock::time_point olderThanTimeStamp) override;
 
   void NukeEntireCache() override;

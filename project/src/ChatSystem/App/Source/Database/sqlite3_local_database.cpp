@@ -453,6 +453,35 @@ void Sqlite3LocalDatabase::EvictOldMessages(std::chrono::system_clock::time_poin
   }
 }
 
+std::vector<CachedMessage> Sqlite3LocalDatabase::SearchMessages(std::string_view chatId, std::string_view keyword) {
+  constexpr auto sql = R"(
+    SELECT id, sender_id, plaintext, type, created_at, is_read, is_delivered, is_deleted 
+    FROM cached_messages 
+    WHERE chat_id = ? AND plaintext LIKE ?
+    ORDER BY created_at DESC;
+  )";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: SearchMessages");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  const std::string like_pattern = std::format("%{}%", keyword);
+
+  Sqlite3Utils::BindStr(stmt.get(), chatId, 1);
+  Sqlite3Utils::BindStr(stmt.get(), like_pattern, 2);
+
+  std::vector<CachedMessage> messages;
+
+  while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+    messages.emplace_back(ReadMessageFromPreparedStmt(stmt.get(), chatId));
+  }
+
+  return messages;
+}
+
 void Sqlite3LocalDatabase::NukeEntireCache() {
   constexpr auto sql = R"(
     DELETE FROM identity;
