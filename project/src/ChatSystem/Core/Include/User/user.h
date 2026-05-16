@@ -91,7 +91,7 @@ public:
   /// @brief Retrieves the assigned role of the user.
   [[nodiscard]] const UserRoleVariant& GetRole() const;
 
-  [[nodiscard]] std::string_view GetRoleStr() const;
+  [[nodiscard]] std::string GetRoleStr() const;
 
   [[nodiscard]] std::chrono::system_clock::time_point CreatedAt() const;
 

@@ -9,9 +9,6 @@ bool User::CanPerform(UserAction action) const {
   );
 }
 
-std::string_view User::GetRoleStr() const {
-  return std::visit(
-    [](auto&& role) { return role.TypeString(); }
-    , role_
-  );
+std::string User::GetRoleStr() const {
+  return UserRoles::RoleToString(role_);
 }
