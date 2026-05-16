@@ -46,7 +46,6 @@ public:
 
   std::vector<std::string> GetChatParticipantIds(std::string_view chatId) override;
 
-
   void SaveMessageForChat(const CachedMessage& message) override;
 
   std::vector<CachedMessage> GetMessagesForChat(
@@ -60,6 +59,14 @@ public:
   void EvictOldMessages(std::chrono::system_clock::time_point olderThanTimeStamp) override;
 
   void NukeEntireCache() override;
+
+  void DeleteMessage(std::string_view messageId) override;
+
+  void DeleteUser(std::string_view userId) override;
+
+  void DeleteChat(std::string_view chatId) override;
+
+  void DeleteUserFromChat(std::string_view userId, std::string_view chatId) override;
 
 
 private:

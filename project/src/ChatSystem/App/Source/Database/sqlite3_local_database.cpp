@@ -40,20 +40,43 @@ Sqlite3LocalDatabase::~Sqlite3LocalDatabase() {
 void Sqlite3LocalDatabase::InitSchema() const {
   constexpr auto sql = R"(
     CREATE TABLE IF NOT EXISTS identity (
-      id TEXT PRIMARY KEY, login TEXT NOT NULL, tag TEXT NOT NULL, session_token TEXT
+      id TEXT PRIMARY KEY,
+      login TEXT NOT NULL,
+      tag TEXT NOT NULL,
+      session_token TEXT
     );
     CREATE TABLE IF NOT EXISTS cached_users (
-      id TEXT PRIMARY KEY, login TEXT NOT NULL, tag TEXT NOT NULL, public_key TEXT NOT NULL, cached_at INTEGER NOT NULL
+      id TEXT PRIMARY KEY,
+      login TEXT NOT NULL,
+      tag TEXT NOT NULL,
+      public_key TEXT NOT NULL,
+      cached_at INTEGER NOT NULL,
+      is_deleted INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS cached_chats (
-      id TEXT PRIMARY KEY, name TEXT, last_message_id TEXT, last_activity_at INTEGER NOT NULL, cached_at INTEGER NOT NULL
+      id TEXT PRIMARY KEY,
+      name TEXT, last_message_id TEXT,
+      last_activity_at INTEGER NOT NULL,
+      cached_at INTEGER NOT NULL,
+      is_deleted INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS cached_chat_participants (
-      chat_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL, PRIMARY KEY (chat_id, user_id)
+      chat_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      is_deleted INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (chat_id, user_id)
     );
     CREATE TABLE IF NOT EXISTS cached_messages (
-      id TEXT PRIMARY KEY, chat_id TEXT NOT NULL, sender_id TEXT NOT NULL, plaintext TEXT NOT NULL, 
-      type TEXT NOT NULL, created_at INTEGER NOT NULL, is_read INTEGER NOT NULL DEFAULT 0, is_delivered INTEGER NOT NULL DEFAULT 0
+      id TEXT PRIMARY KEY,
+      chat_id TEXT NOT NULL,
+      sender_id TEXT NOT NULL,
+      plaintext TEXT NOT NULL, 
+      type TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      is_delivered INTEGER NOT NULL DEFAULT 0,
+      is_deleted INTEGER NOT NULL DEFAULT 0
     );
     CREATE INDEX IF NOT EXISTS idx_cached_messages_chat ON cached_messages(chat_id, created_at DESC);
   )";
@@ -63,8 +86,8 @@ void Sqlite3LocalDatabase::InitSchema() const {
 
 void Sqlite3LocalDatabase::UpsertUser(const CachedUser& user) {
   constexpr auto sql = R"(
-    INSERT OR REPLACE INTO cached_users (id, login, tag, public_key, cached_at) 
-    VALUES (?, ?, ?, ?, ?);
+    INSERT OR REPLACE INTO cached_users (id, login, tag, public_key, cached_at, is_deleted) 
+    VALUES (?, ?, ?, ?, ?, ?);
   )";
 
   sqlite3_stmt* raw_stmt = nullptr;
@@ -83,7 +106,7 @@ void Sqlite3LocalDatabase::UpsertUser(const CachedUser& user) {
 }
 
 std::optional<CachedUser> Sqlite3LocalDatabase::LoadUser(std::string_view userId) {
-  constexpr auto sql = "SELECT login, tag, public_key, cached_at FROM cached_users WHERE id = ?;";
+  constexpr auto sql = "SELECT login, tag, public_key, cached_at, is_deleted FROM cached_users WHERE id = ?;";
 
   sqlite3_stmt* raw_stmt = nullptr;
 
@@ -106,15 +129,18 @@ std::optional<CachedUser> Sqlite3LocalDatabase::LoadUser(std::string_view userId
   Sqlite3Utils::TryReadText(stmt.get(), user.login, 0);
   Sqlite3Utils::TryReadText(stmt.get(), user.tag, 1);
   Sqlite3Utils::TryReadText(stmt.get(), user.public_key, 2);
+
   Sqlite3Utils::TryReadTimeStamp(stmt.get(), user.cached_at, 3);
+
+  Sqlite3Utils::TryReadBool(stmt.get(), user.is_deleted, 4);
 
   return user;
 }
 
 void Sqlite3LocalDatabase::UpsertChat(const CachedChat& chat) {
   constexpr auto sql = R"(
-    INSERT OR REPLACE INTO cached_chats (id, name, last_message_id, last_activity_at, cached_at)
-    VALUES (?, ?, ?, ?, ?);
+    INSERT OR REPLACE INTO cached_chats (id, name, last_message_id, last_activity_at, cached_at, is_deleted)
+    VALUES (?, ?, ?, ?, ?, ?);
   )";
 
   sqlite3_stmt* raw_stmt = nullptr;
@@ -133,7 +159,7 @@ void Sqlite3LocalDatabase::UpsertChat(const CachedChat& chat) {
 }
 
 std::optional<CachedChat> Sqlite3LocalDatabase::LoadChat(std::string_view chatId) {
-  constexpr auto sql = "SELECT name, last_message_id, last_activity_at, cached_at FROM cached_chats WHERE id = ?;";
+  constexpr auto sql = "SELECT name, last_message_id, last_activity_at, cached_at, is_deleted FROM cached_chats WHERE id = ?;";
 
   sqlite3_stmt* raw_stmt = nullptr;
 
@@ -158,13 +184,16 @@ std::optional<CachedChat> Sqlite3LocalDatabase::LoadChat(std::string_view chatId
   Sqlite3Utils::TryReadTimeStamp(stmt.get(), chat.last_activity_at, 2);
   Sqlite3Utils::TryReadTimeStamp(stmt.get(), chat.cached_at, 3);
 
+  Sqlite3Utils::TryReadBool(stmt.get(), chat.is_deleted, 4);
+
   return chat;
 }
 
 std::vector<CachedChat> Sqlite3LocalDatabase::LoadChats(std::size_t limit, std::size_t offset) {
   constexpr auto sql = R"(
-    SELECT id, name, last_message_id, last_activity_at, cached_at
+    SELECT id, name, last_message_id, last_activity_at, cached_at, is_deleted
     FROM cached_chats
+    WHERE is_deleted = 0
     ORDER BY cached_at DESC
     LIMIT ? OFFSET ?;
   )";
@@ -190,8 +219,8 @@ std::vector<CachedChat> Sqlite3LocalDatabase::LoadChats(std::size_t limit, std::
 
 void Sqlite3LocalDatabase::AddUserToChat(std::string_view userId, std::string_view chatId, const UserRoleVariant& chatRole) {  
   constexpr auto sql = R"(
-    INSERT OR IGNORE INTO cached_chat_participants (chat_id, user_id, role)
-    VALUES (?, ?, ?);
+    INSERT OR REPLACE INTO cached_chat_participants (chat_id, user_id, role, is_deleted)
+    VALUES (?, ?, ?, 0);
   )";
 
   sqlite3_stmt* raw_stmt = nullptr;
@@ -211,7 +240,7 @@ void Sqlite3LocalDatabase::AddUserToChat(std::string_view userId, std::string_vi
 }
 
 void Sqlite3LocalDatabase::SetUserChatRole(std::string_view userId, std::string_view chatId, const UserRoleVariant& chatRole) {
-  constexpr auto sql = "UPDATE cached_chat_participants SET role = ? WHERE user_id = ? AND chat_id = ?;";
+  constexpr auto sql = "UPDATE cached_chat_participants SET role = ? WHERE is_deleted = 0 AND user_id = ? AND chat_id = ?;";
 
   sqlite3_stmt* raw_stmt = nullptr;
   if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
@@ -232,8 +261,9 @@ void Sqlite3LocalDatabase::SetUserChatRole(std::string_view userId, std::string_
 std::optional<UserRoleVariant> Sqlite3LocalDatabase::GetUserChatRole(std::string_view userId, std::string_view chatId) {
   constexpr auto sql = R"(
     SELECT role FROM cached_chat_participants
-    WHERE user_id = ?
-    AND chat_id = ?;
+    WHERE is_deleted = 0
+    AND user_id = ?
+    AND chat_id = ?
   )";
 
   sqlite3_stmt* raw_stmt = nullptr;
@@ -262,7 +292,7 @@ std::optional<UserRoleVariant> Sqlite3LocalDatabase::GetUserChatRole(std::string
 }
 
 std::vector<std::string> Sqlite3LocalDatabase::GetChatParticipantIds(std::string_view chatId) {
-  constexpr auto sql = "SELECT user_id FROM cached_chat_participants WHERE chat_id = ?";
+  constexpr auto sql = "SELECT user_id FROM cached_chat_participants WHERE is_deleted = 0 AND chat_id = ?;";
 
   sqlite3_stmt* raw_stmt = nullptr;
   if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
@@ -284,8 +314,9 @@ std::vector<std::string> Sqlite3LocalDatabase::GetChatParticipantIds(std::string
 
 void Sqlite3LocalDatabase::SaveMessageForChat(const CachedMessage& message) {
   constexpr auto sql = R"(
-    INSERT INTO cached_messages (id, chat_id, sender_id, plaintext, type, created_at, is_read, is_delivered)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    INSERT OR REPLACE INTO cached_messages 
+    (id, chat_id, sender_id, plaintext, type, created_at, is_read, is_delivered, is_deleted)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
   )";
 
 
@@ -306,7 +337,7 @@ void Sqlite3LocalDatabase::SaveMessageForChat(const CachedMessage& message) {
 
 std::vector<CachedMessage> Sqlite3LocalDatabase::GetMessagesForChat(std::string_view chatId, std::size_t limit, std::size_t offset) {
   constexpr auto sql = R"(
-    SELECT id, sender_id, plaintext, type, created_at, is_read, is_delivered 
+    SELECT id, sender_id, plaintext, type, created_at, is_read, is_delivered, is_deleted
     FROM cached_messages 
     WHERE chat_id = ? 
     ORDER BY created_at DESC 
@@ -390,6 +421,75 @@ void Sqlite3LocalDatabase::NukeEntireCache() {
   }
 }
 
+void Sqlite3LocalDatabase::DeleteMessage(std::string_view messageId) {
+  constexpr auto sql = "UPDATE cached_messages SET is_deleted = 1 WHERE id = ?;";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: DeleteMessage");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  Sqlite3Utils::BindStr(stmt.get(), messageId, 1);
+
+  if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
+    throw std::runtime_error("Execute failed: DeleteMessage");
+  }
+}
+
+void Sqlite3LocalDatabase::DeleteUser(std::string_view userId) {
+  constexpr auto sql = "UPDATE cached_users SET is_deleted = 1 WHERE id = ?;";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: DeleteUser");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  Sqlite3Utils::BindStr(stmt.get(), userId, 1);
+
+  if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
+    throw std::runtime_error("Execute failed: DeleteUser");
+  }
+}
+
+void Sqlite3LocalDatabase::DeleteChat(std::string_view chatId) {
+  constexpr auto sql = "UPDATE cached_chats SET is_deleted = 1 WHERE id = ?;";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: DeleteChat");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  Sqlite3Utils::BindStr(stmt.get(), chatId, 1);
+
+  if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
+    throw std::runtime_error("Execute failed: DeleteChat");
+  }
+}
+
+void Sqlite3LocalDatabase::DeleteUserFromChat(std::string_view userId, std::string_view chatId) {
+  constexpr auto sql = "UPDATE cached_chat_participants SET is_deleted = 1 WHERE user_id = ? AND chat_id = ?;";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: DeleteUserFromChat");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  Sqlite3Utils::BindStr(stmt.get(), userId, 1);
+  Sqlite3Utils::BindStr(stmt.get(), chatId, 2);
+
+  if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
+    throw std::runtime_error("Execute failed: DeleteUserFromChat");
+  }
+}
+
 CachedMessage Sqlite3LocalDatabase::ReadMessageFromPreparedStmt(sqlite3_stmt* rawStmt, std::string_view chatId) {
   CachedMessage msg;
   msg.chat_id = std::string(chatId);
@@ -401,8 +501,9 @@ CachedMessage Sqlite3LocalDatabase::ReadMessageFromPreparedStmt(sqlite3_stmt* ra
 
   Sqlite3Utils::TryReadTimeStamp(rawStmt, msg.created_at, 4);
 
-  msg.is_read = sqlite3_column_int(rawStmt, 5) != 0;
-  msg.is_delivered = sqlite3_column_int(rawStmt, 6) != 0;
+  Sqlite3Utils::TryReadBool(rawStmt, msg.is_read, 5);
+  Sqlite3Utils::TryReadBool(rawStmt, msg.is_delivered, 6);
+  Sqlite3Utils::TryReadBool(rawStmt, msg.is_deleted, 7);
 
   return msg;
 }
@@ -418,6 +519,9 @@ CachedChat Sqlite3LocalDatabase::ReadChatFromPreparedStmt(sqlite3_stmt* rawStmt)
 
   Sqlite3Utils::TryReadTimeStamp(rawStmt, chat.last_activity_at, 3);
   Sqlite3Utils::TryReadTimeStamp(rawStmt, chat.cached_at, 4);
+
+  Sqlite3Utils::TryReadBool(rawStmt, chat.is_deleted, 5);
+
   
   return chat;
 }
@@ -437,6 +541,8 @@ void Sqlite3LocalDatabase::BindUser(sqlite3_stmt* rawStmt, const CachedUser& use
     Sqlite3Utils::BindStr(rawStmt, user.public_key, 4);
 
     Sqlite3Utils::BindTimestamp(rawStmt, user.cached_at, 5);
+
+    Sqlite3Utils::BindBool(rawStmt, user.is_deleted, 6);    
 }
 
 void Sqlite3LocalDatabase::BindChat(sqlite3_stmt* rawStmt, const CachedChat& chat) {
@@ -448,6 +554,8 @@ void Sqlite3LocalDatabase::BindChat(sqlite3_stmt* rawStmt, const CachedChat& cha
 
   Sqlite3Utils::BindTimestamp(rawStmt, chat.last_activity_at, 4);
   Sqlite3Utils::BindTimestamp(rawStmt, chat.cached_at, 5);
+
+  Sqlite3Utils::BindBool(rawStmt, chat.is_deleted, 6);
 }
 
 void Sqlite3LocalDatabase::BindMessage(sqlite3_stmt* rawStmt, const CachedMessage& msg) {
@@ -461,5 +569,7 @@ void Sqlite3LocalDatabase::BindMessage(sqlite3_stmt* rawStmt, const CachedMessag
 
     Sqlite3Utils::BindBool(rawStmt, msg.is_read, 7);
     Sqlite3Utils::BindBool(rawStmt, msg.is_delivered, 8);
+    Sqlite3Utils::BindBool(rawStmt, msg.is_deleted, 9);
+
 }
 
