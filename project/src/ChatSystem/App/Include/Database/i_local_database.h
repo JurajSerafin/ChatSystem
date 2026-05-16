@@ -57,6 +57,7 @@ public:
 
   virtual void MarkMessageAsRead(std::string_view messageId) = 0;
 
+  virtual std::vector<CachedMessage> SearchMessages(std::string_view chatId, std::string_view keyword) = 0;
 
   virtual void EvictOldMessages(std::chrono::system_clock::time_point olderThanTimeStamp) = 0;
 
