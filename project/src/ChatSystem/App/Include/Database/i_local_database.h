@@ -23,6 +23,8 @@ public:
 
   virtual std::optional<CachedUser> LoadUser(std::string_view userId) = 0;
 
+  virtual std::optional<CachedUser> LoadUserByLoginOrTag(std::string_view login, std::string_view tag) = 0;
+
 
   virtual void UpsertChat(const CachedChat& chat) = 0;
 
@@ -35,6 +37,7 @@ public:
   virtual void SetUserChatRole(std::string_view userId, std::string_view chatId, const UserRoleVariant& chatRole) = 0;
 
   virtual std::optional<UserRoleVariant> GetUserChatRole(std::string_view userId, std::string_view chatId) = 0;
+
 
   virtual std::vector<std::string> GetChatParticipantIds(std::string_view chatId) = 0;
 
