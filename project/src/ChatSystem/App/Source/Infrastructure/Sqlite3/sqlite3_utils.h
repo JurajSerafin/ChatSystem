@@ -30,6 +30,7 @@ namespace Sqlite3Utils {
   void TryReadBlob(sqlite3_stmt* rawStmt, std::vector<unsigned char>& vecBlobOut, int col);
   void TryReadTimeStamp(sqlite3_stmt* rawStmt, std::chrono::system_clock::time_point& timestampOut, int col);
   void TryReadOptionalText(sqlite3_stmt* rawStmt, std::optional<std::string>& optOut, int col);
+  void TryReadBool(sqlite3_stmt* rawStmt, bool& valOut, int col);
 
   int64_t ToEpochMs(std::chrono::system_clock::time_point tp);
   std::chrono::system_clock::time_point FromEpochMs(int64_t ms);

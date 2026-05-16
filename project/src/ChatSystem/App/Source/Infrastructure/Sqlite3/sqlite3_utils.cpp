@@ -61,6 +61,10 @@ namespace Sqlite3Utils {
     }
   }
 
+  void TryReadBool(sqlite3_stmt* rawStmt, bool& valOut, int col) {
+    valOut = (sqlite3_column_int(rawStmt, col) != 0);
+  }
+
   int64_t ToEpochMs(std::chrono::system_clock::time_point tp) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count();
   }
