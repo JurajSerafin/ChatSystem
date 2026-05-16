@@ -16,7 +16,7 @@ using UserRoleVariant = std::variant<
 static_assert(AllUserRolesValid<UserRoleVariant>, "Role not valid, make sure it is compliant with UserRole concept.");
 
 namespace UserRoles {
-  std::string RoleToString(const UserRoleVariant& roleVar);
+  std::string_view RoleToStrView(const UserRoleVariant& roleVar);
 
   UserRoleVariant StringToRole(std::string_view roleStr);
 } // UserRoles
