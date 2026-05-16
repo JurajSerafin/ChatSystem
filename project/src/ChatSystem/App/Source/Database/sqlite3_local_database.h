@@ -2,7 +2,9 @@
 #define SQLITE3_LOCAL_DATABASE_H
 
 #include "Database/i_local_database.h"
+#include "Infrastructure/Sqlite3/sqlite3_utils.h"
 #include "sqlite3.h"
+
 #include <string_view>
 
 class Sqlite3LocalDatabase : public ILocalDatabase {
@@ -31,6 +33,7 @@ public:
 
   std::optional<CachedUser> LoadUser(std::string_view userId) override;
 
+  std::optional<CachedUser> LoadUserByLoginOrTag(std::string_view login, std::string_view tag) override;
 
   void UpsertChat(const CachedChat& chat) override;
 
@@ -41,6 +44,7 @@ public:
   void AddUserToChat(std::string_view userId, std::string_view chatId, const UserRoleVariant& chatRole) override;
 
   void SetUserChatRole(std::string_view userId, std::string_view chatId, const UserRoleVariant& chatRole) override;
+
 
   std::optional<UserRoleVariant> GetUserChatRole(std::string_view userId, std::string_view chatId) override;
 
@@ -83,6 +87,8 @@ private:
   static std::string ReadStringFromPreparedStmt(sqlite3_stmt* rawStmt);
 
   static CachedIdentity ReadIdentityFromPreparedStmt(sqlite3_stmt* rawStmt);
+
+  static CachedUser ReadUserFromPreparedStmt(sqlite3_stmt* rawStmt);
 
   static void BindIdentity(sqlite3_stmt* rawStmt, const CachedIdentity& identity);
 

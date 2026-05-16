@@ -191,6 +191,31 @@ std::optional<CachedUser> Sqlite3LocalDatabase::LoadUser(std::string_view userId
   return user;
 }
 
+std::optional<CachedUser> Sqlite3LocalDatabase::LoadUserByLoginOrTag(std::string_view login, std::string_view tag) {
+  constexpr auto sql = R"(
+    SELECT id, login, tag, public_key, cached_at, is_deleted 
+    FROM cached_users 
+    WHERE login = ? OR tag = ?;
+  )";
+
+  sqlite3_stmt* raw_stmt = nullptr;
+
+  if (!Sqlite3Utils::TryPrepare(db_obs_, sql, &raw_stmt)) {
+    throw std::runtime_error("Prepare failed: LoadUserByLoginOrTag");
+  }
+
+  const Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
+
+  Sqlite3Utils::BindStr(stmt.get(), login, 1);
+  Sqlite3Utils::BindStr(stmt.get(), tag, 2);
+
+  if (!Sqlite3Utils::TryExecuteLoad(stmt.get())) {
+    return std::nullopt;
+  }
+
+  return ReadUserFromPreparedStmt(stmt.get());
+}
+
 void Sqlite3LocalDatabase::UpsertChat(const CachedChat& chat) {
   constexpr auto sql = R"(
     INSERT OR REPLACE INTO cached_chats (id, name, last_message_id, last_activity_at, cached_at, is_deleted)
@@ -626,6 +651,21 @@ CachedIdentity Sqlite3LocalDatabase::ReadIdentityFromPreparedStmt(sqlite3_stmt* 
   Sqlite3Utils::TryReadText(rawStmt, identity.session_token, 3);
 
   return identity;
+}
+
+CachedUser Sqlite3LocalDatabase::ReadUserFromPreparedStmt(sqlite3_stmt* rawStmt) {
+  CachedUser user;
+
+  Sqlite3Utils::TryReadText(rawStmt, user.id, 0);
+  Sqlite3Utils::TryReadText(rawStmt, user.login, 1);
+  Sqlite3Utils::TryReadText(rawStmt, user.tag, 2);
+  Sqlite3Utils::TryReadText(rawStmt, user.public_key, 3);
+
+  Sqlite3Utils::TryReadTimeStamp(rawStmt, user.cached_at, 4);
+
+  Sqlite3Utils::TryReadBool(rawStmt, user.is_deleted, 5);
+
+  return user;
 }
 
 void Sqlite3LocalDatabase::BindIdentity(sqlite3_stmt* rawStmt, const CachedIdentity& identity) {
