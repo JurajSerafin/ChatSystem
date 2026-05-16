@@ -203,7 +203,7 @@ void Sqlite3LocalDatabase::AddUserToChat(std::string_view userId, std::string_vi
   
   Sqlite3Utils::BindStr(stmt.get(), chatId, 1);
   Sqlite3Utils::BindStr(stmt.get(), userId, 2);
-  Sqlite3Utils::BindStr(stmt.get(), UserRoles::RoleToString(chatRole), 3);
+  Sqlite3Utils::BindStr(stmt.get(), UserRoles::RoleToStrView(chatRole), 3);
 
   if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
     throw std::runtime_error("Execute failed: AddUserToChat");
@@ -220,7 +220,7 @@ void Sqlite3LocalDatabase::SetUserChatRole(std::string_view userId, std::string_
 
   Sqlite3Utils::ScopedStmt stmt{ raw_stmt };
 
-  Sqlite3Utils::BindStr(stmt.get(), UserRoles::RoleToString(chatRole), 1);
+  Sqlite3Utils::BindStr(stmt.get(), UserRoles::RoleToStrView(chatRole), 1);
   Sqlite3Utils::BindStr(stmt.get(), userId, 2);
   Sqlite3Utils::BindStr(stmt.get(), chatId, 3);
 
