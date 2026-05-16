@@ -2,14 +2,40 @@ file(GLOB_RECURSE APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
 file(GLOB_RECURSE APP_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.h"
                                "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.hpp")
 
+# Isolate main from the sources
+set(APP_MAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Source/app_main.cpp")
+list(REMOVE_ITEM APP_SOURCES ${APP_MAIN_FILE})
+
+
+# Target 1: The App Library
+add_library(ChatSystemAppLib STATIC ${APP_SOURCES} ${APP_HEADERS})
+
+set_target_properties(ChatSystemAppLib PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+
+# PUBLIC for including in Tests/
+target_include_directories(ChatSystemAppLib PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+)
+
+# PUBLIC so consumers (Tests) get them implicitly
+target_link_libraries(ChatSystemAppLib PUBLIC
+    ChatSystem::Core
+    ChatSystem::Dependencies
+)
+
+# Target 2: The App Executable
+add_executable(ChatSystemApp ${GUI_TYPE} ${APP_MAIN_FILE})
+
 # Platform-specific GUI type
 if(WIN32)
     set(GUI_TYPE WIN32)
 else()
     set(GUI_TYPE "")
 endif()
-
-add_executable(ChatSystemApp ${GUI_TYPE} ${APP_SOURCES} ${APP_HEADERS})
 
 set_target_properties(ChatSystemApp PROPERTIES
     CXX_STANDARD 20
@@ -18,14 +44,9 @@ set_target_properties(ChatSystemApp PROPERTIES
     OUTPUT_NAME "ChatSystem"
 )
 
-target_include_directories(ChatSystemApp PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/Include
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source
-)
-
+# The executable needs only the server's 'library
 target_link_libraries(ChatSystemApp PRIVATE
-    ChatSystem::Core
-    ChatSystem::Dependencies
+    ChatSystemAppLib
 )
 
 # Copy runtime DLLs for wxWidgets
@@ -39,9 +60,7 @@ if(WIN32)
 endif()
 
 # Source groups for IDEs
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Include" 
-    PREFIX "Header Files" FILES ${APP_HEADERS})
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Source" 
-    PREFIX "Source Files" FILES ${APP_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Include" PREFIX "Header Files" FILES ${APP_HEADERS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Source" PREFIX "Source Files" FILES ${APP_SOURCES})
 
 message(STATUS "Configured App executable")
