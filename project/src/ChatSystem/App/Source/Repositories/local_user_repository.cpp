@@ -16,6 +16,3 @@ void LocalUserRepository::Delete(std::string_view userId) {
   db_obs_->DeleteUser(userId);
 }
 
-
-
-
