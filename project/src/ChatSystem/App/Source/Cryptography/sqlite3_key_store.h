@@ -33,18 +33,6 @@ private:
 
   void InitSchema() const;
 
-  static bool TryExecuteStore(sqlite3_stmt* rawStmt);
-
-  static bool TryExecuteLoad(sqlite3_stmt* rawStmt);
-
-  bool TryPrepare(const char* sql, sqlite3_stmt** rawStmt) const;
-
-  bool TryExecute(const char* sql, char*& errMsgOut) const;
-
-  static void TryReadText(sqlite3_stmt* rawStmt, std::string& textOut, int col);
-
-  static void TryReadBlob(sqlite3_stmt* rawStmt, std::vector<unsigned char>& vecBlobOut, int col);
-
 };
 
 #endif // SQLITE3_KEY_STORE_H
