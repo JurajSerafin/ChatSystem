@@ -10,7 +10,7 @@ public:
 
   virtual KeyPair GenerateAndProtectKeyPair(std::string_view password) = 0;
 
-  virtual std::string GetUnlockedPrivateKey() = 0;
+  virtual std::string GetUnlockedPrivateKey(std::string_view password) = 0;
 
   virtual void DeleteProtectedKeys() = 0;
 };
