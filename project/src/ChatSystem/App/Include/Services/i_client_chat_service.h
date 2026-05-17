@@ -12,9 +12,9 @@ class IClientChatService {
 public:
   virtual ~IClientChatService() = default;
 
-  virtual std::vector<Chat> GetChats(std::size_t limit, std::size_t offset) = 0;
+  virtual std::vector<CachedChat> GetChats(std::size_t limit, std::size_t offset) = 0;
 
-  virtual Chat GetChatById(const ChatId& id) = 0;
+  virtual CachedChat GetChatById(const ChatId& id) = 0;
 
   virtual void CreateChat(const std::vector<UserId>& participantIds) = 0;
 
