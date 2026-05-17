@@ -12,11 +12,6 @@
  * Instances are immutable after construction except for move operations.
  */
 class KeyPair {
-private:
-  std::string private_key_;
-
-  std::string public_key_;
-
 public:
   /**
    * @brief Deleted default constructor.
@@ -81,6 +76,10 @@ public:
 
   [[nodiscard]] const std::string& GetPrivateKey() const;
 
+private:
+  std::string private_key_;
+
+  std::string public_key_;
 };
 
 inline bool KeyPair::operator==(const KeyPair& other) const {
