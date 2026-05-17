@@ -17,6 +17,8 @@ struct UserProfile {
   std::string login;
 
   std::string role;
+
+  std::string public_key;
 };
 
 #endif // USER_PROFILE_H

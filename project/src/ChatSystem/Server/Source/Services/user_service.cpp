@@ -16,7 +16,8 @@ UserProfile UserService::MapToProfile(const User& user) {
     .id = user.GetId().ToString(),
     .tag = user.GetTag().ToString(),
     .login = user.GetLogin(),
-    .role = std::string{user.GetRoleStr()}
+    .role = std::string{user.GetRoleStr()},
+    .public_key = user.GetPublicKey()
   };
 }
 
