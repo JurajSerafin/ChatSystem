@@ -36,3 +36,15 @@ void LocalChatRepository::UpdateLastMessage(std::string_view chatId, std::string
 void LocalChatRepository::Delete(std::string_view chatId) {
   db_obs_->DeleteChat(chatId);
 }
+
+void LocalChatRepository::AddParticipant(std::string_view userId, std::string_view chatId, const UserRoleVariant& role) {
+  db_obs_->AddUserToChat(userId, chatId, role);
+}
+
+std::vector<std::string> LocalChatRepository::GetParticipantIds(std::string_view chatId) {
+  return db_obs_->GetChatParticipantIds(chatId);
+}
+
+void LocalChatRepository::RemoveParticipant(std::string_view userId, std::string_view chatId) {
+  db_obs_->DeleteUserFromChat(userId, chatId);
+}

@@ -18,6 +18,12 @@ public:
 
   void Delete(std::string_view chatId) override;
 
+  void AddParticipant(std::string_view userId, std::string_view chatId, const UserRoleVariant& role) override;
+
+  std::vector<std::string> GetParticipantIds(std::string_view chatId) override;
+
+  void RemoveParticipant(std::string_view userId, std::string_view chatId) override;
+
 private:
   ILocalDatabase* db_obs_;
 };

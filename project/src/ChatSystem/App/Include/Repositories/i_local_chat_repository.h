@@ -19,6 +19,12 @@ public:
   virtual void UpdateLastMessage(std::string_view chatId, std::string_view messageId, int64_t lastActivityMs) = 0;
 
   virtual void Delete(std::string_view chatId) = 0;
+
+  virtual void AddParticipant(std::string_view userId, std::string_view chatId, const UserRoleVariant& role) = 0;
+
+  virtual std::vector<std::string> GetParticipantIds(std::string_view chatId) = 0;
+
+  virtual void RemoveParticipant(std::string_view userId, std::string_view chatId) = 0;
 };
 
 #endif // I_LOCAL_CHAT_REPOSITORY_H
