@@ -1,7 +1,6 @@
 #ifndef I_CLIENT_MESSAGE_SERVICE_H
 #define I_CLIENT_MESSAGE_SERVICE_H
 
-
 #include "Chat/chat_id.h"
 #include "Database/local_db_models.h"
 #include "Message/message_id.h"
@@ -20,5 +19,6 @@ public:
 
   virtual std::vector<CachedMessage> SearchMessages(const ChatId& chatId, std::string_view keywords) = 0;
 };
+
 
 #endif // I_CLIENT_MESSAGE_SERVICE_H
