@@ -49,6 +49,8 @@ namespace Sqlite3Utils {
 
   void BindBool(sqlite3_stmt* rawStmt, bool val, int col);
 
+  void BindByteVector(sqlite3_stmt* rawStmt, const std::vector<unsigned char>& vec, int col);
+
 } // namespace Sqlite3Utils
 
 #endif // SQLITE3_UTILS_H
