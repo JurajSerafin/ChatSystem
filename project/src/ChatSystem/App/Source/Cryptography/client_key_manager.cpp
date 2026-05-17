@@ -31,7 +31,7 @@ KeyPair ClientKeyManager::GenerateAndProtectKeyPair(std::string_view password) {
   return key_pair;
 }
 
-std::string ClientKeyManager::GetUnlockedPrivateKey(std::string_view password) const {
+std::string ClientKeyManager::GetUnlockedPrivateKey(std::string_view password)  {
   const std::optional<EncryptedKeyMaterial> cached_crypto = key_store_->Load();
 
   if (!cached_crypto.has_value()) {

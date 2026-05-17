@@ -18,7 +18,7 @@ public:
 
   KeyPair GenerateAndProtectKeyPair(std::string_view password) override;
 
-  std::string GetUnlockedPrivateKey(std::string_view password) const override;
+  std::string GetUnlockedPrivateKey(std::string_view password) override;
 
   void DeleteProtectedKeys() override;
 
