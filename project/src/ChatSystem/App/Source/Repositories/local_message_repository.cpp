@@ -14,3 +14,10 @@ void LocalMessageRepository::Delete(std::string_view messageId) {
   db_obs_->DeleteMessage(messageId);
 }
 
+void LocalMessageRepository::MarkAsRead(std::string_view messageId) {
+  db_obs_->MarkMessageAsRead(messageId);
+}
+
+void LocalMessageRepository::SaveForChat(const CachedMessage& message) {
+  db_obs_->SaveMessageForChat(message);
+}

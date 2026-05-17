@@ -14,6 +14,10 @@ public:
 
   void Delete(std::string_view messageId) override;
 
+  void MarkAsRead(std::string_view messageId) override;
+
+  void SaveForChat(const CachedMessage& message) override;
+
 private:
   ILocalDatabase* db_obs_;
 };

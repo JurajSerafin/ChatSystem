@@ -14,6 +14,10 @@ public:
   virtual void Upsert(const CachedMessage& message) = 0;
 
   virtual void Delete(std::string_view messageId) = 0;
+
+  virtual void MarkAsRead(std::string_view messageId) = 0;
+
+  virtual void SaveForChat(const CachedMessage& message) = 0;
 };
 
 #endif // I_LOCAL_MESSAGE_REPOSITORY_H
