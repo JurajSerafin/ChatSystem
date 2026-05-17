@@ -16,6 +16,10 @@ public:
 
   virtual HttpResponse Delete(std::string_view endpoint) = 0;
 
+  virtual HttpResponse Post(std::string_view endpoint, const nlohmann::json& body) = 0;
+
+  virtual HttpResponse Put(std::string_view endpoint, const nlohmann::json& body) = 0;
+
   virtual ~IRestClient() = default;
 
 };

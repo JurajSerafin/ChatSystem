@@ -41,10 +41,18 @@ HttpResponse BoostRestClient::Delete(std::string_view endpoint) {
   return SendRequest(http::verb::delete_, endpoint);
 }
 
+HttpResponse BoostRestClient::Post(std::string_view endpoint, const nlohmann::json& body) {
+  return SendRequest(http::verb::post, endpoint, &body);
+}
+
+HttpResponse BoostRestClient::Put(std::string_view endpoint, const nlohmann::json& body) {
+  return SendRequest(http::verb::put, endpoint, &body);
+}
+
 void BoostRestClient::SetSNIHostName(beast::ssl_stream<beast::tcp_stream>& sslStream) const {
   if (!SSL_set_tlsext_host_name(sslStream.native_handle(), host_.c_str())) {
 
-    beast::error_code ec{ static_cast<int>(::ERR_get_error()), net::error::get_ssl_category() };
+    const beast::error_code ec{ static_cast<int>(::ERR_get_error()), net::error::get_ssl_category() };
 
     throw beast::system_error{ ec };
   }

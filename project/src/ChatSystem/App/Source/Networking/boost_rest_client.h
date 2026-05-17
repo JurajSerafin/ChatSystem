@@ -29,6 +29,10 @@ public:
 
   HttpResponse Delete(std::string_view endpoint) override;
 
+  HttpResponse Post(std::string_view endpoint, const nlohmann::json& body) override;
+
+  HttpResponse Put(std::string_view endpoint, const nlohmann::json& body) override;
+
 private:
   HttpResponse SendRequest(http::verb method, std::string_view endpoint, const nlohmann::json* body = nullptr) const;
 
