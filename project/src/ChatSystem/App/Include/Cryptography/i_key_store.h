@@ -2,7 +2,6 @@
 #define I_KEY_STORE_H
 
 #include <optional>
-#include <string_view>
 
 struct EncryptedKeyMaterial;
 

@@ -17,7 +17,7 @@ public:
 
   void Clear() override;
 
-  explicit Sqlite3KeyStore(std::string_view dbPath);
+  explicit Sqlite3KeyStore(const std::string& dbPath);
 
   ~Sqlite3KeyStore() override;
 

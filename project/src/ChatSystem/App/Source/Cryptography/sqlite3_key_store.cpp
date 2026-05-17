@@ -25,8 +25,8 @@ Sqlite3KeyStore& Sqlite3KeyStore::operator=(Sqlite3KeyStore&& other) noexcept {
   return *this;
 }
 
-Sqlite3KeyStore::Sqlite3KeyStore(std::string_view dbPath) {
-  if (sqlite3_open(dbPath.data(), &db_obs_) != SQLITE_OK) {
+Sqlite3KeyStore::Sqlite3KeyStore(const std::string& dbPath) {
+  if (sqlite3_open(dbPath.c_str(), &db_obs_) != SQLITE_OK) {
     std::string error = sqlite3_errmsg(db_obs_);
 
     sqlite3_close(db_obs_);
@@ -44,8 +44,8 @@ Sqlite3KeyStore::~Sqlite3KeyStore() {
 
 void Sqlite3KeyStore::Store(const EncryptedKeyMaterial& encryptMaterial) {
   constexpr auto sql = R"(
-    INSERT OR REPLACE INTO key_store (id, algorithm, encrypted_key, iv, salt, stored_at) 
-    VALUES (1, ?, ?, ?, ?, ?);
+    INSERT OR REPLACE INTO key_store (id, algorithm, encrypted_key, salt, stored_at) 
+    VALUES (1, ?, ?, ?, ?);
   )";
 
   sqlite3_stmt* raw_stmt = nullptr;
@@ -57,13 +57,11 @@ void Sqlite3KeyStore::Store(const EncryptedKeyMaterial& encryptMaterial) {
   const Sqlite3Utils::ScopedStmt stmt { raw_stmt };
 
   const auto now = std::chrono::system_clock::now();
-  const int64_t now_timestamp = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 
-  sqlite3_bind_text(stmt.get(), 1, encryptMaterial.algorithm.c_str(), -1, SQLITE_TRANSIENT);
-  sqlite3_bind_blob(stmt.get(), 2, encryptMaterial.encrypted_key.data(), static_cast<int>(encryptMaterial.encrypted_key.size()), SQLITE_TRANSIENT);
-  sqlite3_bind_blob(stmt.get(), 3, encryptMaterial.iv.data(), static_cast<int>(encryptMaterial.iv.size()), SQLITE_TRANSIENT);
-  sqlite3_bind_blob(stmt.get(), 4, encryptMaterial.salt.data(), static_cast<int>(encryptMaterial.salt.size()), SQLITE_TRANSIENT);
-  sqlite3_bind_int64(stmt.get(), 5, now_timestamp);
+  Sqlite3Utils::BindStr(stmt.get(), encryptMaterial.algorithm, 1);
+  Sqlite3Utils::BindByteVector(stmt.get(), encryptMaterial.encrypted_key, 2);
+  Sqlite3Utils::BindByteVector(stmt.get(), encryptMaterial.salt, 3);
+  Sqlite3Utils::BindTimestamp(stmt.get(), now, 4);
 
   if (!Sqlite3Utils::TryExecuteStore(stmt.get())) {
     throw std::runtime_error("Failed to execute Store statement: " + std::string(sqlite3_errmsg(db_obs_)));
@@ -71,7 +69,7 @@ void Sqlite3KeyStore::Store(const EncryptedKeyMaterial& encryptMaterial) {
 }
 
 std::optional<EncryptedKeyMaterial> Sqlite3KeyStore::Load() {
-  constexpr auto sql = "SELECT algorithm, encrypted_key, iv, salt FROM key_store WHERE id = 1;";
+  constexpr auto sql = "SELECT algorithm, encrypted_key, salt FROM key_store WHERE id = 1;";
 
   sqlite3_stmt* raw_stmt = nullptr;
 
@@ -89,8 +87,7 @@ std::optional<EncryptedKeyMaterial> Sqlite3KeyStore::Load() {
 
   Sqlite3Utils::TryReadText(stmt.get(), key_material.algorithm, 0);
   Sqlite3Utils::TryReadBlob(stmt.get(), key_material.encrypted_key, 1);
-  Sqlite3Utils::TryReadBlob(stmt.get(), key_material.iv, 2);
-  Sqlite3Utils::TryReadBlob(stmt.get(), key_material.salt, 3);
+  Sqlite3Utils::TryReadBlob(stmt.get(), key_material.salt, 2);
 
   return key_material;
 }
@@ -118,7 +115,6 @@ void Sqlite3KeyStore::InitSchema() const {
       id INTEGER PRIMARY KEY CHECK (id = 1),
       algorithm TEXT NOT NULL,
       encrypted_key BLOB NOT NULL,
-      iv BLOB NOT NULL,
       salt BLOB NOT NULL,
       stored_at INTEGER NOT NULL
     );
