@@ -28,3 +28,5 @@ namespace client::services::utils {
     }
     return resolved;
   }
+
+} // namespace client::services::utils
