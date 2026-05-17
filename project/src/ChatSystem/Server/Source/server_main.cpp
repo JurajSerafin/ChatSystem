@@ -160,7 +160,7 @@ int main() {
 
     std::cout << "[3/4] Registering HTTP Controllers...\n";
 
-    AuthController auth_controller{ &auth_service };
+    AuthController auth_controller{ &auth_service, &user_service };
     UserController user_controller{ &auth_service, &user_service };
     ChatController chat_controller{ &auth_service, &chat_service };
     MessageController msg_controller{ &auth_service, &msg_service };

@@ -3,6 +3,7 @@
 
 #include "Networking/router.h"
 #include "Services/Interface/i_auth_service.h"
+#include "Services/Interface/i_user_service.h"
 
 #include <nlohmann/json.hpp>
 #include <string_view>
@@ -18,7 +19,7 @@
  */
 class AuthController {
 public:
-  explicit AuthController(IAuthService* authServiceObs);
+  explicit AuthController(IAuthService* authServiceObs, IUserService* userServiceObs);
 
   /**
    * @brief Registers a new user and provisions a session token.
@@ -55,6 +56,8 @@ private:
 
   static std::string ExtractRequiredString(const nlohmann::json& body, std::string_view fieldName);
 
+  static nlohmann::json FormatAuthResponse(const std::string& token, const UserProfile& userProfile);
+
   static nlohmann::json FormatTokenResponse(const std::string& token);
 
   std::string RegisterAndGetSessionToken(const nlohmann::json& authDataBody) const;
@@ -64,8 +67,9 @@ private:
   void ExtractAndChangePassword(const nlohmann::json& passChangeBody, const UserId& userId) const;
 
   IAuthService* auth_service_obs_;
+  IUserService* user_service_obs_;
 };
 
-inline AuthController::AuthController(IAuthService* authServiceObs) : auth_service_obs_(authServiceObs) {}
+inline AuthController::AuthController(IAuthService* authServiceObs, IUserService* userServiceObs) : auth_service_obs_(authServiceObs), user_service_obs_(userServiceObs) {}
 
 #endif // AUTH_CONTROLLER_H

@@ -1,24 +1,11 @@
 #include "Networking/Controllers/auth_controller.h"
 #include "Networking/api_errors.h"
 #include "Networking/Controllers/utils.h"
+#include "Api/auth_contract.h"
+#include "Api/user_contract.h" // Needed to write user fields into the response
+
 #include <stdexcept>
 #include <format>
-
-namespace {
-  constexpr std::string_view kLoginField = "login";
-  constexpr std::string_view kPasswordField = "password";
-  constexpr std::string_view kPublicKeyField = "public_key";
-  constexpr std::string_view kOldPasswordField = "old_password";
-  constexpr std::string_view kNewPasswordField = "new_password";
-  constexpr std::string_view kTokenField = "token";
-
-
-  constexpr std::string_view kRegisterRoute = "/auth/register";
-  constexpr std::string_view kLoginRoute = "/auth/login";
-  constexpr std::string_view kLogoutRoute = "/auth/logout";
-  constexpr std::string_view kChangePasswordRoute = "/auth/password";
-}  // namespace
-
 
 // POST /auth/register
 http::response<http::string_body> AuthController::HandleRegister(
@@ -26,15 +13,23 @@ http::response<http::string_body> AuthController::HandleRegister(
   const Router::PathParams&) const
 {
   try {
-    const std::string session_token = RegisterAndGetSessionToken(nlohmann::json::parse(req.body()));
+    auto body = nlohmann::json::parse(req.body());
+    const std::string login = ExtractRequiredString(body, api::auth::fields::kLogin);
+    const std::string password = ExtractRequiredString(body, api::auth::fields::kPassword);
+    const std::string public_key = ExtractRequiredString(body, api::auth::fields::kPublicKey);
 
-    return netw::utils::BuildAndReturnOkResponse(req, FormatTokenResponse(session_token));
+    const auto auth_result = auth_service_obs_->RegisterUser(login, password, public_key);
+
+    const auto session_user = *user_service_obs_->GetById(auth_result.GetUserId());
+
+    nlohmann::json response_json = FormatAuthResponse(auth_result.GetToken(), session_user);
+
+    return netw::utils::BuildAndReturnOkResponse(req, response_json);
   }
   catch (const nlohmann::json::exception&) {
     return api::errors::BadRequest(req, "Invalid JSON format.");
   }
   catch (const std::invalid_argument& e) {
-    //  empty/missing field errors
     return api::errors::BadRequest(req, e.what());
   }
   catch (const std::exception& e) {
@@ -48,8 +43,20 @@ http::response<http::string_body> AuthController::HandleLogin(
   const Router::PathParams&) const
 {
   try {
-    const std::string session_token = LoginAndGetSessionToken(nlohmann::json::parse(req.body()));
-    return netw::utils::BuildAndReturnOkResponse(req, FormatTokenResponse(session_token));
+    auto body = nlohmann::json::parse(req.body());
+    const std::string login = ExtractRequiredString(body, api::auth::fields::kLogin);
+    const std::string password = ExtractRequiredString(body, api::auth::fields::kPassword);
+
+    const auto auth_result = auth_service_obs_->Login(login, password);
+
+    auto session_user = user_service_obs_->GetById(auth_result.GetUserId());
+
+    nlohmann::json response_json = FormatAuthResponse(
+      auth_result.GetToken(),
+      *session_user
+    );
+
+    return netw::utils::BuildAndReturnOkResponse(req, response_json);
   }
   catch (const nlohmann::json::exception& e) {
     return api::errors::BadRequest(req, "Invalid JSON format");
@@ -130,51 +137,36 @@ std::string AuthController::ExtractRequiredString(const nlohmann::json& body, st
   return value;
 }
 
-nlohmann::json AuthController::FormatTokenResponse(const std::string& token) {
+nlohmann::json AuthController::FormatAuthResponse(const std::string& token, const UserProfile& userProfile) {
   return {
-    {kTokenField, token}
+    {api::auth::fields::kToken, token},
+    {api::user::fields::kId, userProfile.id},
+    {api::user::fields::kLogin, userProfile.login},
+    {api::user::fields::kTag, userProfile.tag},
   };
 }
 
-std::string AuthController::RegisterAndGetSessionToken(const nlohmann::json& authDataBody) const {
-  const std::string login = ExtractRequiredString(authDataBody, kLoginField);
-  const std::string password = ExtractRequiredString(authDataBody, kPasswordField);
-  const std::string public_key = ExtractRequiredString(authDataBody, kPublicKeyField);
-
-  return auth_service_obs_->RegisterUser(login, password, public_key).GetToken();
-}
-
-std::string AuthController::LoginAndGetSessionToken(const nlohmann::json& authDataBody) const {
-  const std::string login = ExtractRequiredString(authDataBody, kLoginField);
-  const std::string password = ExtractRequiredString(authDataBody, kPasswordField);
-
-  return auth_service_obs_->Login(login, password).GetToken();
-}
-
 void AuthController::ExtractAndChangePassword(const nlohmann::json& passChangeBody, const UserId& userId) const {
-
-  const auto old_pass = ExtractRequiredString(passChangeBody, kOldPasswordField);
-
-  const auto new_pass = ExtractRequiredString(passChangeBody, kNewPasswordField);
+  const auto old_pass = ExtractRequiredString(passChangeBody, api::auth::fields::kOldPassword);
+  const auto new_pass = ExtractRequiredString(passChangeBody, api::auth::fields::kNewPassword);
 
   auth_service_obs_->ChangePassword(userId, old_pass, new_pass);
-
 }
 
 void AuthController::RegisterRoutes(Router& router) {
-  router.AddRoute(http::verb::post, std::string{kRegisterRoute},
+  router.AddRoute(http::verb::post, std::string{ api::auth::routes::kRegisterRoute },
     [this](const auto& req, const auto& params) {return HandleRegister(req, params); }
   );
 
-  router.AddRoute(http::verb::post, std::string{ kLoginRoute },
+  router.AddRoute(http::verb::post, std::string{ api::auth::routes::kLoginRoute },
     [this](const auto& req, const auto& params) {return HandleLogin(req, params); }
   );
 
-  router.AddRoute(http::verb::post, std::string{ kLogoutRoute },
+  router.AddRoute(http::verb::post, std::string{ api::auth::routes::kLogoutRoute },
     [this](const auto& req, const auto& params) {return HandleLogout(req, params); }
   );
 
-  router.AddRoute(http::verb::post, std::string{ kChangePasswordRoute },
+  router.AddRoute(http::verb::put, std::string{ api::auth::routes::kChangePasswordRoute },
     [this](const auto& req, const auto& params) {return HandleChangePassword(req, params); }
   );
 };
