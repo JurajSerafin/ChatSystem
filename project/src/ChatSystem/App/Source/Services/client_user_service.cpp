@@ -16,7 +16,7 @@ std::vector<CachedUser> ClientUserService::Search(std::string_view query, std::s
 
   std::vector<CachedUser> search_results;
 
-  for (const auto& user_json : res.body) {
+  for (auto&& user_json : res.body) {
 
     CachedUser cached_user = DBModelJsonMapper::ToUser(user_json);
 
@@ -29,46 +29,17 @@ std::vector<CachedUser> ClientUserService::Search(std::string_view query, std::s
 }
 
 CachedUser ClientUserService::GetById(const UserId& userId) {
-  std::optional<CachedUser> cached_user = user_repo_obs_->FindById(userId.ToString());
-
-  // Cache Hit
-  if (cached_user.has_value()) {
-    return *cached_user;
-  }
-
-  // Cache Miss
-  std::string dynamic_id_route = client::services::utils::ResolveIdRoute(
-    api::user::routes::kGetById, userId.ToString(), api::user::fields::kId
+  return client::services::utils::GetOrFetchById<CachedUser>(
+    userId,
+    user_repo_obs_,
+    rest_client_obs_,
+    [](auto&& body) {return DBModelJsonMapper::ToUser(body); },
+    api::user::routes::kGetById,
+    api::user::fields::kId
   );
-
-
-  const HttpResponse res = rest_client_obs_->Get(dynamic_id_route);
-
-  cached_user = DBModelJsonMapper::ToUser(res.body);
-
-  user_repo_obs_->Upsert(*cached_user);
-
-  return *cached_user;
 }
 
 std::string ClientUserService::GetPublicKey(const UserId& userId) {
-  std::optional<CachedUser> cached_user = user_repo_obs_->FindById(userId.ToString());
-
-  // Cache Hit
-  if (cached_user.has_value()) {
-    return cached_user->public_key;
-  }
-
-  // Cache Miss
-  std::string dynamic_id_route = client::services::utils::ResolveIdRoute(
-    api::user::routes::kGetById, userId.ToString(), api::user::fields::kId
-  );
-  const HttpResponse res = rest_client_obs_->Get(dynamic_id_route);
-
-  cached_user = DBModelJsonMapper::ToUser(res.body);
-
-  user_repo_obs_->Upsert(*cached_user);
-
-  return cached_user->public_key;
+  return GetById(userId).public_key;
 }
 
