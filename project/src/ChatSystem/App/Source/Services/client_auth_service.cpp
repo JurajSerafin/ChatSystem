@@ -15,7 +15,7 @@ CachedUser ClientAuthService::Register(std::string_view login, std::string_view 
 
   const HttpResponse response = rest_client_obs_->Post(api::auth::routes::kRegisterRoute, body);
 
-  identity_repo_->Store(DBModelJsonMapper::ToIdentity(response.body));
+  identity_repo_obs_->Store(DBModelJsonMapper::ToIdentity(response.body));
 
   return DBModelJsonMapper::ToUser(response.body);
 }
@@ -34,7 +34,7 @@ CachedUser ClientAuthService::Login(std::string_view login, std::string_view pas
 
   session_token_ = logged_identity.session_token;
 
-  identity_repo_->Store(logged_identity);
+  identity_repo_obs_->Store(logged_identity);
 
   return DBModelJsonMapper::ToUser(response.body);
 }
@@ -49,7 +49,7 @@ void ClientAuthService::Logout() {
 
   session_token_.clear();
 
-  identity_repo_->Clear();
+  identity_repo_obs_->Clear();
 
   key_manager_obs_->DeleteProtectedKeys();
 }

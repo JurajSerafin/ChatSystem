@@ -25,7 +25,7 @@ public:
 private:
   IRestClient* rest_client_obs_;
   IClientKeyManager* key_manager_obs_;
-  ILocalIdentityRepository* identity_repo_;
+  ILocalIdentityRepository* identity_repo_obs_;
 
   std::string session_token_;
 };
@@ -36,7 +36,7 @@ inline ClientAuthService::ClientAuthService(
   ILocalIdentityRepository* identityRepoObs
 ) : rest_client_obs_(restClientObs),
   key_manager_obs_(keyManagerObs),
-  identity_repo_(identityRepoObs) {}
+  identity_repo_obs_(identityRepoObs) {}
 
 #endif // CLIENT_AUTH_SERVICE_H
 
