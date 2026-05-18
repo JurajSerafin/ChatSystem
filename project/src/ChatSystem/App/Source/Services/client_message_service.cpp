@@ -128,6 +128,7 @@ std::string ClientMessageService::DecryptIncomingMessage(const nlohmann::json& m
 
   return crypto_service_obs_->DecryptSymmetric(cipher_text, aes_key);
 }
+
 nlohmann::json ClientMessageService::BuildSendMessagePayload(
   std::string_view ciphertext,
   const std::vector<CachedUser>& participants,
