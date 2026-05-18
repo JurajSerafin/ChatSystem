@@ -1,7 +1,6 @@
 #ifndef PQXX_RESULT_SET_H
 #define PQXX_RESULT_SET_H
 
-
 #include <functional>
 
 #include <Database/i_row.h>
@@ -11,20 +10,24 @@
 
 #include <utility>
 
+/**
+ * @brief Concrete implementation of a result set wrapping a `pqxx::result`.
+ * * Acts as an immutable, memory-safe container for the raw data returned by
+ * a PostgreSQL query, allowing functional iteration and extraction of records.
+ */
 class PqxxResultSet : public IResultSet {
 public:
-  void ForEach(const std::function<void(const IRow&)>& action) const override;
-
-  void First(const std::function<void(const IRow&)>& action) const override;
-
-  [[nodiscard]] bool IsEmpty() const override;
-
-  [[nodiscard]] std::size_t GetSize() const override;
-
+  /**
+   * @brief Takes ownership of a raw libpqxx result object.
+   */
   explicit PqxxResultSet(pqxx::result result);
 
-private:
+  void ForEach(const std::function<void(const IRow&)>& action) const override;
+  void First(const std::function<void(const IRow&)>& action) const override;
+  [[nodiscard]] bool IsEmpty() const override;
+  [[nodiscard]] std::size_t GetSize() const override;
 
+private:
   pqxx::result result_;
 };
 

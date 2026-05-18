@@ -4,8 +4,17 @@
 #include <Repositories/i_chat_repository.h>
 #include <Database/i_connection_pool.h>
 
+/**
+ * @brief Concrete PostgreSQL implementation of the server-side chat repository.
+ * * Uses the injected connection pool to execute highly concurrent transactions
+ * managing chat metadata and the many-to-many participant junction tables.
+ */
 class PqxxChatRepository : public IChatRepository {
 public:
+  /**
+   * @brief Constructs the repository with a thread-safe connection pool.
+   * @param connectionPoolObs Observer pointer to the active PostgreSQL connection pool.
+   */
   explicit PqxxChatRepository(IConnectionPool* connectionPoolObs);
 
   void Add(const Chat& chat) override;

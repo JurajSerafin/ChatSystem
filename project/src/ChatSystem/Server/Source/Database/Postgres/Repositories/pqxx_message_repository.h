@@ -5,9 +5,16 @@
 
 class IConnectionPool;
 
+/**
+ * @brief Concrete PostgreSQL implementation of the server-side message repository.
+ * * Securely persists E2EE message ciphertexts and their associated wrapped keys.
+ */
 class PqxxMessageRepository : public IMessageRepository {
 public:
-
+  /**
+   * @brief Constructs the repository with a thread-safe connection pool.
+   * @param connectionPoolObs Observer pointer to the active PostgreSQL connection pool.
+   */
   explicit PqxxMessageRepository(IConnectionPool* connectionPoolObs);
 
   [[nodiscard]] std::optional<Message> FindById(const MessageId& id) override;
@@ -29,6 +36,7 @@ public:
   void Add(const Message& message, const EncryptedKeysMap& encryptedKeys) override;
 
   std::optional<std::string> GetEncryptedKey(const MessageId& messageId, const UserId& userId) override;
+
 private:
   IConnectionPool* connection_pool_obs_;
 };
