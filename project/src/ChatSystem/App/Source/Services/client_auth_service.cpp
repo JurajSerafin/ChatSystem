@@ -28,7 +28,7 @@ CachedUser ClientAuthService::Login(std::string_view login, std::string_view pas
 
   const HttpResponse response = rest_client_obs_->Post(api::auth::routes::kLoginRoute, body);
 
-  key_manager_obs_->GetUnlockedPrivateKey(password);
+  key_manager_obs_->UnlockPrivateKey(password);
 
   const CachedIdentity logged_identity = DBModelJsonMapper::ToIdentity(response.body);
 

@@ -22,11 +22,15 @@ public:
   virtual KeyPair GenerateAndProtectKeyPair(std::string_view password) = 0;
 
   /**
-   * @brief Derives a key from the password to decrypt and return the user's local private key.
+   * @brief Derives a key from the password to decrypt and return the user's local private key and holds it in memory.
    * @param password The user's plaintext password.
-   * @return The raw, unencrypted private key string.
    */
-  virtual std::string GetUnlockedPrivateKey(std::string_view password) = 0;
+  virtual void UnlockPrivateKey(std::string_view password) = 0;
+
+  /**
+   * @brief Retrieves the loaded private key.
+   */
+  virtual std::string GetPrivateKey() = 0;
 
   /**
    * @brief Wipes the locally stored encrypted key material from disk.

@@ -120,7 +120,7 @@ std::string ClientMessageService::DecryptIncomingMessage(const nlohmann::json& m
 
   std::string wrapped_key = key_res.body.at(api::message::fields::kEncryptedKey).get<std::string>();
 
-  std::string self_private_key = key_manager_obs_->GetUnlockedPrivateKey();
+  std::string self_private_key = key_manager_obs_->GetPrivateKey();
 
   std::string aes_key = crypto_service_obs_->UnwrapKey(wrapped_key, self_private_key);
 
@@ -152,7 +152,7 @@ nlohmann::json ClientMessageService::BuildSendMessagePayload(
 }
 
 void ClientMessageService::InsertChatIdToPath(std::string& path, const ChatId& chatId) {
-  const std::string path = client::services::utils::ResolveIdRoute(
+  path = client::services::utils::ResolveIdRoute(
     api::message::routes::kChatMessages,
     chatId.ToString(),
     api::chat::path_params::kChatId
