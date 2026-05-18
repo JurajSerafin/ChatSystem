@@ -1,9 +1,9 @@
-file(GLOB_RECURSE SERVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
-file(GLOB_RECURSE SERVER_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.h"
-                                  "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.hpp")
+file(GLOB_RECURSE SERVER_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
 
-file(GLOB_RECURSE PRIVATE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
-                                     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.hpp")
+file(GLOB_RECURSE SERVER_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.h" 
+                                                    "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.hpp")
+file(GLOB_RECURSE PRIVATE_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h" 
+                                                    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.hpp")
 
 # Isolate main from the sources
 set(SERVER_MAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Source/server_main.cpp")
