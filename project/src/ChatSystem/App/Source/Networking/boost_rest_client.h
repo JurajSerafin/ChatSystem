@@ -42,7 +42,7 @@ private:
 
   void LoadAndAttachSessionToken(http::request<http::string_body>& req) const;
 
-  static void CloseSSLStream(beast::ssl_stream<beast::tcp_stream> stream& sslStream);
+  static void CloseSSLStream(beast::ssl_stream<beast::tcp_stream>& sslStream);
 
   static void ThrowOnErrorStatusCode(const unsigned statusCode, http::response<http::string_body>& res);
 
