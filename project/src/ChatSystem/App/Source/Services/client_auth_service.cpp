@@ -1,59 +1,50 @@
-#include "client_auth_service.h"
+#ifndef CLIENT_AUTH_SERVICE_H
+#define CLIENT_AUTH_SERVICE_H
 
-#include "API/auth_contract.h"
-#include "db_model_json_mapper.h"
+#include "Networking/i_rest_client.h"
+#include "Repositories/i_local_identity_repository.h"
+#include "Repositories/i_local_user_repository.h"
+#include "Services/i_client_auth_service.h"
+#include "Cryptography/i_client_key_manager.h"
 
+/**
+ * @brief Concrete implementation of the client authentication service.
+ * * Wires together network calls to the auth endpoints, cryptographic key generation,
+ * and local SQLite storage to establish and tear down user sessions safely.
+ */
+class ClientAuthService : public IClientAuthService {
+public:
+  /**
+   * @brief Constructs the auth service with its required operational dependencies.
+   * @param restClientObs Pointer to the networking client.
+   * @param keyManagerObs Pointer to the cryptographic key orchestrator.
+   * @param identityRepoObs Pointer to the local cache for storing the active session.
+   */
+  explicit ClientAuthService(
+    IRestClient* restClientObs,
+    IClientKeyManager* keyManagerObs,
+    ILocalIdentityRepository* identityRepoObs
+  );
 
-CachedUser ClientAuthService::Register(std::string_view login, std::string_view password) {
-  const KeyPair key_pair = key_manager_obs_->GenerateAndProtectKeyPair(password);
+  CachedUser Register(std::string_view login, std::string_view password) override;
+  CachedUser Login(std::string_view login, std::string_view password) override;
+  void Logout() override;
 
-  const nlohmann::json body = {
-    {api::auth::fields::kLogin, login},
-    {api::auth::fields::kPassword, password},
-    {api::auth::fields::kPublicKey, key_pair.GetPublicKey()}
-  };
+private:
+  IRestClient* rest_client_obs_;
+  IClientKeyManager* key_manager_obs_;
+  ILocalIdentityRepository* identity_repo_obs_;
 
-  const HttpResponse response = rest_client_obs_->Post(api::auth::routes::kRegisterRoute, body);
+  std::string session_token_;
+};
 
-  identity_repo_obs_->Store(DBModelJsonMapper::ToIdentity(response.body));
-
-  return DBModelJsonMapper::ToUser(response.body);
+inline ClientAuthService::ClientAuthService(
+  IRestClient* restClientObs,
+  IClientKeyManager* keyManagerObs,
+  ILocalIdentityRepository* identityRepoObs
+) : rest_client_obs_(restClientObs),
+key_manager_obs_(keyManagerObs),
+identity_repo_obs_(identityRepoObs) {
 }
 
-CachedUser ClientAuthService::Login(std::string_view login, std::string_view password) {
-  const nlohmann::json body = {
-  {api::auth::fields::kLogin, login},
-  {api::auth::fields::kPassword, password},
-  };
-
-  const HttpResponse response = rest_client_obs_->Post(api::auth::routes::kLoginRoute, body);
-
-  key_manager_obs_->UnlockPrivateKey(password);
-
-  const CachedIdentity logged_identity = DBModelJsonMapper::ToIdentity(response.body);
-
-  session_token_ = logged_identity.session_token;
-
-  identity_repo_obs_->Store(logged_identity);
-
-  return DBModelJsonMapper::ToUser(response.body);
-}
-
-void ClientAuthService::Logout() {
-
-  const nlohmann::json body = {
-  {api::auth::fields::kToken, session_token_},
-  };
-
-  rest_client_obs_->Post(api::auth::routes::kLoginRoute, body);
-
-  session_token_.clear();
-
-  identity_repo_obs_->Clear();
-
-  key_manager_obs_->DeleteProtectedKeys();
-}
-
-
-
-
+#endif // CLIENT_AUTH_SERVICE_H
