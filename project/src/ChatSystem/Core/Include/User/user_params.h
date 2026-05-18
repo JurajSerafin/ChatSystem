@@ -7,34 +7,23 @@
 #include <string>
 
 /**
- * @brief Data transfer object for user creation and validation.
+ * @brief DTO for user creation and validation.
  *
  * UserParams aggregates all data required to construct or update a User.
- * It is typically passed to a validator before being used to create
- * a domain object.
- *
- * Validation rules (e.g. non-empty fields, length constraints, valid role)
- * are enforced externally via an IValidator<UserParams> implementation.
  */
 struct UserParams {
   // Required
 
-  /// Unique identifier of the user.
   UserId id;
 
-  /// User tag.
   tags::UserTag tag;
 
-  /// User login name.
   std::string login;
 
-  /// Hashed password.
   std::string password_hash;
 
-  /// Public key associated with the user).
   std::string public_key;
 
-  /// User role defining permissions.
   UserRoleVariant role;
 
   std::chrono::system_clock::time_point created_at;
