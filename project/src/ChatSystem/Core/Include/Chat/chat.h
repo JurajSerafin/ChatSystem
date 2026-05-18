@@ -15,7 +15,6 @@
 #include <vector>
 
 /**
- * @class Chat
  * @brief Domain Aggregate Root representing a communication channel between users.
  * 
  * This class encapsulates the state of a chat, including its participants and metadata.
