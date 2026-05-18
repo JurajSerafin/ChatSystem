@@ -2,12 +2,15 @@ file(GLOB_RECURSE SERVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp")
 file(GLOB_RECURSE SERVER_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.h"
                                   "${CMAKE_CURRENT_SOURCE_DIR}/Include/*.hpp")
 
+file(GLOB_RECURSE PRIVATE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
+                                     "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.hpp")
+
 # Isolate main from the sources
 set(SERVER_MAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Source/server_main.cpp")
 list(REMOVE_ITEM SERVER_SOURCES ${SERVER_MAIN_FILE})
 
 # Target 1: The Server Library
-add_library(ChatSystemServerLib STATIC ${SERVER_SOURCES} ${SERVER_HEADERS})
+add_library(ChatSystemServerLib STATIC ${SERVER_SOURCES} ${SERVER_HEADERS} ${PRIVATE_HEADERS})
 
 set_target_properties(ChatSystemServerLib PROPERTIES
     CXX_STANDARD 20
@@ -16,8 +19,9 @@ set_target_properties(ChatSystemServerLib PROPERTIES
 )
 
 # PUBLIC for including in Tests/
-target_include_directories(ChatSystemServerLib PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+target_include_directories(ChatSystemServerLib
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Source>
 )
 
 # PUBLIC so consumers (e.g. Tests) get them implicitly

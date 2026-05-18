@@ -2,7 +2,7 @@
 #include "User/user.h"
 
 #include <Chat/chat_validator.h>
-#include <Services/Implementation/chat_service.h>
+#include <Services/chat_service.h>
 #include <algorithm>
 #include <stdexcept>
 

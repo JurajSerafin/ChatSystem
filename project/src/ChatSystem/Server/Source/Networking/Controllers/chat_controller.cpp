@@ -1,9 +1,10 @@
-#include "Networking/Controllers/chat_controller.h"
+#include "chat_controller.h"
 
-#include "Chat/chat.h"
-#include "Networking/Controllers/utils.h"
-#include "Networking/api_errors.h"
 #include "Api/chat_contract.h"
+#include "Api/user_contract.h"
+#include "Chat/chat.h"
+#include "Networking/api_errors.h"
+#include "Networking/utils.h"
 
 #include <nlohmann/json.hpp>
 
@@ -229,12 +230,31 @@ nlohmann::json ChatController::FormatJsonOutput(const Chat& chat) {
 nlohmann::json ChatController::FormatJsonOutput(const std::vector<Chat>& chats) {
   auto json_array = nlohmann::json::array();
 
-  for (const auto& chat : chats) {
-    json_array.push_back(FormatJsonOutput(chat));
+  for (auto&& chat : chats) {
+    json_array.emplace_back(FormatJsonOutput(chat));
   }
   return json_array;
 }
 
+nlohmann::json ChatController::FormatJsonOutput(const std::vector<User>& participants) {
+  auto json_array = nlohmann::json::array();
+
+  for (auto&& user : participants) {
+    json_array.emplace_back(FormatJsonOutput(user));
+  }
+
+  return json_array;
+}
+
+nlohmann::json ChatController::FormatJsonOutput(const User& user) {
+  return nlohmann::json{
+    {api::user::fields::kId, user.GetId().ToString()},
+    {api::user::fields::kTag, user.GetTag().ToString()},
+    {api::user::fields::kLogin, user.GetLogin()},
+    {api::user::fields::kPublicKey, user.GetPublicKey()},
+    {api::user::fields::kRole, user.GetRoleStr()}
+  };
+}
 
 void ChatController::RegisterRoutes(Router& router) {
   router.AddRoute(http::verb::post, std::string{ api::chat::routes::kBase },

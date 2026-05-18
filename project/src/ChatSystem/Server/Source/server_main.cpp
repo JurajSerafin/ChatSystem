@@ -1,36 +1,32 @@
-#include <iostream>
-#include <thread>
-#include <memory>
-#include <stdexcept>
-#include <format>
-#include <fstream>
-
-#include <boost/asio.hpp>
-#include <boost/beast.hpp>
-#include <boost/asio/thread_pool.hpp>
-#include <boost/asio/post.hpp>
-
-#include "Networking/router.h"
+#include "Cryptography/open_ssl_server_encryption_service.h"
+#include "Database/Postgres/Repositories/pqxx_chat_repository.h"
+#include "Database/Postgres/Repositories/pqxx_message_repository.h"
+#include "Database/Postgres/Repositories/pqxx_session_repository.h"
+#include "Database/Postgres/Repositories/pqxx_user_repository.h"
+#include "Database/Postgres/pqxx_connection_pool.h"
 #include "Networking/Controllers/auth_controller.h"
-#include "Networking/Controllers/user_controller.h"
 #include "Networking/Controllers/chat_controller.h"
 #include "Networking/Controllers/message_controller.h"
-
-#include "Services/Implementation/auth_service.h"
-#include "Services/Implementation/user_service.h"
-#include "Services/Implementation/chat_service.h"
-#include "Services/Implementation/message_service.h"
-#include "Services/Implementation/notification_service.h"
-#include "Infrastructure/OpenSSL/open_ssl_server_encryption_service.h"
-#include "Infrastructure/Postgres/pqxx_connection_pool.h"
-#include "Infrastructure/Postgres/Repositories/pqxx_user_repository.h"
-#include "Infrastructure/Postgres/Repositories/pqxx_session_repository.h"
-#include "Infrastructure/Postgres/Repositories/pqxx_chat_repository.h"
-#include "Infrastructure/Postgres/Repositories/pqxx_message_repository.h"
-
+#include "Networking/Controllers/user_controller.h"
+#include "Networking/router.h"
+#include "Services/auth_service.h"
+#include "Services/chat_service.h"
+#include "Services/message_service.h"
+#include "Services/notification_service.h"
+#include "Services/user_service.h"
 #include "Session/session_validator.h"
 #include "User/user_validator.h"
 
+#include <format>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <thread>
+
+#include <boost/asio.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/beast.hpp>
 
 namespace beast = boost::beast;
 namespace http = beast::http;

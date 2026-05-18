@@ -1,6 +1,6 @@
-#include "Networking/Controllers/auth_controller.h"
+#include "auth_controller.h"
 #include "Networking/api_errors.h"
-#include "Networking/Controllers/utils.h"
+#include "Networking/utils.h"
 #include "Api/auth_contract.h"
 #include "Api/user_contract.h" // Needed to write user fields into the response
 

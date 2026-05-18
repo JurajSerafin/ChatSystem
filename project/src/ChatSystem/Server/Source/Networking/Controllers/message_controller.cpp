@@ -1,6 +1,6 @@
-#include "Networking/Controllers/message_controller.h"
+#include "message_controller.h"
 
-#include "Networking/Controllers/utils.h"
+#include "Networking/utils.h"
 #include "Networking/api_errors.h"
 #include "TypeLibHelpers/domain_class_type_variant_factory.h"
 #include "Api/message_contract.h"

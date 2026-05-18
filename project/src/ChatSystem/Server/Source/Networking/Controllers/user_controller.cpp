@@ -1,6 +1,6 @@
-#include "Networking/Controllers/user_controller.h"
+#include "user_controller.h"
 
-#include "Networking/Controllers/utils.h"
+#include "Networking/utils.h"
 #include "Networking/api_errors.h"
 #include "Tags/user_tag.h"
 #include "nlohmann/json.hpp"

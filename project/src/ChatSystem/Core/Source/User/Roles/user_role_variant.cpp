@@ -8,7 +8,7 @@
 namespace UserRoles {
   std::string_view RoleToStrView(const UserRoleVariant& roleVar) {
     return std::visit(
-      [&]<typename TRole>(TRole&&) { return TRole::TypeString(); },
+      [&](auto&& role) { return role.TypeString(); },
       roleVar
     );
   }

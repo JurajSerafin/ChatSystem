@@ -1,5 +1,5 @@
-#include <Services/Implementation/message_service.h>
-#include <Services/Interface/i_notification_service.h>
+#include <Services/message_service.h>
+#include <Services/i_notification_service.h>
 
 
 #include "TypeLibHelpers/domain_class_type_variant_factory.h"
