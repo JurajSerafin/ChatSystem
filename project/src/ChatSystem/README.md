@@ -141,3 +141,130 @@ After building, you'll have:
 
 - `linux-debug` - Debug build with Clang 
 - `linux-release` - Optimized release build with Clang
+
+
+# Database Setup & Migrations
+
+This project uses PostgreSQL hosted inside a Docker container for both development and testing.
+
+Database schema evolution is managed through Flyway migrations to guarantee that all developers share an identical database structure:
+- tables
+- columns
+- indexes
+- foreign keys
+- constraints
+
+## Architecture Overview
+
+### The Database (`postgres-db`)
+
+Runs continuously in the background.
+
+**Responsibilities:**
+- Hosts the development database
+
+
+### Flyway (`flyway`)
+
+A short-lived migration container.
+
+**Responsibilities:**
+- Reads `.sql` migration scripts from:
+  - `db/migrations`
+- Applies migrations sequentially
+- Terminates immediately after completion
+
+
+## Prerequisites
+
+Before starting, ensure the following tools are installed:
+
+- **docker**
+- **docker compose**
+
+You must also create:
+- `.env`
+
+in the project root.
+
+
+## Required Environment Variables
+
+```env
+DB_USER=chatsystem_admin
+DB_PASSWORD=your_password
+DB_NAME=db_name
+DB_HOST=127.0.0.1
+DB_PORT=5432
+```
+
+
+# Step-by-Step Setup
+
+## 1. Boot the Database Engine
+
+Start the PostgreSQL container in detached mode:
+
+```bash
+docker compose up -d postgres-db
+```
+
+This automatically creates the development database using values from `.env`.
+
+> Wait approximately 5–10 seconds on first startup for PostgreSQL initialization.
+
+
+## 2. Run Database Migrations (Flyway)
+
+Once databases exist, execute Flyway migrations.
+
+
+### Migrate the Development Database
+
+```bash
+docker-compose run --rm flyway
+```
+
+
+# Database Ready
+
+After successful migration execution:
+
+- PostgreSQL schema is fully initialized
+- Development environment is operational
+
+You may now:
+- launch the ChatSystem server
+
+
+# ⚠️ Troubleshooting: The "Nuclear Reset"
+
+If:
+- PostgreSQL becomes corrupted
+- Docker caches invalid credentials
+- `.env` password changes are ignored
+- migrations become inconsistent
+
+you can fully wipe and rebuild the database environment.
+
+
+## Warning
+
+This permanently deletes:
+- all databases
+- all stored data
+- all Docker volumes
+
+
+## 1. Destroy Containers & Volumes
+
+```bash
+docker-compose down -v
+```
+
+
+## 2. Rebuild PostgreSQL
+
+```bash
+docker-compose up -d postgres-db
+```
