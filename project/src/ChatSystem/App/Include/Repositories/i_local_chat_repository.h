@@ -1,10 +1,11 @@
 #ifndef I_LOCAL_CHAT_REPOSITORY_H
 #define I_LOCAL_CHAT_REPOSITORY_H
 
-#include <vector>
-#include <string_view>
-
 #include "Database/local_db_models.h"
+#include "User/Roles/user_role_variant.h"
+
+#include <string_view>
+#include <vector>
 
 /**
  * @brief Repository interface for managing cached chat rooms and their participants.
