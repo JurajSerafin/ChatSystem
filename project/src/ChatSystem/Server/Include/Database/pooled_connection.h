@@ -9,34 +9,41 @@
 #include <memory>
 #include <utility>
 
+/**
+ * @brief RAII wrapper for a borrowed database connection.
+ * * Ensures that a connection is automatically returned to its parent IConnectionPool
+ * as soon as this object goes out of scope, preventing connection leaks.
+ */
 class PooledConnection {
 public:
   std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params);
-
   std::unique_ptr<IResultSet> Execute(std::string_view query);
-
   [[nodiscard]] bool IsAlive() const noexcept;
-
   [[nodiscard]] IConnection& GetConnection();
 
   PooledConnection() = delete;
-
   PooledConnection(const PooledConnection&) = delete;
-
-  PooledConnection(PooledConnection&& other) noexcept;
-
-  PooledConnection(std::unique_ptr<IConnection> connectionPtr, IConnectionPool* connectionPoolPtr);
-
   PooledConnection& operator=(const PooledConnection&) = delete;
-  
+
+  /** @brief Safely transfers ownership of the connection to a new wrapper. */
+  PooledConnection(PooledConnection&& other) noexcept;
   PooledConnection& operator=(PooledConnection&& other) noexcept;
 
+  /**
+   * @brief Initializes the wrapper with a raw connection and a pointer to the parent pool.
+   */
+  PooledConnection(std::unique_ptr<IConnection> connectionPtr, IConnectionPool* connectionPoolPtr);
+
+  /**
+   * @brief Destructor. Automatically returns the raw connection to the pool.
+   */
   ~PooledConnection();
 
 private:
   std::unique_ptr<IConnection> connection_;
   IConnectionPool* connection_pool_obs_;
 
+  /** @brief Safely returns the held connection to the observer pool. */
   void ReturnExistingConnectionToPool() noexcept;
 };
 

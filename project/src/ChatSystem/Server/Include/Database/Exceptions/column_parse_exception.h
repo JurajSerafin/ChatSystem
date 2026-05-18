@@ -7,9 +7,7 @@
 
 class ColumnParseException : public std::runtime_error {
 public:
-
   explicit ColumnParseException(const std::string& message) : std::runtime_error(message) {}
-
   explicit ColumnParseException(const char* message) : std::runtime_error(message) {}
 };
 

@@ -7,9 +7,7 @@
 
 class ColumnTypeMismatchException : public std::runtime_error {
 public:
-
   explicit ColumnTypeMismatchException(const std::string& message) : std::runtime_error(message) {}
-
   explicit ColumnTypeMismatchException(const char* message) : std::runtime_error(message) {}
 };
 

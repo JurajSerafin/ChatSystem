@@ -6,37 +6,44 @@
 
 #include <memory>
 
+/**
+ * @brief RAII wrapper ensuring atomic execution of a database transaction.
+ * * Automatically begins a transaction on construction. If the transaction is not
+ * explicitly committed before this object is destroyed, it will automatically Rollback.
+ * This guarantees safe recovery during unexpected exceptions.
+ */
 class Transaction {
 public:
-
+  /**
+   * @brief Explicitly finalizes the transaction and commits it to the database.
+   */
   void Commit();
 
   std::unique_ptr<IResultSet> Execute(std::string_view query, const QueryParams& params);
-
   std::unique_ptr<IResultSet> Execute(std::string_view query);
 
-
+  /**
+   * @brief Takes ownership of a pooled connection and immediately executes "BEGIN".
+   */
   explicit Transaction(PooledConnection connection);
 
   Transaction() = delete;
-
   Transaction(const Transaction&) = delete;
-
   Transaction& operator=(const Transaction&) = delete;
 
   Transaction(Transaction&& other) = default;
-
   Transaction& operator=(Transaction&& other) noexcept;
 
+  /**
+   * @brief Destructor. Executes "ROLLBACK" if the transaction hasn't been committed.
+   */
   ~Transaction();
 
-
 private:
-
+  /** @brief Helper to roll back the underlying connection if uncommitted. */
   void CleanupExistingTransaction();
 
   PooledConnection connection_;
-
   bool is_commited_{ false };
 };
 

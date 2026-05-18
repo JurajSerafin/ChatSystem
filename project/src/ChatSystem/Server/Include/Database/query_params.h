@@ -18,23 +18,24 @@ using ParamsVariant = std::variant<
 >;
 
 
+/**
+ * @brief A fluid builder for securely binding SQL parameters to a query.
+ * * Collects arguments of various types sequentially to be passed to an IConnection
+ * for parameterized query execution (protecting against SQL Injection).
+ */
 class QueryParams {
 public:
 
+  /**
+   * @brief Binds a parameter and returns the object reference for chaining.
+   */
   QueryParams& BindParam(std::string&& param);
-
   QueryParams& BindParam(std::string_view param);
-
   QueryParams& BindParam(int64_t param);
-
   QueryParams& BindParam(int param);
-
   QueryParams& BindParam(std::size_t param);
-
   QueryParams& BindParam(bool param);
-
   QueryParams& BindParam(std::chrono::system_clock::time_point param);
-
   QueryParams& BindParam(std::nullptr_t param);
 
 
