@@ -8,6 +8,8 @@ The system is split into **3** core pillars:
 - The **Core** (Shared Domain Models, Validation Engine, & REST API Contracts)
 - The **Server** (Stateless, Zero-Knowledge backend)
 
+![Complete App Class Diagram](./diagrams/system_architecture_diagram.svg)
+
 ## 1. Architectural Justification & Third-Party Stack
 
 The choice of external dependencies is driven strictly by architectural goals: compile-time performance, memory safety and platform portability.
