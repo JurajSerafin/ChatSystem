@@ -31,7 +31,7 @@ KeyPair ClientKeyManager::GenerateAndProtectKeyPair(std::string_view password) {
   return key_pair;
 }
 
-std::string ClientKeyManager::GetUnlockedPrivateKey(std::string_view password)  {
+void ClientKeyManager::UnlockPrivateKey(std::string_view password)  {
   const std::optional<EncryptedKeyMaterial> cached_crypto = key_store_->Load();
 
   if (!cached_crypto.has_value()) {
@@ -47,7 +47,11 @@ std::string ClientKeyManager::GetUnlockedPrivateKey(std::string_view password)  
     cached_crypto->encrypted_key.size()
   );
 
-  return crypto_service_obs_->DecryptSymmetric(ciphertext_view, priv_key_encr_key);
+  loaded_private_key_ = crypto_service_obs_->DecryptSymmetric(ciphertext_view, priv_key_encr_key);
+}
+
+std::string ClientKeyManager::GetPrivateKey() {
+  return loaded_private_key_;
 }
 
 void ClientKeyManager::DeleteProtectedKeys() {
