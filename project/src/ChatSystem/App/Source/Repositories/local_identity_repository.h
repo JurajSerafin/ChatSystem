@@ -7,8 +7,17 @@
 
 #include <optional>
 
+/**
+ * @brief Concrete implementation of the local identity repository.
+ * * Manages the persistence of the active user session and authentication token
+ * by delegating to the low-level database engine.
+ */
 class LocalIdentityRepository : public ILocalIdentityRepository {
 public:
+  /**
+   * @brief Constructs the repository with an injected database connection.
+   * @param dbObs Pointer to the active local database instance.
+   */
   explicit LocalIdentityRepository(ILocalDatabase* dbObs);
 
   void Store(const CachedIdentity& identity) override;

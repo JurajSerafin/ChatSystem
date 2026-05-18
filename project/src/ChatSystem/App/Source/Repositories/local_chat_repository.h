@@ -4,8 +4,17 @@
 #include "Database/i_local_database.h"
 #include "Repositories/i_local_chat_repository.h"
 
+/**
+ * @brief Concrete implementation of the local chat repository.
+ * * Acts as a domain-specific wrapper that delegates chat and participant
+ * storage operations to the underlying SQLite database engine.
+ */
 class LocalChatRepository : public ILocalChatRepository {
 public:
+  /**
+   * @brief Constructs the repository with an injected database connection.
+   * @param db Pointer to the active local database instance.
+   */
   explicit LocalChatRepository(ILocalDatabase* db);
 
   std::vector<CachedChat> FindAll() override;
