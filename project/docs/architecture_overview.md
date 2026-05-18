@@ -10,13 +10,13 @@ The system is split into **3** core pillars:
 
 ![Complete App Class Diagram](./diagrams/system_architecture_diagram.svg)
 
-## 1. Architectural Justification & Third-Party Stack
+## 1. Architectural Reasoning & Third-Party Stack
 
 The choice of external dependencies is driven strictly by architectural goals: compile-time performance, memory safety and platform portability.
 
 The entire stack is orchestrated via CMake, and Clang tools.
 
-| Dependency | Component Layer | Architectural Justification |
+| Dependency | Component Layer | Architectural Reasoning |
 |---|---|---|
 | OpenSSL | Client / Server Crypto | Provides cryptographic primitives (scrypt, AES-256, RSA), memory-hard password stretching and hardware-accelerated symmetric streaming. |
 | Boost (Asio/Beast) | Client / Server Networking | Provides a low-level, high-performance asynchronous execution context. Beast translates raw sockets into HTTP and WebSocket state machines. |
@@ -220,7 +220,7 @@ Persistent offline storage for:
 - Chat history
 - Locally wrapped cryptographic keys
 
-### Architectural Justification
+### Architectural Reasoning
 
 - **Cache-Aside Model**
   - App loads instantly from local database
@@ -565,7 +565,7 @@ The server therefore maintains a pool of pre-allocated active connections.
 Provide safe, optimized, parameterized SQL execution across multiple threads.
 
 
-## Architectural Justification & Features
+## Architectural Reasoning & Features
 
 ### RAII Connection Borrowing (`PooledConnection`)
 
