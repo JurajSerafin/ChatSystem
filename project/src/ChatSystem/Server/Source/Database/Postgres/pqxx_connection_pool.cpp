@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <cstddef>
+#include <Database/Exceptions/connection_exception.h>
 
 PooledConnection PqxxConnectionPool::Acquire() {
   const auto deadline = std::chrono::system_clock::now() + acquire_timeout_;
