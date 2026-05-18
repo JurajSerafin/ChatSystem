@@ -1,0 +1,720 @@
+@startuml system_architecture_diagram
+
+top to bottom direction
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam roundcorner 8
+
+skinparam nodesep 60
+skinparam ranksep 70
+hide empty fields
+
+package "Core Shared Library (Dependency-Free)" #FFFFFF {
+
+    package "Domain Entities & Invariants" {
+        class Message {
+            +Message(Message &&) = default : void
+            +Message(const Message &) = deleted : void
+            +operator=(Message &&) = default : Message &
+            +operator=(const Message &) = deleted : Message &
+            {static} +Create<MessageValidatorFor TMessageValidator>(MessageParams params, const TMessageValidator & validator) : Message
+            +CreatedAt() const : std::chrono::system_clock::time_point
+            +GetChatId() const : const ChatId &
+            +GetCiphertext() const : std::string_view
+            +GetId() const : const MessageId &
+            +GetSenderId() const : const UserId &
+            +GetType() const : const MessageTypeVariant &
+            +GetTypeStr() const : std::string
+            {static} +Reconstitute(MessageParams params) : Message
+        }
+
+        class User {
+            +User(User &&) = default : void
+            +User(const User &) = deleted : void
+            +operator=(User &&) = default : User &
+            +operator=(const User &) = deleted : User &
+            +CanPerform(UserAction action) const : bool
+            {static} +Create<UserValidatorFor TUserValidator>(UserParams params, const TUserValidator & validator) : User
+            +CreatedAt() const : std::chrono::system_clock::time_point
+            +GetId() const : const UserId &
+            +GetLogin() const : const std::string &
+            +GetPasswordHash() const : const std::string &
+            +GetPublicKey() const : const std::string &
+            +GetRole() const : const UserRoleVariant &
+            +GetRoleStr() const : std::string_view
+            +GetTag() const : const tags::UserTag &
+            {static} +Reconstitute(UserParams params) : User
+            +SetLogin(std::string login) : void
+            +SetPasswordHash(std::string hash) : void
+            +SetRole(UserRoleVariant role) : void
+        }
+
+        class Chat {
+            +AddParticipant(UserId userId) : void
+            {static} +Create<ChatValidatorFor TChatValidator>(ChatParams params, const TChatValidator & validator) : Chat
+            +CreatedAt() const : std::chrono::system_clock::time_point
+            +GetId() const : const ChatId &
+            +GetLastMessage() const : const std::optional<Message> &
+            +GetParticipantIds() const : const std::vector<UserId> &
+            +GetType() const : const ChatTypeVariant &
+            {static} +Reconstitute(ChatParams params) : Chat
+            +RemoveParticipant(const UserId & userId) : void
+            +SetLastMessage(Message message) : void
+        }
+
+        class Session {
+            +Session(Session &&) = default : void
+            +Session(const Session &) = deleted : void
+            +operator=(Session &&) = default : Session &
+            +operator=(const Session &) = deleted : Session &
+            {static} +Create<SessionValidatorFor TSessionValidator>(SessionParams params, const TSessionValidator & validator) : Session
+            +CreatedAt() const : std::chrono::system_clock::time_point
+            +ExpiresAt() const : std::chrono::system_clock::time_point
+            +GetId() const : const SessionId &
+            +GetToken() const : const std::string &
+            +GetUserId() const : const UserId &
+            +IsExpired() const : bool
+            {static} +Reconstitute(SessionParams params) : Session
+            +Refresh(std::chrono::system_clock::duration duration) : void
+        }
+    }
+
+package "Strongly Typed Identifiers" {
+        together {
+            class "BaseId<MessageId>" as BaseId_MessageId {
+                {static} +Generate() : MessageId
+                {static} +Parse(const std::string& id) : MessageId
+                {static} +Reconstitute(std::string id) : MessageId
+                +ToString() const : const std::string&
+                +IsValid() const : bool
+                +operator==(const BaseId&) const : bool
+            }
+            class MessageId
+            BaseId_MessageId <|-- MessageId
+            
+            class "BaseId<ChatId>" as BaseId_ChatId {
+                {static} +Generate() : ChatId
+                {static} +Parse(const std::string& id) : ChatId
+                {static} +Reconstitute(std::string id) : ChatId
+                +ToString() const : const std::string&
+                +IsValid() const : bool
+                +operator==(const BaseId&) const : bool
+            }
+            class ChatId
+            BaseId_ChatId <|-- ChatId
+        }
+
+        together {
+            class "BaseId<UserId>" as BaseId_UserId {
+                {static} +Generate() : UserId
+                {static} +Parse(const std::string& id) : UserId
+                {static} +Reconstitute(std::string id) : UserId
+                +ToString() const : const std::string&
+                +IsValid() const : bool
+                +operator==(const BaseId&) const : bool
+            }
+            class UserId
+            BaseId_UserId <|-- UserId
+
+            class "BaseId<SessionId>" as BaseId_SessionId {
+                {static} +Generate() : SessionId
+                {static} +Parse(const std::string& id) : SessionId
+                {static} +Reconstitute(std::string id) : SessionId
+                +ToString() const : const std::string&
+                +IsValid() const : bool
+                +operator==(const BaseId&) const : bool
+            }
+            class SessionId
+            BaseId_SessionId <|-- SessionId
+        }
+    }
+
+    package "Metaprogramming & Infrastructure" {
+            class "DomainClassTypeVariantFactory<std::variant<TTypes...>>" as VariantFactory {
+                {static} +Create(std::string_view typeStr, TArgs&&... args) : std::variant<TTypes...>
+            }
+
+            class "MessageType<T>" as MessageType_T <<concept>> {
+                (T payload)
+                --
+                {T::TypeString()} -> std::convertible_to<std::string_view>
+            }
+            
+            class SystemMessageType {
+                {static} +GetMaxLength() constexpr : std::size_t
+                {static} +TypeString() constexpr : std::string_view
+            }
+            class TextMessageType {
+                {static} +GetMaxLength() constexpr : std::size_t
+                {static} +TypeString() constexpr : std::string_view
+            }
+            class DirectChatType {
+                {static} +IsValid() constexpr noexcept : bool
+                {static} +TypeString() constexpr noexcept : std::string_view
+            }
+            class RegularUserRole {
+                {static} +CanPerform(UserAction action) : bool
+                {static} +TypeString() constexpr : std::string_view
+            }
+            
+            enum UserAction {
+                kSendMessage
+                kDeleteAccount
+                kModifyLogin
+                kModifyPassword
+                kModifyTag
+                kDeleteOwnMessage
+                kDeleteAnyMessage
+                kBanUser
+                kManageRoles
+            }
+            
+            interface "IValidator<T>" as IValidator_T {
+                +~IValidator() = default
+                {abstract} +Validate(const T& params) const : ValidationResult
+            }
+            
+            class MessageValidator {
+                {static} +GetCiphertextRule() constexpr : NotEmpty_t
+                {static} +GetCreatedAtRule() constexpr : TimePointMustBeSet_t
+                {static} +GetEncryptedKeysRule() constexpr : NotEmpty_t
+                +Validate(const MessageParams & params) constexpr const : validation::ValidationResult<kMaxErrors>
+            }
+            class UserValidator {
+                {static} +GetCreatedAtRule() constexpr : TimePointMustBeSet_t
+                {static} +GetLoginRule() constexpr : validation::rules::AndRule<AndRule<NotEmpty_t,MinLength_t<3>>,MaxLength_t<32>>
+                {static} +GetPasswordHashRule() constexpr : NotEmpty_t
+                {static} +GetPublicKeyRule() constexpr : NotEmpty_t
+                +Validate(const UserParams & params) constexpr const : validation::ValidationResult<kMaxErrors>
+            }
+            class ChatValidator {
+                {static} +GetCreatedAtRule() constexpr : TimePointMustBeSet_t
+                +Validate(const ChatParams & params) constexpr const : validation::ValidationResult<kMaxErrors>
+            }
+            class SessionValidator {
+                {static} +GetCreatedAtRule(std::chrono::system_clock::time_point other) constexpr : validation::rules::AndRule<TimePointMustBeSet_t,IsLessThanInclusive_t<time_point<system_clock,duration<long long,ratio<1,10000000>>>>>
+                {static} +GetExpiresAtRule() constexpr : TimePointMustBeSet_t
+                {static} +GetTokenRule() constexpr : validation::rules::AndRule<NotEmpty_t,MinLength_t<32>>
+                +Validate(const SessionParams & params) constexpr const : validation::ValidationResult<kMaxErrors>
+                {static} +kMinTokenLength : const size_t
+            }
+
+            IValidator_T <|.. MessageValidator
+            IValidator_T <|.. UserValidator
+            IValidator_T <|.. ChatValidator
+            IValidator_T <|.. SessionValidator
+
+            
+            VariantFactory -[hidden]down-> MessageType_T
+            MessageType_T -[hidden]down-> SystemMessageType
+            
+            SystemMessageType -[hidden]right-> TextMessageType
+            TextMessageType -[hidden]right-> DirectChatType
+            DirectChatType -[hidden]right-> RegularUserRole
+            RegularUserRole -[hidden]right-> UserAction
+
+            MessageValidator -[hidden]right-> UserValidator
+            UserValidator -[hidden]right-> ChatValidator
+            ChatValidator -[hidden]right-> SessionValidator
+    }
+}
+
+package "Client Subsystem (App)" #F9F9F9 {
+
+    package "Client Layer 1: Services" {
+        interface IClientAuthService {
+            +~IClientAuthService() constexpr = default : void
+            {abstract} +Login(std::string_view login, std::string_view password) = 0 : CachedUser
+            {abstract} +Logout() = 0 : void
+            {abstract} +Register(std::string_view login, std::string_view password) = 0 : CachedUser
+        }
+        class ClientAuthService
+        IClientAuthService <|.. ClientAuthService
+
+        interface IClientChatService {
+            +~IClientChatService() constexpr = default : void
+            {abstract} +CreateChat(const std::vector<UserId> & participantIds) = 0 : void
+            {abstract} +GetChatById(const ChatId & id) = 0 : CachedChat
+            {abstract} +GetChats(std::size_t limit, std::size_t offset) = 0 : std::vector<CachedChat>
+            {abstract} +GetParticipants(const ChatId & chatId) = 0 : std::vector<CachedUser>
+        }
+        class ClientChatService
+        IClientChatService <|.. ClientChatService
+
+        interface IClientMessageService {
+            +~IClientMessageService() constexpr = default : void
+            {abstract} +GetHistory(const ChatId & chatId, std::size_t limit, std::size_t offset) = 0 : std::vector<CachedMessage>
+            {abstract} +GetUndelivered() = 0 : std::vector<CachedMessage>
+            {abstract} +MarkAsRead(const MessageId & messageId) = 0 : void
+            {abstract} +SearchMessages(const ChatId & chatId, std::string_view keywords) = 0 : std::vector<CachedMessage>
+            {abstract} +SendMessage(const ChatId & chatId, std::string_view plainText) = 0 : void
+        }
+        class ClientMessageService
+        IClientMessageService <|.. ClientMessageService
+
+        interface IClientUserService {
+            +~IClientUserService() constexpr = default : void
+            {abstract} +GetById(const UserId & userId) = 0 : CachedUser
+            {abstract} +GetPublicKey(const UserId & userId) = 0 : std::string
+            {abstract} +Search(std::string_view query, std::size_t limit, std::size_t offset) = 0 : std::vector<CachedUser>
+        }
+        class ClientUserService
+        IClientUserService <|.. ClientUserService
+    }
+
+    package "Client Gateway Boundaries" {
+        interface IRestClient {
+            +~IRestClient() constexpr = default : void
+            {abstract} +Delete(std::string_view endpoint) = 0 : HttpResponse
+            {abstract} +Get(std::string_view endpoint) = 0 : HttpResponse
+            {abstract} +Post(std::string_view endpoint) = 0 : HttpResponse
+            {abstract} +Post(std::string_view endpoint, const nlohmann::json & body) = 0 : HttpResponse
+            {abstract} +Put(std::string_view endpoint) = 0 : HttpResponse
+            {abstract} +Put(std::string_view endpoint, const nlohmann::json & body) = 0 : HttpResponse
+        }
+        class BoostRestClient
+        IRestClient <|.. BoostRestClient
+    }
+
+    package "Client Layer 2: Secure Identity Cryptography" {
+        interface IClientKeyManager {
+            +~IClientKeyManager() constexpr = default : void
+            {abstract} +DeleteProtectedKeys() = 0 : void
+            {abstract} +GenerateAndProtectKeyPair(std::string_view password) = 0 : KeyPair
+            {abstract} +GetPrivateKey() = 0 : std::string
+            {abstract} +UnlockPrivateKey(std::string_view password) = 0 : void
+        }
+        class ClientKeyManager
+        IClientKeyManager <|.. ClientKeyManager
+        
+        interface IClientEncryptionService {
+            +~IClientEncryptionService() constexpr = default : void
+            {abstract} +DecryptSymmetric(std::string_view ciphertext, std::string_view key) = 0 : std::string
+            {abstract} +EncryptSymmetric(std::string_view plaintext, std::string_view key) = 0 : std::string
+            {abstract} +GenerateKeyPair() = 0 : KeyPair
+            {abstract} +GenerateSymmetricKey() = 0 : std::string
+            {abstract} +Sign(std::string_view data, std::string_view privateKey) = 0 : std::string
+            {abstract} +UnwrapKey(std::string_view wrappedKey, std::string_view privateKey) = 0 : std::string
+            {abstract} +Verify(std::string_view data, std::string_view signature, std::string_view publicKey) = 0 : bool
+            {abstract} +WrapKey(std::string_view symmetricKey, std::string_view publicKey) = 0 : std::string
+        }
+        class OpenSSLClientEncryptionService
+        IClientEncryptionService <|.. OpenSSLClientEncryptionService
+
+        interface IKeyDerivationService {
+            +~IKeyDerivationService() constexpr = default : void
+            {abstract} +DeriveKey(std::string_view password, const std::vector<unsigned char> & salt, const KdfParams & params) = 0 : std::string
+            {abstract} +GenerateSalt() = 0 : std::vector<unsigned char>
+            {abstract} +GetDefaultParams() const = 0 : KdfParams
+            {abstract} +NeedsRehash(std::string_view algId) const = 0 : bool
+            {abstract} +ParseAlgorithmId(std::string_view algId) const = 0 : KdfParams
+        }
+        class OpenSSLKeyDerivationService
+        IKeyDerivationService <|.. OpenSSLKeyDerivationService
+
+        interface IKeyStore {
+            +~IKeyStore() constexpr = default : void
+            {abstract} +Clear() = 0 : void
+            {abstract} +Load() = 0 : std::optional<EncryptedKeyMaterial>
+            {abstract} +Store(const EncryptedKeyMaterial & encryptMaterial) = 0 : void
+        }
+        class Sqlite3KeyStore
+        IKeyStore <|.. Sqlite3KeyStore
+
+        ClientKeyManager --> IClientEncryptionService : -crypto_
+        ClientKeyManager o--> IKeyDerivationService : -kdf_
+        ClientKeyManager o--> IKeyStore : -store_
+    }
+
+    package "Client Layer 3: Storage Vault Cache" {
+        interface ILocalDatabase {
+            +~ILocalDatabase() constexpr = default : void
+            {abstract} +AddUserToChat(std::string_view userId, std::string_view chatId, const UserRoleVariant & chatRole) = 0 : void
+            {abstract} +ClearIdentity() = 0 : void
+            {abstract} +DeleteChat(std::string_view chatId) = 0 : void
+            {abstract} +DeleteMessage(std::string_view messageId) = 0 : void
+            {abstract} +DeleteUser(std::string_view userId) = 0 : void
+            {abstract} +DeleteUserFromChat(std::string_view userId, std::string_view chatId) = 0 : void
+            {abstract} +EvictOldMessages(std::chrono::system_clock::time_point olderThanTimeStamp) = 0 : void
+            {abstract} +GetChatParticipantIds(std::string_view chatId) = 0 : std::vector<std::string>
+            {abstract} +GetUserChatRole(std::string_view userId, std::string_view chatId) = 0 : std::optional<UserRoleVariant>
+            {abstract} +LoadChat(std::string_view chatId) = 0 : std::optional<CachedChat>
+            {abstract} +LoadChats(std::size_t limit, std::size_t offset) = 0 : std::vector<CachedChat>
+            {abstract} +LoadIdentity() = 0 : std::optional<CachedIdentity>
+            {abstract} +LoadMessagesForChat(std::string_view chatId, std::size_t limit, std::size_t offset) = 0 : std::vector<CachedMessage>
+            {abstract} +LoadUser(std::string_view userId) = 0 : std::optional<CachedUser>
+            {abstract} +LoadUserByLoginOrTag(std::string_view login, std::string_view tag) = 0 : std::optional<CachedUser>
+            {abstract} +MarkMessageAsRead(std::string_view messageId) = 0 : void
+            {abstract} +NukeEntireCache() = 0 : void
+            {abstract} +SaveIdentity(const CachedIdentity & identity) = 0 : void
+            {abstract} +SaveMessageForChat(const CachedMessage & message) = 0 : void
+            {abstract} +SearchMessages(std::string_view chatId, std::string_view keyword) = 0 : std::vector<CachedMessage>
+            {abstract} +SetUserChatRole(std::string_view userId, std::string_view chatId, const UserRoleVariant & chatRole) = 0 : void
+            {abstract} +UpsertChat(const CachedChat & chat) = 0 : void
+            {abstract} +UpsertUser(const CachedUser & user) = 0 : void
+        }
+        class Sqlite3LocalDatabase
+        ILocalDatabase <|.. Sqlite3LocalDatabase
+
+        interface ILocalChatRepository {
+            +~ILocalChatRepository() constexpr = default : void
+            {abstract} +AddParticipant(std::string_view userId, std::string_view chatId, const UserRoleVariant & role) = 0 : void
+            {abstract} +Delete(std::string_view chatId) = 0 : void
+            {abstract} +FindAll() = 0 : std::vector<CachedChat>
+            {abstract} +FindById(std::string_view chatId) = 0 : std::optional<CachedChat>
+            {abstract} +GetParticipantIds(std::string_view chatId) = 0 : std::vector<std::string>
+            {abstract} +RemoveParticipant(std::string_view userId, std::string_view chatId) = 0 : void
+            {abstract} +UpdateLastMessage(std::string_view chatId, std::string_view messageId, int64_t lastActivityMs) = 0 : void
+            {abstract} +Upsert(const CachedChat & chat) = 0 : void
+        }
+        class LocalChatRepository
+        ILocalChatRepository <|.. LocalChatRepository
+
+        interface ILocalIdentityRepository {
+            +~ILocalIdentityRepository() constexpr = default : void
+            {abstract} +Clear() = 0 : void
+            {abstract} +Load() = 0 : std::optional<CachedIdentity>
+            {abstract} +Store(const CachedIdentity & identity) = 0 : void
+            {abstract} +UpdateSessionToken(std::string_view newToken) = 0 : void
+        }
+        class LocalIdentityRepository
+        ILocalIdentityRepository <|.. LocalIdentityRepository
+
+        interface ILocalMessageRepository {
+            +~ILocalMessageRepository() constexpr = default : void
+            {abstract} +Delete(std::string_view messageId) = 0 : void
+            {abstract} +FindByChatId(std::string_view chatId, std::size_t limit, std::size_t offset) = 0 : std::vector<CachedMessage>
+            {abstract} +MarkAsRead(std::string_view messageId) = 0 : void
+            {abstract} +SaveForChat(const CachedMessage & message) = 0 : void
+            {abstract} +Search(std::string_view chatId, std::string_view keywords) = 0 : std::vector<CachedMessage>
+            {abstract} +Upsert(const CachedMessage & message) = 0 : void
+        }
+        class LocalMessageRepository
+        ILocalMessageRepository <|.. LocalMessageRepository
+
+        interface ILocalUserRepository {
+            +~ILocalUserRepository() constexpr = default : void
+            {abstract} +Delete(std::string_view userId) = 0 : void
+            {abstract} +FindById(std::string_view userId) = 0 : std::optional<CachedUser>
+            {abstract} +FindByLoginOrTag(std::string_view login, std::string_view tag) = 0 : std::optional<CachedUser>
+            {abstract} +Upsert(const CachedUser & user) = 0 : void
+        }
+        class LocalUserRepository
+        ILocalUserRepository <|.. LocalUserRepository
+
+        LocalChatRepository --> ILocalDatabase
+        LocalIdentityRepository --> ILocalDatabase
+        LocalMessageRepository --> ILocalDatabase
+        LocalUserRepository --> ILocalDatabase
+    }
+
+    BoostRestClient --> ILocalIdentityRepository
+
+    ClientAuthService --> IRestClient
+    ClientAuthService --> IClientKeyManager
+    ClientAuthService --> ILocalIdentityRepository
+
+    ClientChatService --> IRestClient
+    ClientChatService --> ILocalChatRepository
+    ClientChatService --> ILocalUserRepository
+
+    ClientMessageService --> IRestClient
+    ClientMessageService --> IClientKeyManager
+    ClientMessageService --> IClientEncryptionService
+    ClientMessageService --> IClientChatService
+    ClientMessageService --> IClientUserService
+    ClientMessageService --> ILocalMessageRepository
+    ClientMessageService --> ILocalIdentityRepository
+
+    ClientUserService --> IRestClient
+    ClientUserService --> ILocalUserRepository
+}
+
+package "Server Subsystem (Backend)" #F9F9F9 {
+
+    package "Server Layer 0: Presentation REST API" {
+        class Router {
+            -routes_ : std::vector<Route>
+            +AddRoute(http::verb method, const std::string& pathTemplate, HandlerFunc handler) : void
+            +RouteRequest(const http::request<http::string_body>& req) : http::response<http::string_body>
+            {static} -IsDynamicParameter(std::string_view segment) : bool
+            {static} -ProcessDynamicParameter(Route& route, std::string_view param) : void
+            {static} -ProcessStringMatch(Route& route, std::string&& param) : void
+            {static} -ProcessRouteTemplate(const std::string& pathTemplate, Route& route) : void
+            {static} -TryExtractParams(PathParams& paramsOut, const std::vector<uint8_t>& isDynamicIndicators, const std::vector<std::string>& paramNames, const std::vector<std::string>& requestSegments, const std::vector<std::string>& segments) : bool
+            {static} -HandleNotFound(const http::request<http::string_body>& req) : http::response<http::string_body>
+            {static} -HandleBadRequest(const http::request<http::string_body>& req) : http::response<http::string_body>
+            {static} -ExtractTarget(const http::request<http::string_body>& req) : std::string
+            {static} -ExtractPath(const std::string& target) : std::string
+            {static} -DiscardLeadingEmptyString(const std::string& path, std::istream& pathStream, std::string& segment) : void
+            {static} -GetParsedRequestSegments(const std::string& path, std::istream& pathStream, std::string& segment) : std::vector<std::string>
+        }
+
+        class AuthController {
+            -auth_service_obs_ : IAuthService*
+            -user_service_obs_ : IUserService*
+            +AuthController(IAuthService* authServiceObs, IUserService* userServiceObs)
+            +HandleRegister(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleLogin(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleLogout(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleChangePassword(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +RegisterRoutes(Router& router) : void
+            {static} -ExtractRequiredString(const nlohmann::json& body, std::string_view fieldName) : std::string
+            {static} -FormatAuthResponse(const std::string& token, const UserProfile& userProfile) : nlohmann::json
+            {static} -FormatTokenResponse(const std::string& token) : nlohmann::json
+            -RegisterAndGetSessionToken(const nlohmann::json& authDataBody) const : std::string
+            -LoginAndGetSessionToken(const nlohmann::json& authDataBody) const : std::string
+            -ExtractAndChangePassword(const nlohmann::json& passChangeBody, const UserId& userId) const : void
+        }
+
+        class ChatController {
+            -auth_service_obs_ : IAuthService*
+            -chat_service_obs_ : IChatService*
+            -user_validator_ : UserValidator
+            -session_validator_ : SessionValidator
+            +ChatController(IAuthService* authServiceObs, IChatService* chatServiceObs)
+            +HandleCreateChat(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetChats(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetChatById(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetParticipants(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleAddParticipant(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleRemoveParticipant(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleDeleteChat(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +RegisterRoutes(Router& router) : void
+            -GetAuthenticatedUserId(const http::request<http::string_body>& req) const : std::optional<UserId>
+            {static} -ExtractParticipantIds(const nlohmann::json& reqBody) : std::vector<UserId>
+            {static} -FormatJsonOutput(const Chat& chat) : nlohmann::json
+            {static} -FormatJsonOutput(const std::vector<Chat>& chats) : nlohmann::json
+            {static} -FormatJsonOutput(const std::vector<User>& users) : nlohmann::json
+            {static} -FormatJsonOutput(const User& user) : nlohmann::json
+        }
+
+        class MessageController {
+            -auth_service_obs_ : IAuthService*
+            -message_service_obs_ : IMessageService*
+            +MessageController(IAuthService* authServiceObs, IMessageService* messageServiceObs)
+            +HandleSendMessage(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetMessageHistory(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetMessagePublicKey(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleReadMessage(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetUndelivered(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleDeleteMessage(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +RegisterRoutes(Router& router) : void
+            -GetAuthenticatedUserId(const http::request<http::string_body>& req) const : std::optional<UserId>
+            {static} -ExtractCursorPagination(const http::request<http::string_body>& req, std::size_t& limitOut, std::optional<MessageId>& afterIdOut) : void
+            {static} -FormatJsonOutput(const Message& message) : nlohmann::json
+            {static} -FormatJsonOutput(const std::vector<Message>& messages) : nlohmann::json
+            {static} -ExtractEncryptedKeys(const nlohmann::json& reqBody) : EncryptedKeysMap
+            {static} -ExtractCiphertext(const nlohmann::json& reqBody) : std::string
+        }
+
+        class UserController {
+            -auth_service_obs_ : IAuthService*
+            -user_service_obs_ : IUserService*
+            +UserController(IAuthService* authServiceObs, IUserService* userServiceObs)
+            +HandleSearchUsers(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetById(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetByTag(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +HandleGetPublicKey(const http::request<http::string_body>& req, const Router::PathParams& params) const : http::response<http::string_body>
+            +RegisterRoutes(Router& router) : void
+            -GetAuthenticatedUserId(const http::request<http::string_body>& req) const : std::optional<UserId>
+            {static} -FormatJsonOutput(const std::vector<UserProfile>& userProfiles) : nlohmann::json
+            {static} -FormatJsonOutput(const UserProfile& userProfile) : nlohmann::json
+            {static} -ExtractSearchQuery(const http::request<http::string_body>& req) : std::string
+        }
+    }
+
+    package "Server Layer 1: Core Domain Entrypoints" {
+        interface IAuthService {
+            +~IAuthService() constexpr = default : void
+            {abstract} +ChangePassword(const UserId & userId, const std::string & oldPassword, const std::string & newPassword) = 0 : void
+            {abstract} +Login(const std::string & login, const std::string & password) = 0 : Session
+            {abstract} +Logout(const std::string & token) = 0 : void
+            {abstract} +RegisterUser(const std::string & login, const std::string & password, const std::string & publicKey) = 0 : Session
+            {abstract} +ValidateToken(const std::string & token) = 0 : std::optional<User>
+        }
+        class AuthService
+        IAuthService <|.. AuthService
+
+        interface IChatService {
+            +~IChatService() constexpr = default : void
+            {abstract} +AddParticipant(const ChatId & id, const UserId & requestingUserId, const UserId & newUserId) = 0 : void
+            {abstract} +CreateChat(const UserId & creatorId, const std::vector<UserId> & participantIds) = 0 : Chat
+            {abstract} +DeleteChat(const ChatId & id, const UserId & requestingUserId) = 0 : void
+            {abstract} +GetById(const ChatId & id, const UserId & requestingUserId) = 0 : std::optional<Chat>
+            {abstract} +GetChatsForUser(const UserId & userId, std::size_t limit, std::size_t offset) = 0 : std::vector<Chat>
+            {abstract} +GetParticipants(const ChatId & id, const UserId & requestingUserId) = 0 : std::vector<User>
+            {abstract} +RemoveParticipant(const ChatId & id, const UserId & requestingUserId, const UserId & userIdToRemove) = 0 : void
+        }
+        class ChatService
+        IChatService <|.. ChatService
+
+        interface IMessageService {
+            +~IMessageService() constexpr = default : void
+            {abstract} +DeleteMessage(const MessageId & id, const UserId & requesterId) = 0 : void
+            {abstract} +GetEncryptedKey(const MessageId & messageId, const UserId & userId) = 0 : std::optional<std::string>
+            {abstract} +GetHistory(const ChatId & chatId, const UserId & requestingUserId, std::size_t limit, std::size_t offset) = 0 : std::vector<Message>
+            {abstract} +GetUndelivered(const UserId & userId, std::size_t limit, std::optional<MessageId> afterMessageId) = 0 : std::vector<Message>
+            {abstract} +MarkAsRead(const MessageId & id, const UserId & readerId) = 0 : void
+            {abstract} +SendChatMessage(const UserId & senderId, const ChatId & chatId, const std::string & ciphertext, const EncryptedKeysMap & encryptedKeys, MessageTypeVariant type) = 0 : Message
+        }
+        class MessageService
+        IMessageService <|.. MessageService
+
+        interface IUserService {
+            +~IUserService() constexpr = default : void
+            {abstract} +GetById(const UserId & userId) = 0 : std::optional<UserProfile>
+            {abstract} +GetByTag(const tags::UserTag & tag) = 0 : std::optional<UserProfile>
+            {abstract} +GetPublicKey(const UserId & userId) = 0 : std::optional<std::string>
+            {abstract} +Search(const std::string & query, const UserId & requestingUserId, std::size_t limit, std::size_t offset) = 0 : std::vector<UserProfile>
+        }
+        class UserService
+        IUserService <|.. UserService
+
+        interface INotificationService {
+            +~INotificationService() constexpr = default : void
+            {abstract} +NotifyNewMessage(const UserId & recipientId, const Message & message) = 0 : void
+            {abstract} +NotifyReadReceipt(const UserId & senderId, const MessageId & messageId, const UserId & readerId) = 0 : void
+            {abstract} +Subscribe(const UserId & userId, const EventObserver & observer) = 0 : SubscriberId
+            {abstract} +Unsubscribe(const UserId & userId, SubscriberId subscriberId) = 0 : void
+        }
+        class NotificationService
+        INotificationService <|.. NotificationService
+    }
+
+    package "Server Layer 2: Abstract Persistence Repositories" {
+        interface IChatRepository {
+            +~IChatRepository() constexpr = default : void
+            {abstract} +Add(const Chat & chat) = 0 : void
+            {abstract} +AddParticipant(const ChatId & chatId, const UserId & userId) = 0 : void
+            {abstract} +DeleteById(const ChatId & id) = 0 : void
+            {abstract} +FindById(const ChatId & id) = 0 : std::optional<Chat>
+            {abstract} +FindByUserId(const UserId & userId, std::size_t limit, std::size_t offset) = 0 : std::vector<Chat>
+            {abstract} +IsParticipant(const ChatId & chatId, const UserId & userId) = 0 : bool
+            {abstract} +RemoveParticipant(const ChatId & chatId, const UserId & userId) = 0 : void
+            {abstract} +UpdateLastMessage(const ChatId & chatId, const Message & message) = 0 : void
+        }
+        class PqxxChatRepository
+        IChatRepository <|.. PqxxChatRepository
+
+        interface IMessageRepository {
+            +~IMessageRepository() constexpr = default : void
+            {abstract} +Add(const Message & message, const EncryptedKeysMap & encryptedKeys) = 0 : void
+            {abstract} +DeleteById(const MessageId & id) = 0 : void
+            {abstract} +FindByChatId(const ChatId & chatId, std::size_t limit, std::size_t offset) = 0 : std::vector<Message>
+            {abstract} +FindById(const MessageId & id) = 0 : std::optional<Message>
+            {abstract} +FindUndelivered(const UserId & recipientId, std::size_t limit, std::optional<MessageId> afterMessageId) = 0 : std::vector<Message>
+            {abstract} +GetDeliveredTo(const MessageId & messageId) = 0 : std::vector<UserId>
+            {abstract} +GetEncryptedKey(const MessageId & messageId, const UserId & userId) = 0 : std::optional<std::string>
+            {abstract} +GetReaders(const MessageId & messageId) = 0 : std::vector<UserId>
+            {abstract} +MarkDelivered(const MessageId & messageId, const UserId & recipientId) = 0 : void
+            {abstract} +MarkRead(const MessageId & messageId, const UserId & readerId) = 0 : void
+        }
+        class PqxxMessageRepository
+        IMessageRepository <|.. PqxxMessageRepository
+
+        interface ISessionRepository {
+            +~ISessionRepository() constexpr = default : void
+            {abstract} +Add(const Session & session) = 0 : void
+            {abstract} +DeleteAllForUser(const UserId & userId) = 0 : void
+            {abstract} +DeleteByToken(const std::string & token) = 0 : void
+            {abstract} +DeleteExpired() = 0 : void
+            {abstract} +FindByToken(const std::string & token) = 0 : std::optional<Session>
+            {abstract} +FindByUserId(const UserId & userId) = 0 : std::vector<Session>
+        }
+        class PqxxSessionRepository
+        ISessionRepository <|.. PqxxSessionRepository
+
+        interface IUserRepository {
+            +~IUserRepository() constexpr = default : void
+            {abstract} +Add(const User & user) = 0 : void
+            {abstract} +DeleteById(const UserId & id) = 0 : void
+            {abstract} +FindById(const UserId & id) = 0 : std::optional<User>
+            {abstract} +FindByLogin(const std::string & login) = 0 : std::optional<User>
+            {abstract} +FindByTag(const tags::UserTag & tag) = 0 : std::optional<User>
+            {abstract} +Search(const std::string & query, std::size_t limit, std::size_t offset) = 0 : std::vector<User>
+            {abstract} +Update(const User & user) = 0 : void
+        }
+        class PqxxUserRepository
+        IUserRepository <|.. PqxxUserRepository
+    }
+
+    package "Server Layer 3: Connection Pool Drivers" {
+        interface IConnectionPool {
+            +~IConnectionPool() constexpr = default : void
+            {abstract} +Acquire() = 0 : PooledConnection
+            {abstract} +Return(std::unique_ptr<IConnection> connection) = 0 : void
+        }
+        class PqxxConnectionPool
+        IConnectionPool <|.. PqxxConnectionPool
+        
+        interface IConnection {
+            +~IConnection() constexpr = default : void
+            {abstract} +BeginTransaction() = 0 : void
+            {abstract} +CommitTransaction() = 0 : void
+            {abstract} +Execute(std::string_view query, const QueryParams & params) = 0 : std::unique_ptr<IResultSet>
+            {abstract} +Execute(std::string_view query) = 0 : std::unique_ptr<IResultSet>
+            {abstract} +IsAlive() const = 0 : bool
+            {abstract} +RollbackTransaction() = 0 : void
+        }
+        class PqxxConnection
+        IConnection <|.. PqxxConnection
+
+        PqxxConnectionPool o--> IConnection
+    }
+
+    AuthService --> IUserRepository
+    AuthService --> ISessionRepository
+
+    ChatService --> IChatRepository
+    ChatService --> IUserRepository
+
+    MessageService --> INotificationService
+    MessageService --> IMessageRepository
+    MessageService --> IChatRepository
+    MessageService o--> MessageValidator
+
+    UserService --> IUserRepository
+
+    PqxxChatRepository --> IConnectionPool
+    PqxxMessageRepository --> IConnectionPool
+    PqxxSessionRepository --> IConnectionPool
+    PqxxUserRepository --> IConnectionPool
+}
+
+"Core Shared Library (Dependency-Free)" -[hidden]down-> "Client Subsystem (App)"
+"Core Shared Library (Dependency-Free)" -[hidden]down-> "Server Subsystem (Backend)"
+"Client Subsystem (App)" -[hidden]right-> "Server Subsystem (Backend)"
+
+    AuthController --> IAuthService
+    AuthController --> IUserService
+    AuthController --> Router
+
+    ChatController --> IAuthService
+    ChatController --> IChatService
+    ChatController --> Router
+    ChatController o--> UserValidator
+    ChatController o--> SessionValidator
+
+    MessageController --> IAuthService
+    MessageController --> IMessageService
+    MessageController --> Router
+
+    UserController --> IAuthService
+    UserController --> IUserService
+    UserController --> Router
+
+ClientMessageService .up.> Message : Manipulates
+MessageService .up.> Message : Validates & Emits
+LocalMessageRepository .up.> Message : Deserializes
+PqxxMessageRepository .up.> Message : Hydrates
+
+ClientChatService .up.> Chat : Evaluates
+ChatService .up.> Chat : Instantiates
+LocalChatRepository .up.> Chat : Translates
+PqxxChatRepository .up.> Chat : Persists
+
+remove @unlinked
+@enduml
