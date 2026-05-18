@@ -1,5 +1,0 @@
-ALTER TABLE chats ADD COLUMN type VARCHAR(16) NOT NULL DEFAULT 'direct';
-
-ALTER TABLE chats ADD COLUMN last_message_id UUID REFERENCES messages(id) ON DELETE SET NULL;
-
-ALTER TABLE chats ADD COLUMN last_message_timestamp TIMESTAMPTZ;
