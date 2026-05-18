@@ -16,8 +16,7 @@
  * @brief Concept defining the requirements for a Message validator.
  * Extends the basic `ValidatorFor` concept to ensure the validator also provides
  * access to individual field rules. This allows domain objects to validate
- * individual fields during state mutations (e.g., `SetId`) without
- * requiring a full `MessageParams` DTO.
+ * individual fields during state mutations without requiring a full `MessageParams` DTO.
  *
  * @tparam TValidator The validator type being checked.
  * @tparam TParams The parameter DTO type (expected to structurally match MessageParams).

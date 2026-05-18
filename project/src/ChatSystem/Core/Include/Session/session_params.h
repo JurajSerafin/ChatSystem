@@ -19,19 +19,14 @@
 struct SessionParams {
   // Required
 
-  /// Unique identifier of the session.
   SessionId id;
 
-  /// Identifier of the user associated with the session.
   UserId user_id;
 
-  /// Authentication token.
   std::string token;
 
-  /// Expiration timestamp.
   std::chrono::system_clock::time_point expires_at;
 
-  /// Creation timestamp.
   std::chrono::system_clock::time_point created_at;
 
   // Optional
