@@ -23,7 +23,7 @@ sudo apt-get install git cmake ninja-build clang
 
 **Clone and Enter the Repository**
 ```powershell
-git clone --recurse-submodules <repository-url>
+git clone --recurse-submodules https://github.com/JurajSerafin/ChatSystem.git
 cd ChatSystem
 ```
 
@@ -46,7 +46,7 @@ cd ChatSystem
 
 **Clone and Enter the Repository**
 ```bash
-git clone --recurse-submodules <repository-url>
+git clone --recurse-submodules https://github.com/JurajSerafin/ChatSystem.git
 cd ChatSystem
 ```
 **Run the Setup (first time: ~25-35 minutes)**
