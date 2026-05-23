@@ -1,8 +1,5 @@
 ﻿# ChatSystem
 
-[Project proposal](../../docs/Proposal.md)
-
-
 ## Prerequisites
 
 ### Windows
