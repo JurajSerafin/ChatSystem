@@ -243,7 +243,7 @@ The server acts strictly as a transport layer:
 - It stores and forwards encrypted bytes
 - It mathematically cannot decrypt the payload
 
-To achieve this safely without leaking :contentReference[oaicite:0]{index=0} dependencies into the business logic, the cryptographic subsystem is divided into four specialized pillars.
+To achieve this safely without leaking dependencies into the business logic, the cryptographic subsystem is divided into four specialized pillars.
 
 ---
 
